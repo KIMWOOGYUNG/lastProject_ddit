@@ -1,0 +1,168 @@
+package kr.or.ddit.approval.controller;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpSession;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import kr.or.ddit.approval.service.ApprovalServiceImpl;
+import kr.or.ddit.approval.service.IApprovalService;
+import kr.or.ddit.vo.AjaxdataApprLineVO;
+import kr.or.ddit.vo.Approve_LineVO;
+import kr.or.ddit.vo.DraftVO;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.ProjectVO;
+import kr.or.ddit.vo.ReviewerGroupVO;
+import kr.or.ddit.vo.SearchVO;
+
+@Controller
+@RequestMapping("approval")
+public class ApprovalController {
+	@Inject
+	IApprovalService service;
+	
+	@GetMapping("publicformbox")
+	public String Depmanage() {
+		String goPage = "publicformList.approval";
+		return goPage;
+	}
+
+	@GetMapping("myapproval/{pos}")
+	public String printdriftList(@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+			@PathVariable(name = "pos") String draft_pos, SearchVO searchVO,Model model,HttpSession session) {
+		String goPage = "daftList.approval";
+			System.out.println("값은 = "+draft_pos);
+			System.out.println(searchVO);
+		if(draft_pos.equals("all")) {
+			model.addAttribute("title", "내가 쓴 기안서");
+		}else if(draft_pos.equals("temp")){
+			model.addAttribute("title", "임시보관함");
+		}else if(draft_pos.equals("delete")){
+			model.addAttribute("title", "삭제함");
+		}else {
+			//아무것도 아닐경우
+		}
+		EmployeeVO employeeVO =(EmployeeVO) session.getAttribute("authUser");
+		DraftVO draftVO = makeDraftSearchVo(searchVO, draft_pos);
+		draftVO.setEmp_code(employeeVO.getEmp_code());
+		
+		PagingVO<DraftVO> pagingVO = new PagingVO<>();
+		pagingVO.setDetailSearch(draftVO);
+		pagingVO.setCurrentPage(currentPage);
+		int totalRecord = service.getApproveCount(pagingVO);
+		pagingVO.setTotalRecord(totalRecord);
+		
+		List<DraftVO> projectList = service.getTempFolder(pagingVO);
+		pagingVO.setDataList(projectList);
+		
+		model.addAttribute("draft_pos", draft_pos);
+		model.addAttribute("pagingVO", pagingVO);
+		
+		return goPage;
+	}
+	
+	@GetMapping(value="myapproval/{pos}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public PagingVO<DraftVO> ajaxForlist(
+			@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+			@PathVariable(name = "pos") String draft_pos,SearchVO searchVO,Model model,HttpSession session
+		){
+		printdriftList(currentPage, draft_pos, searchVO, model,session);
+		return (PagingVO<DraftVO>) model.asMap().get("pagingVO");
+	}
+	
+	
+	
+	@GetMapping("approvalwrite")
+	public String goWrite() {
+		String goPage = "approvalWrite.approval";
+		return goPage;
+	}
+	
+	
+	
+	@GetMapping(value="approvalwrite/{pos}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public List<AjaxdataApprLineVO> addList(@PathVariable(name="pos") String pos, HttpSession session,Model model) {
+		EmployeeVO vo = (EmployeeVO) session.getAttribute("authUser");
+		String emp_code = vo.getEmp_code();
+	
+		List<AjaxdataApprLineVO> data = new ArrayList<AjaxdataApprLineVO>();
+		
+		if("apprLine".equals(pos)) {
+			for(Approve_LineVO temp:service.getMyApprGroup(emp_code)) {
+				data.add(temp.sendEmpData());
+			}
+			model.addAttribute("title", "결재라인 선택");
+		}else if("rg1Line".equals(pos)) {
+			ReviewerGroupVO groupVO = new ReviewerGroupVO();
+			groupVO.setEmp_code(emp_code);
+			groupVO.setRg_type("1");
+			for(ReviewerGroupVO temp:service.getMyReviewerGroup(groupVO)) {
+				data.add(temp.sendEmpData());
+			}
+			model.addAttribute("title", "참조자 선택");
+		}else if("rg2Line".equals(pos)) {
+			ReviewerGroupVO groupVO = new ReviewerGroupVO();
+			groupVO.setEmp_code(emp_code);
+			groupVO.setRg_type("2");
+			service.getMyReviewerGroup(groupVO);
+			for(ReviewerGroupVO temp:service.getMyReviewerGroup(groupVO)) {
+				data.add(temp.sendEmpData());
+			}
+			model.addAttribute("title", "열람권자 선택");
+		}
+		
+		return data;
+	}
+	
+	private DraftVO makeDraftSearchVo(SearchVO searchVO, String draft_pos) {
+		DraftVO draftVO = new DraftVO();
+		String state = null;
+		if("all".equals(draft_pos)) {
+			state = "1";
+		}else if("temp".equals(draft_pos)) {
+			state = "2";
+		}else if("delete".equals(draft_pos)) {
+			state = "3";
+		}
+		
+		
+		draftVO.setDraft_pos(state);
+		
+		
+		
+		
+		String type = searchVO.getSearchType();
+		
+		if(!StringUtils.isBlank(type)) {
+			String data = searchVO.getSearchWord();
+			if("no".equals(type)) {
+				draftVO.setDraft_title(data);
+			}else if("emp".equals(type)){
+				draftVO.setEmp_code(data);
+			}else if("title".equals(type)){
+				draftVO.setDraft_title(data);
+			}else if("state".equals(type)){
+				draftVO.setDraft_stat(data);
+			}
+		}
+		
+		return draftVO;
+	}
+	
+}

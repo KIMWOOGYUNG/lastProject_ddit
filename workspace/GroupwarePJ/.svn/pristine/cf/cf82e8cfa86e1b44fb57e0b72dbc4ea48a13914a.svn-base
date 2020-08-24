@@ -1,0 +1,25 @@
+package kr.or.ddit.work.dao;
+
+import java.util.List;
+
+import org.springframework.stereotype.Repository;
+
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.WorkLogVO;
+import kr.or.ddit.vo.Work_ReportVO;
+
+@Repository
+public interface IMyReportDAO {
+	// 보고등록
+	public int insertReport(Work_ReportVO reportVO);
+	
+	// 보고상세조회
+	public Work_ReportVO selectReport(String report_code);
+	
+	// 보고 수 조회
+	public int selectReportCount(PagingVO<Work_ReportVO> pagingVO);
+	
+	// 보고목록조회
+	public List<Work_ReportVO> selectReportList(PagingVO<Work_ReportVO> pagingVO);
+	
+}

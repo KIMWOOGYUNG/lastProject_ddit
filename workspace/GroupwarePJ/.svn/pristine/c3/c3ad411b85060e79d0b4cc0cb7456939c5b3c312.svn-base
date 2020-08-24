@@ -1,0 +1,163 @@
+package kr.or.ddit.hr_admin.service;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+import javax.validation.Valid;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.hr_admin.dao.IAdminEmployDAO;
+import kr.or.ddit.login_logout.service.AzurePersonService;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.Image_AttatchVO;
+import kr.or.ddit.vo.PagingVO;
+
+@Service
+public class AdminEmployServiceImpl implements IAdminEmployService {
+	@Inject
+	AzurePersonService personService;
+	
+	@Inject
+	IAdminEmployDAO adminemployDAO;
+	
+	@Override
+	public List<EmployeeVO> selectEmpmanageList(PagingVO<EmployeeVO> pagingVO) {
+		return adminemployDAO.selectEmpmanageList(pagingVO);
+	}
+
+	@Override
+	public EmployeeVO selectEmpmanage(String emp_code) {
+		return adminemployDAO.selectEmpmanage(emp_code);
+	}
+
+	@Override
+	public int selectEmpmanageCount(PagingVO<EmployeeVO> pagingVO) {
+		return adminemployDAO.selectEmpmanageCount(pagingVO);
+	}
+	
+	
+	@Override
+	public ResultState insertEmp(EmployeeVO employee) {
+		ResultState result = ResultState.FAIL;
+		int sc = settingForFaceId(employee);
+		if(sc==200) {
+			int cnt = adminemployDAO.insertEmp(employee);
+			if(cnt > 0) result= ResultState.OK;
+			
+		}
+		return result;
+	}
+
+	private int settingForFaceId(@Valid EmployeeVO employeeVO){
+		String emp_code = employeeVO.getEmp_code();
+		System.out.println("setting은 타는지 확인"+emp_code);
+		Map<String, Object> responseBody = new HashMap<>(); //회원마다 map이 따로 만들어져야함
+		int sc = personService.createPersonInGroup(personGroupId,emp_code,responseBody);
+		if(sc==200) {
+			String personId = (String) responseBody.get("personId");
+			employeeVO.setPersonid(personId);
+			responseBody.clear();
+			sc = addFaceToPersonInGroup(employeeVO,responseBody);
+		}
+		return sc;
+	}
+
+	//personGroupId는 DB에 저장된 것을 받아 오는것으로 추후수정
+	final String personGroupId = "77e7ceb5-365f-4ac9-b3bb-aca90151a744"; 
+	//애저 서버에 faceID 추가 & Group 훈련
+	private int addFaceToPersonInGroup(EmployeeVO employeeVO,Map<String, Object> responseBody){
+		MultipartFile multipartFile = employeeVO.getImg1();
+		if(multipartFile==null) return 400;
+		try {
+			byte[] imageByteArray = multipartFile.getBytes();
+			String personId = employeeVO.getPersonid();
+			int sc = personService.addFaceToPersonInGroup(personGroupId, personId, imageByteArray, responseBody);
+			if(sc==200) {
+				String persistedFaceId= (String) responseBody.get("persistedFaceId");
+				employeeVO.setPersistedfaceid(persistedFaceId);
+				int cnt = personService.personGroupTrain(personGroupId, responseBody);
+				if(cnt==202) {
+					sc = 200;
+				}
+			}
+			return sc;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	@Override
+	public int deleteEmp(String emp_code) {
+		return adminemployDAO.deleteEmp(emp_code);
+	}
+
+	@Override
+	public ResultState updateEmp(EmployeeVO employee) {
+		int cnt = adminemployDAO.updateEmp(employee);
+		ResultState result = ResultState.FAIL;
+		if(cnt>0) result = ResultState.OK;
+		return result;
+	}
+
+	@Override
+	public String selectCode() {
+		return adminemployDAO.selectCode();
+	}
+
+	@Override
+	public ResultState insertEmpImage(Image_AttatchVO image_AttatchVO) {
+		int cnt = adminemployDAO.insertEmpImage(image_AttatchVO);
+		ResultState result = ResultState.FAIL;
+		if(cnt>0) result = ResultState.OK;
+		return result;
+	}
+
+	@Override
+	public ResultState updateEmpImage(Image_AttatchVO image_AttatchVO) {
+		int cnt = adminemployDAO.updateEmpImage(image_AttatchVO);
+		ResultState result = ResultState.FAIL;
+		if(cnt>0) result = ResultState.OK;
+		return result;
+	}
+
+	@Override
+	public ResultState deleteEmpImage(String emp_attcode) {
+		int cnt = adminemployDAO.deleteEmpImage(emp_attcode);
+		ResultState result = ResultState.FAIL;
+		if(cnt>0) result = ResultState.OK;
+		return result;
+	}
+
+	@Override
+	public Image_AttatchVO selectImage(String emp_attcode) {
+		return adminemployDAO.selectImage(emp_attcode);
+	}
+	
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

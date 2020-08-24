@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.project.dao.IProjectListDAO">
+<!-- 검색 항목으로 조건 -->
+	<sql id="searchFrag">
+			<trim prefix="where" prefixOverrides="and">
+				<if test="detailSearch!=null">
+					<if test="detailSearch.emp_code!=null and @org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.emp_code)">
+						AND PROJECT_CODE IN (
+							SELECT PROJECT_CODE
+							  FROM PJ_RGROUP
+							 WHERE PRG_CODE IN (
+								SELECT PRG_CODE
+								  FROM PJ_MEMBER
+								 WHERE EMP_CODE = #{detailSearch.emp_code}))
+					</if>
+				</if>	
+				
+				<if test="searchVO!=null and @org.apache.commons.lang3.StringUtils@isNotBlank(searchVO.searchWord)">
+					<choose>
+						<when test="'name'.equals(searchVO.searchType)">
+							AND PROJECT_CODE IN (SELECT PROJECT_CODE
+							                        FROM PJ_RGROUP
+							                        WHERE PRG_CODE IN (SELECT PRG_CODE
+								                                         FROM PJ_MEMBER
+								                                        WHERE EMP_CODE = (SELECT EMP_CODE
+								                                                            FROM EMPLOYEE
+								                                                           WHERE EMP_KOR LIKE '%' || #{searchVO.searchWord} || '%')))
+						</when>
+						<when test="'pjName'.equals(searchVO.searchType)">
+								AND INSTR(PROJECT_NAME, #{searchVO.searchWord}) > 0
+						</when>
+						<when test="'dept'.equals(searchVO.searchType)">
+								AND PROJECT_CODE IN (SELECT PROJECT_CODE
+													FROM PROJECT INNER JOIN DEPARTMENT ON (PROJECT.DEPT_CODE = DEPARTMENT.DEPT_CODE)
+													WHERE DEPT_NAME LIKE '%${searchVO.searchWord}%')
+						</when>
+					</choose>
+					
+				</if>	
+			</trim>
+	</sql>
+
+<!-- 로그인한 유저로 조건 -->	
+	<sql id="searchFrag2">
+		FROM EMPLOYEE A INNER JOIN DEPARTMENT B ON (A.DEPT_CODE = B.DEPT_CODE)
+		INNER JOIN TEAM C ON (A.TEAM_CODE = C.TEAM_CODE)
+		INNER JOIN POSITION D ON (A.POSITION_CODE = D.POSITION_CODE)
+		
+		
+		<trim prefix=" WHERE " prefixOverrides=" AND ">
+			<if test="detailSearch!=null">
+			RETIRE_DATE IS NULL
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.dept_code)">
+					AND A.DEPT_CODE = #{detailSearch.dept_code} 
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.team_code)">
+					AND	C.TEAM_CODE = #{detailSearch.team_code}
+				</if>
+			</if>
+		</trim>        
+	</sql>
+	
+<!-- 프로젝트 목록 조회 -->	
+	<select id="selectProjectCount" resultType="int" parameterType="kr.or.ddit.vo.PagingVO">
+		SELECT COUNT(PROJECT_CODE)
+		FROM PROJECT A INNER JOIN DEPARTMENT B ON (A.DEPT_CODE = B.DEPT_CODE)
+			<include refid="searchFrag" />
+	</select>
+	
+	<resultMap type="kr.or.ddit.vo.ProjectVO" id="projectListMap" autoMapping="true">
+		<id property="project_code" column="PROJECT_CODE"/>
+		<collection property="pj_rgroupList" javaType="java.util.List" ofType="PJ_RgroupVO"  autoMapping="true">
+			<id property="prg_code" column="PRG_CODE"/>
+			<collection property="pj_memberList" javaType="java.util.List" ofType="PJ_MemberVO" autoMapping="true"/>
+		</collection>
+	</resultMap>
+	
+	<select id="selectProjectList" resultMap="projectListMap" parameterType="kr.or.ddit.vo.PagingVO">
+		SELECT ROWNUM RNUM, Y.*, PRG_CODE, PR_CODE, PR_NAME, PJ_MEMCODE, EMP_CODE , EMP_KOR, POSITION_NAME
+		FROM(SELECT PROJECT_CODE, A.DEPT_CODE, PROJECT_NAME, PROJECT_SUM, PROJECT_STAT, PROJECT_IMPORTANT, PROJECT_HIDE
+					, B.DEPT_NAME, C.STANDARD_NAME AS STAT_NAME, D.STANDARD_NAME AS IMPORT_NAME
+					
+			   FROM PROJECT A INNER JOIN DEPARTMENT B ON (A.DEPT_CODE = B.DEPT_CODE)
+			  				  INNER JOIN STANDARD C ON (A.PROJECT_STAT = C.STANDARD_CODE)
+			   				  INNER JOIN STANDARD D ON (A.PROJECT_IMPORTANT = D.STANDARD_CODE)
+			   				  <include refid="searchFrag" />
+			) Y	LEFT OUTER JOIN (SELECT E.PROJECT_CODE, E.PRG_CODE, E.PR_CODE, PR_NAME, PJ_MEMCODE, G.EMP_CODE, H.EMP_KOR, I.POSITION_NAME
+			   				  FROM PJ_RGROUP E INNER JOIN PROJECT_ROLE F ON (E.PR_CODE = F.PR_CODE) 
+								   			   INNER JOIN PJ_MEMBER G ON (E.PRG_CODE = G.PRG_CODE)
+								   			   INNER JOIN EMPLOYEE H ON (G.EMP_CODE = H.EMP_CODE)
+								   			   INNER JOIN POSITION I ON (I.POSITION_CODE = H.POSITION_CODE)
+							 WHERE OUT_MEMBER = 'N') X ON(Y.PROJECT_CODE = X.PROJECT_CODE)
+								WHERE Y.PROJECT_CODE IN(SELECT V.PROJECT_CODE    
+												  FROM (SELECT W.*,ROWNUM RNUM
+							                              FROM (SELECT PROJECT_CODE
+							                                      FROM PROJECT
+							                                       <include refid="searchFrag" />
+							                             ORDER BY PROJECT_CODE ASC) W 
+							      AND OUT_MEMBER = 'N')V
+							      
+			 WHERE V.RNUM BETWEEN  #{startRow} AND #{endRow})
+        ORDER BY RNUM ASC
+	</select>
+		
+<!-- 프로젝트 상세조회 -->
+	<resultMap type="ProjectVO" id="ProjectMap" autoMapping="true">
+		<id property="project_code" column="PROJECT_CODE"/>
+		<collection property="pj_rgroupList" javaType="java.util.List" ofType="PJ_RgroupVO" autoMapping="true">
+			<id property="prg_code" column="PRG_CODE"/>
+			<collection property="pj_memberList" javaType="java.util.List" ofType="PJ_MemberVO" autoMapping="true"/>
+		</collection>
+	</resultMap>
+	
+	<select id="selectProject" parameterType="String" resultMap="ProjectMap">	
+		SELECT Y.*, PRG_CODE, PR_CODE, PR_NAME, PJ_MEMCODE, X.EMP_CODE , EMP_KOR, POSITION_NAME, OUT_MEMBER, EMP_ATTCODE
+		FROM (SELECT PROJECT_CODE, A.DEPT_CODE, DEPT_NAME, PROJECT_NAME, PROJECT_CONTENT, PROJECT_SUM, 
+			   TO_CHAR(PROJECT_START,'YYYY-MM-DD') PROJECT_START, TO_CHAR(PROJECT_END,'YYYY-MM-DD') PROJECT_END, 
+			   A.PROJECT_STAT, C.STANDARD_NAME AS STAT_NAME, A.PROJECT_IMPORTANT, D.STANDARD_NAME AS IMPORT_NAME, PROJECT_HIDE
+		  FROM PROJECT A INNER JOIN DEPARTMENT B ON (A.DEPT_CODE = B.DEPT_CODE)
+			  			 INNER JOIN STANDARD C ON (A.PROJECT_STAT = C.STANDARD_CODE)
+			   			 INNER JOIN STANDARD D ON (A.PROJECT_IMPORTANT = D.STANDARD_CODE)
+		)Y LEFT OUTER JOIN (SELECT E.PROJECT_CODE, E.PRG_CODE, E.PR_CODE, PR_NAME, PJ_MEMCODE, OUT_MEMBER, G.EMP_CODE, H.EMP_KOR, I.POSITION_NAME
+			   				  FROM PJ_RGROUP E INNER JOIN PROJECT_ROLE F ON (E.PR_CODE = F.PR_CODE) 
+								   			   LEFT OUTER JOIN PJ_MEMBER G ON (E.PRG_CODE = G.PRG_CODE)
+								   			   LEFT OUTER JOIN EMPLOYEE H ON (G.EMP_CODE = H.EMP_CODE)
+								   			   LEFT OUTER JOIN POSITION I ON (I.POSITION_CODE = H.POSITION_CODE)
+							) X ON(Y.PROJECT_CODE = X.PROJECT_CODE)
+		LEFT OUTER JOIN (SELECT EMP_ATTCODE, EMP_CODE FROM IMAGE_ATTATCH WHERE IMG_CATAG='IMG300') J ON (X.EMP_CODE = J.EMP_CODE) 
+		WHERE Y.PROJECT_CODE = #{PROJECT_CODE}
+	</select>
+	
+<!-- 프로젝트 팀관리 -->
+	<resultMap type="PJ_RgroupVO" id="pj_rgroupMap" autoMapping="true">
+		<id property="prg_code" column="PRG_CODE"/>
+		<collection property="pj_memberList" javaType="java.util.List" ofType="PJ_MemberVO" autoMapping="true"/>
+	</resultMap>
+	
+	<select id="selectPJ_Rgroup" parameterType="String" resultMap="pj_rgroupMap">
+		SELECT A.PRG_CODE, A.PR_CODE, PROJECT_CODE,
+			   B.PR_NAME, D.EMP_CODE, D.EMP_KOR, D.POSITION_CODE, E.POSITION_NAME
+		FROM PJ_RGROUP A INNER JOIN PROJECT_ROLE B ON (A.PR_CODE = B.PR_CODE) 
+						 LEFT OUTER JOIN PJ_MEMBER C ON (A.PRG_CODE = C.PRG_CODE)
+						 LEFT OUTER JOIN EMPLOYEE D ON (C.EMP_CODE = D.EMP_CODE)
+						 LEFT OUTER JOIN POSITION E ON (D.POSITION_CODE = E.POSITION_CODE)
+		WHERE PROJECT_CODE = #{project_code}
+	</select>
+	
+	<insert id="insertPJ_Member">
+		<selectKey resultType="String" keyProperty="pj_memcode" order="BEFORE">
+			SELECT 'PM' || LPAD(NVL(TO_NUMBER(SUBSTR(MAX(PJ_MEMCODE), 3)), 0)+1, 3, '0') 
+			FROM PJ_MEMBER
+		</selectKey>
+		INSERT INTO PJ_MEMBER(
+			PJ_MEMCODE,
+			PRG_CODE,
+			EMP_CODE,
+			OUT_MEMBER
+		) VALUES(
+			#{pj_memcode}, 
+			#{prg_code}, 
+			#{emp_code},
+			'N')
+	</insert>
+	
+	<select id="selectPJ_MemCode" parameterType="PJ_MemberVO" resultType="String">
+		SELECT PJ_MEMCODE
+		FROM PJ_MEMBER
+		WHERE EMP_CODE = #{emp_code}
+		  AND PRG_CODE = #{prg_code}
+	</select>
+	
+	<delete id="outPJ_Member" parameterType="String">
+	    UPDATE PJ_MEMBER
+	    SET OUT_MEMBER = 'Y'
+	    WHERE PJ_MEMCODE = #{pj_memcode} 	
+	</delete>
+	
+
+<!-- 프로젝트 수정 -->
+	<update id="updateProject" parameterType="projectVO">
+		UPDATE PROJECT
+		SET 
+		DEPT_CODE = #{dept_code},
+		PROJECT_NAME = #{project_name},
+		PROJECT_CONTENT = #{project_content},
+		PROJECT_SUM = #{project_sum},
+		PROJECT_START = #{project_start},		
+		PROJECT_END = #{project_end},
+		PROJECT_STAT = #{project_stat},
+		PROJECT_IMPORTANT = #{project_important},
+		PROJECT_HIDE = #{project_hide}
+		WHERE PROJECT_CODE = #{project_code}
+	</update>
+    
+    <insert id="insertPJ_Rgroup" parameterType="PJ_RgroupVO">
+    	<selectKey resultType="String" keyProperty="prg_code" order="BEFORE">
+			SELECT 'PG' || LPAD(NVL(TO_NUMBER(SUBSTR(MAX(PRG_CODE), 3)), 0)+1, 3, '0') 
+			FROM PJ_RGROUP
+		</selectKey>
+		INSERT INTO PJ_RGROUP(
+			PRG_CODE, 
+			PR_CODE,
+			PROJECT_CODE
+		)VALUES(
+			#{prg_code}, 
+			#{pr_code},
+			#{project_code})
+    </insert>
+    	          	
+	<select id="selectPJ_Member" parameterType="Hashmap" resultType="String">
+		SELECT PJ_MEMCODE 
+		  FROM PJ_MEMBER
+		 WHERE PJ_MEMBER.PRG_CODE = (SELECT PJ_RGROUP.PRG_CODE FROM PJ_RGROUP WHERE PR_CODE = #{pr_code} AND PROJECT_CODE = #{project_code})
+	</select>   
+    	          	
+	<delete id="deletePJ_Rgroup" parameterType="hashmap">
+		DELETE FROM PJ_RGROUP
+		WHERE PR_CODE = #{pr_code}
+		  AND PROJECT_CODE = #{project_code}
+	</delete>
+	
+<!-- 프로젝트 삭제 -->
+
+	<delete id="deleteProject" parameterType="String">
+		DELETE FROM PROJECT
+		WHERE PROJECT_CODE = #{project_code}
+	</delete>
+
+<!-- 프로젝트 등록 -->
+	<select id="selectEmpList" parameterType="pagingVO" resultType="EmployeeVO">
+		SELECT Z.*
+		FROM(
+			SELECT ROWNUM RNUM, A.DEPT_CODE, B.DEPT_NAME, A.TEAM_CODE, C.TEAM_NAME, A.EMP_CODE, A.EMP_KOR, D.POSITION_NAME
+			<include refid="searchFrag2"/>
+		)Z
+		WHERE Z.RNUM BETWEEN #{startRow} AND #{endRow}
+	</select>
+	
+	<select id="selectEmpCount" parameterType="pagingVO" resultType="int">
+		SELECT COUNT(*)
+	    <include refid="searchFrag2"/>
+	</select>
+	
+	<select id="selectRoleList" resultType="Project_roleVO">
+		SELECT PR_CODE, PR_NAME
+		  FROM PROJECT_ROLE
+	</select>
+	
+	<select id="selectPRG_PK" resultType="int">
+		SELECT LPAD(NVL(TO_NUMBER(SUBSTR(MAX(PRG_CODE), 3)), 0)+1, 3, '0') 
+		FROM PJ_RGROUP
+	</select>
+	
+	<insert id="insertProject" parameterType="ProjectVO">
+		<selectKey resultType="String" keyProperty="project_code" order="BEFORE">
+			SELECT 'PJ' || LPAD(NVL(TO_NUMBER(SUBSTR(MAX(PROJECT_CODE), 3)), 0)+1, 3, '0') 
+			FROM PROJECT
+		</selectKey>
+		INSERT ALL
+		INTO PROJECT(
+			PROJECT_CODE,
+			DEPT_CODE,
+			PROJECT_NAME,
+			PROJECT_CONTENT,
+			PROJECT_SUM,
+			PROJECT_START,
+			PROJECT_END,
+			PROJECT_STAT,
+			PROJECT_IMPORTANT,
+			PROJECT_HIDE) 
+		VALUES(
+			#{project_code}, 
+			#{dept_code}, 
+			#{project_name}, 
+			#{project_content,jdbcType=CLOB}, 
+			#{project_sum}, 
+			TO_DATE(#{project_start}), 
+			TO_DATE(#{project_end}), 
+			#{project_stat}, 
+			#{project_important}, 
+			#{project_hide})
+		<if test="pj_rgroupList != null">
+			<foreach collection="pj_rgroupList" item="rgroup">
+				INTO PJ_RGROUP(
+					PRG_CODE,
+					PR_CODE,
+					PROJECT_CODE
+				) VALUES(
+					#{rgroup.prg_code}, 
+					#{rgroup.pr_code}, 
+					#{project_code})				
+			</foreach>
+		</if>
+		SELECT * FROM DUAL
+	</insert>
+	
+
+<!-- 일감등록시 사원이 속한 프로젝트 목록 -->	
+	<select id="selectProjectListForTask" parameterType="String" resultType="ProjectVO">
+		SELECT A.PROJECT_CODE, PROJECT_NAME
+		  FROM PROJECT A INNER JOIN PJ_RGROUP B ON (A.PROJECT_CODE = B.PROJECT_CODE)
+		       INNER JOIN PJ_MEMBER C ON (B.PRG_CODE = C.PRG_CODE)
+		  WHERE C.EMP_CODE = #{emp_code}
+	</select>
+	
+<!-- 프로젝트 진척도 -->
+	<select id="selectPJProgress" parameterType="String" resultType="int">
+		SELECT NVL(AVG(TASK_PROGRESS), 0) PROJECT_PROGRESS
+		  FROM TASK
+		 WHERE PROJECT_CODE = #{project_code}
+	</select>
+	
+<!-- 멤버별 진척도 -->
+	<select id="selectTMProgress" parameterType="String" resultType="int">
+		SELECT NVL(AVG(TASK_PROGRESS), 0) PROJECT_PROGRESS
+		  FROM TASK
+		 WHERE PJ_MEMCODE = #{pj_memcode}
+	</select>
+	
+<!-- 월별 진척도 -->
+	<resultMap type="HashMap" id="monthlyProgressMap">
+		<id property="PROJECT_PROGRESS" column="PROJECT_PROGRESS" />
+	</resultMap>
+
+	<select id="selectMonthlyProgress" parameterType="String" resultMap="monthlyProgressMap">
+		SELECT TO_CHAR(TASK_START,'MM') MONTH, ROUND(AVG(TASK_PROGRESS)) PROJECT_PROGRESS
+		  FROM TASK
+		 WHERE PROJECT_CODE = #{project_code}
+		 GROUP BY TO_CHAR(TASK_START,'MM')
+		 ORDER BY MONTH
+	</select>
+	
+<!-- 최근일감 -->
+	<select id="selectRecentTaskList" parameterType="String" resultType="TaskVO">
+		SELECT D.* 
+		  FROM (SELECT ROWNUM RNUM, TASK_CODE, TASK_NAME, TASK_PROGRESS, B.EMP_CODE, EMP_KOR, TASK_CHANGE  
+		          FROM TASK A INNER JOIN PJ_MEMBER B ON (A.PJ_MEMCODE = B.PJ_MEMCODE)                 
+		         INNER JOIN EMPLOYEE C ON (B.EMP_CODE = C.EMP_CODE)    
+		         WHERE PROJECT_CODE = #{project_code}) D
+		 WHERE D.RNUM BETWEEN 1 AND 5    
+		 ORDER BY D.TASK_CHANGE ASC
+	</select>
+	
+</mapper>

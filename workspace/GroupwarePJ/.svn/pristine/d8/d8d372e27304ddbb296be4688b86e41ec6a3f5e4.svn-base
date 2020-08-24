@@ -1,0 +1,32 @@
+package kr.or.ddit.vo;
+
+import lombok.Data;
+import lombok.ToString;
+
+/**
+ * @author �ۼ��ڸ�
+ * @since 2020. 6. 29
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[�����̷�(Modification Information)]]
+ * ������                          ������               ��������
+ * --------     --------    ----------------------
+ * 2020. 6. 29      �ڼ���       �����ۼ�
+ * Copyright (c) 2020 by DDIT All right reserved
+ * </pre>
+ */
+@Data
+@ToString
+public class Task_AttVO {//�ϰ� ÷������
+
+	private String task_attcode;
+	private String task_code;
+	private String file_path;
+	private Long file_size;
+	private String org_name;
+	private String save_name;
+	private String fancy_size;
+	private String mime; 
+
+}

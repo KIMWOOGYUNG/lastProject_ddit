@@ -1,0 +1,61 @@
+package kr.or.ddit.addr.service;
+
+import java.util.List;
+
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.vo.AddressVO;
+import kr.or.ddit.vo.DepartmentVO;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.TeamVO;
+
+public interface IaddrService {
+	//사내주소록 리스트 보이기 
+	public List<EmployeeVO> addrList(PagingVO<EmployeeVO> pagingVO);
+	
+	//주소록 수량 출력
+//	public int selectaddrCount(PagingVO<AddressVO> pagingVO);
+	
+	public int selectaddrCount(PagingVO<EmployeeVO> pagingVO);
+	
+	/////상세보기 내가한거 
+	public EmployeeVO selectAddress(String emp_code);
+	
+	
+	
+	///팀 리스트 조회
+	public List<EmployeeVO> teamList(PagingVO<EmployeeVO> pagingVO);
+//	public List<TeamVO> readTeam(String team_code);
+	
+	//팀 인원 수 출력
+	public int selectTeamCount(PagingVO<EmployeeVO> pagingVO);
+	
+	//주소록 상세보기 
+	public EmployeeVO selectaddr(String emp_code);
+	
+	
+//	public List<EmployeeVO> addrList(PagingVO<EmployeeVO>)
+	
+	
+	/////////////////////////////////////////////////////////
+	
+	/**
+	 * 사내주소록 검색 조건에 맞는 사내 주소록 사원목록
+	 */
+	public List<EmployeeVO> readAddrList(PagingVO<EmployeeVO> pagingVO);
+	
+	
+	/**
+	 * 부서를 리스트로 출력
+	 * @return
+	 */
+	public List<DepartmentVO> readDepartmentList();
+	
+	
+	/**
+	 * 해당부서에 속해있는 팀을 리스트로 출력
+	 * @param dept_code 부서코드
+	 * @return
+	 */
+	public List<TeamVO> readTeamList(String dept_code);
+}

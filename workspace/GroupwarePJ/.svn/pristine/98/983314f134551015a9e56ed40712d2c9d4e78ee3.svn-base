@@ -1,0 +1,15 @@
+package kr.or.ddit.schedule.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+
+@Controller
+public class Com_ScheduleController {
+	
+	@GetMapping("/plan/companyplan")
+	public String ComSchedule() {
+		String goPage="ComSchedule.plan";
+		return goPage;
+		
+	}
+}

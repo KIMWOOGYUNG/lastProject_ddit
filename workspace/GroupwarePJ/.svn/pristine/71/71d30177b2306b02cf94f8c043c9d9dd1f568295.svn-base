@@ -1,0 +1,13 @@
+package kr.or.ddit.vo;
+
+import lombok.Data;
+
+@Data
+public class PushMessageVO {
+	private String push_code;
+	private String title;
+	private String content;
+	private String receiver;// 사원 코드
+	private String data;
+	private String type;//draft,msg
+}

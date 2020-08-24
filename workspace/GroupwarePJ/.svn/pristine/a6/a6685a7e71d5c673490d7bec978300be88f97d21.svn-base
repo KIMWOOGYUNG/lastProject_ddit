@@ -1,0 +1,101 @@
+package kr.or.ddit.hr_admin.controller;
+
+import java.io.File;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpSession;
+import javax.validation.Valid;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.Errors;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.hr_admin.dao.IEmpinfoStandardDAO;
+import kr.or.ddit.hr_admin.service.IAdminEmployService;
+import kr.or.ddit.hr_admin.service.IImageAttatchService;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.Image_AttatchVO;
+import kr.or.ddit.vo.WorkLogVO;
+
+@Controller
+public class AdminEmpInsertController {
+	
+	@Inject
+	private IEmpinfoStandardDAO infoDAO;
+	
+	@Inject
+	private IAdminEmployService service;
+	
+	@Inject
+	private IImageAttatchService imageservice;
+	
+
+	@ModelAttribute("currentAction")
+	private String attributeSetting(Model model) {
+		model.addAttribute("departnm", infoDAO.selectDepartname());
+		model.addAttribute("teamnm", infoDAO.selectTeamname());
+		model.addAttribute("positionnm", infoDAO.selectPosition());
+		model.addAttribute("jobnm", infoDAO.selectJobtitle());
+		return "/hr/employer/empenroll";
+				
+	}
+	
+	@GetMapping("/hr/employer/empenroll")
+	public String form(Model model) {
+		attributeSetting(model);
+		return "AdminEmpEnroll.hr";
+	}
+	
+	@PostMapping(value = "/hr/employer/empenroll" ,produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public String empenroll(@Valid @ModelAttribute("employee") EmployeeVO employeeVO, Errors errors, Model model, HttpSession session) {
+		System.out.println(employeeVO.toString());
+		EmployeeVO employeeVO1 = (EmployeeVO) session.getAttribute("authUser");
+		String emp_code = employeeVO1.getEmp_code();
+		employeeVO.setEmp_code(emp_code);
+		 
+		String goPage = null;
+		String message = null;
+		if(!errors.hasErrors()) {
+			ResultState result = service.insertEmp(employeeVO);
+			System.out.println(result);
+			switch (result) {
+			case FAIL:
+				goPage = "AdminEmpEnroll.hr";
+				message = "다시 입력하세요";
+				break;
+
+			default:
+				goPage = "AdminEmpManage.hr";
+				message = "insert성공";
+				break;
+			}
+			
+		}else {
+			System.out.println(errors.toString());
+			goPage = "AdminEmpEnroll.hr";
+		}
+		
+		model.addAttribute("message", message);
+		
+		return goPage;
+	}
+	
+//	@GetMapping("/hr/employer/empenroll")
+//	public String download(@PathVariable(required = true) String emp_attcode, Model model) {
+//		Image_AttatchVO attatch = imageservice.insertImage(emp_attcode);
+//	
+//		model.addAttribute("attatch" , attatch);
+//		return "ImageDownloadView";
+//	}
+	
+	
+	
+	
+}

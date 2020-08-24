@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.project.dao.IMyProjectListDAO">
+	<sql id="searchFrag">
+		FROM PROJECT C, DEPARTMENT D
+		WHERE C.DEPT_CODE = D.DEPT_CODE
+		<where>
+			<if test="searchVO!=null and @org.apache.commons.lang3.StringUtils@isNotBlank(searchVO.searchWord)">
+			C.DEPT_CODE = (
+				<choose>
+					<when test="'department'.equals(searchVO.searchType)">
+						SELECT B.DEPT_CODE
+						FROM PROJECT A INNER JOIN DEPARTMENT B ON (A.DEPT_CODE = B.DEPT_CODE)
+						WHERE B.DEPT_NAME LIKE '%' || #{searchVO.searchWord} || '%'
+					</when>
+					<when test="'name'.equals(searchVO.searchType)">
+						INSTR(PROJECT_NAME, #{searchVO.searchWord}) > 0
+					</when>
+					<when test="'employee'.equals(searchVO.searchType)">
+						SELECT C.DEPT_CODE
+						FROM PROJECT A INNER JOIN EMPLOYEE B ON (A.EMP_CODE = B.EMP_CODE), DEPARTMENT C
+						WHERE B.EMP_NAME LIKE '%' || #{searchVO.searchWord} || '%'
+					</when>
+					<otherwise>
+						SELECT B.DEPT_CODE
+						FROM PROJECT A INNER JOIN DEPARTMENT B ON (A.DEPT_CODE = B.DEPT_CODE)
+						WHERE B.DEPT_NAME LIKE '%' || #{searchVO.searchWord} || '%'
+						OR INSTR(PROJECT_NAME, #{searchVO.searchWord}) > 0
+						OR SELECT B.EMP_NAME
+							FROM PROJECT A INNER JOIN EMPLOYEE B ON (A.EMP_CODE = B.EMP_CODE)
+							WHERE B.EMP_NAME LIKE '%' || #{searchVO.searchWord} || '%'
+					</otherwise>
+				</choose>
+			)
+			</if>
+		</where>
+	</sql>
+	
+	<select id="selectProjectCount" resultType="int" parameterType="kr.or.ddit.vo.PagingVO">
+		SELECT COUNT(PROJECT_CODE)
+		<include refid="searchFrag" />
+	</select>
+	
+	<select id="selectProjectList" resultType="kr.or.ddit.vo.ProjectVO" parameterType="kr.or.ddit.vo.PagingVO">
+		SELECT A.*
+		FROM (
+			SELECT ROWNUM RNUM, PROJECT_CODE, DEPT_NAME AS DEPT_CODE, PROJECT_NAME,
+				   PROJECT_PROGRESS, PROJECT_IMPORTANT, PROJECT_STAT
+			<include refid="searchFrag" />
+			ORDER BY PROJECT_CODE ASC
+		) A
+		<![CDATA[
+			WHERE RNUM >= #{startRow} AND RNUM <= #{endRow}
+		]]>
+	</select>
+</mapper>

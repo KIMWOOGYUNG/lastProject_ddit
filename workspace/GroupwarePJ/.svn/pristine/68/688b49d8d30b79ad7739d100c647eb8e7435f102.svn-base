@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.project.dao.IMyProjectListDAO">
+	<sql id="searchFrag">
+		FROM PROJECT A INNER JOIN DEPARTMENT B ON (A.DEPT_CODE = B.DEPT_CODE)
+			<if test="searchVO!=null and @org.apache.commons.lang3.StringUtils@isNotBlank(searchVO.searchWord)">
+				<choose>
+					<when test="'department'.equals(searchVO.searchType)">
+						WHERE B.DEPT_NAME LIKE '%' || #{searchVO.searchWord} || '%'
+					</when>
+					<when test="'name'.equals(searchVO.searchType)">
+						WHERE INSTR(PROJECT_NAME, #{searchVO.searchWord}) > 0
+					</when>
+					<when test="'employee'.equals(searchVO.searchType)">
+						WHERE PROJECT_CODE = (SELECT PROJECT_CODE
+						                        FROM PJ_RGROUP
+						                        WHERE PRG_CODE =(SELECT PRG_CODE
+						                                        FROM PJ_MEMBER
+						                                        WHERE EMP_CODE = (SELECT EMP_CODE
+						                                                            FROM EMPLOYEE
+						                                                            WHERE EMP_KOR LIKE '%' || #{searchVO.searchWord} || '%')))
+					</when>
+					<otherwise>
+						A INNER JOIN DEPARTMENT B ON (A.DEPT_CODE = B.DEPT_CODE)
+						WHERE B.DEPT_NAME LIKE '%' || #{searchVO.searchWord} || '%'
+						OR
+						WHERE INSTR(PROJECT_NAME, #{searchVO.searchWord}) > 0
+						OR
+						WHERE PROJECT_CODE = (SELECT PROJECT_CODE
+						                        FROM PJ_RGROUP
+						                        WHERE PRG_CODE =(SELECT PRG_CODE
+						                                        FROM PJ_MEMBER
+						                                        WHERE EMP_CODE = (SELECT EMP_CODE
+						                                                            FROM EMPLOYEE
+						                                                            WHERE EMP_KOR LIKE '%' || #{searchVO.searchWord} || '%')))
+					</otherwise>
+				</choose>
+			</if>
+	</sql>
+	
+	<select id="selectProjectCount" resultType="int" parameterType="kr.or.ddit.vo.PagingVO">
+		SELECT COUNT(PROJECT_CODE)
+		FROM(SELECT * <include refid="searchFrag" />)
+	</select>
+	
+	<select id="selectProjectList" resultType="kr.or.ddit.vo.ProjectVO" parameterType="kr.or.ddit.vo.PagingVO">
+		SELECT A.*
+		FROM (
+			SELECT ROWNUM RNUM, PROJECT_CODE, DEPT_NAME AS DEPT_CODE, PROJECT_NAME,
+				   PROJECT_PROGRESS, PROJECT_IMPORTANT, PROJECT_STAT
+			<include refid="searchFrag" />
+			ORDER BY PROJECT_CODE ASC
+		) A
+		<![CDATA[
+			WHERE RNUM >= #{startRow} AND RNUM <= #{endRow}
+		]]>
+	</select>
+</mapper>

@@ -1,0 +1,148 @@
+//package kr.or.ddit.addr.service;
+//
+//import java.io.IOException;
+//import java.util.regex.Matcher;
+//import java.util.regex.Pattern;
+//
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
+//import org.springframework.stereotype.Service;
+//
+//import com.microsoft.azure.cognitiveservices.vision.computervision.ComputerVision;
+//import com.microsoft.azure.cognitiveservices.vision.computervision.ComputerVisionClient;
+//import com.microsoft.azure.cognitiveservices.vision.computervision.models.OcrLanguages;
+//import com.microsoft.azure.cognitiveservices.vision.computervision.models.OcrLine;
+//import com.microsoft.azure.cognitiveservices.vision.computervision.models.OcrRegion;
+//import com.microsoft.azure.cognitiveservices.vision.computervision.models.OcrResult;
+//import com.microsoft.azure.cognitiveservices.vision.computervision.models.OcrWord;
+//import com.microsoft.azure.cognitiveservices.vision.customvision.prediction.models.BoundingBox;
+//
+//import kr.or.ddit.vo.Dimension;
+//
+//@Service
+//public class AzureOCRService {
+//	private static final Logger logger = LoggerFactory.getLogger(AzureOCRService.class);
+//	private static String SUBSCRIPTIONKEY = "377de7b42ea34c858f13807d896240d2";
+//	private static String ENDPOINT = "https://namareum.cognitiveservices.azure.com/";
+//	
+//	Dimension info;
+//	
+//	/**
+//	 * @param companyNumber
+//	 * @return
+//	 */
+//	private static String parseCompanyNumber(String companyNumber) {
+//		Pattern regex = Pattern.compile("(\\d{3})\\s*[-_]\\s*(\\d{4})\\s*[-_]\\s*(\\d{4})");
+//		Matcher matcher = regex.matcher(companyNumber);
+//		String numbers = null;
+//		if(matcher.find()) {
+//			numbers = String.format("%s-%s-%s", matcher.group(1), matcher.group(2), matcher.group(3));
+//		}
+//		return numbers;
+//	}
+//	
+//	/**
+//	 * 
+//	 * @param employeeName
+//	 * @return
+//	 */
+//	private static String EmployeeName(String employeeName) {
+//		Pattern regex = Pattern.compile("^[가-힣]*$");
+//		Matcher matcher = regex.matcher(employeeName);
+//		String name = null;
+//		if(matcher.find()) {
+//			name = String.format("%s", matcher);
+//		}
+//		return name;
+//	}
+//
+//	/**
+//	 * 근사치를 적용하여 일정 양식내의 등록번호의 위치와 유사 범위내에 있는 문자를 추출하기 위한 영역 테스트
+//	 * @param boundingBox
+//	 * @return
+//	 */
+//	private static boolean collisionNubmer(String boundingBox, double ratio, Dimension info) {
+//		//범위좌표(충돌 테스트)
+//		BoundingBox baseBox = new BoundingBox().withLeft(info.BASELEFT*ratio)
+//											   .withTop(info.BASETOP*ratio)
+//											   .withWidth(info.BASEWIDTH*ratio)
+//											   .withHeight(info.BASEHEIGHT*ratio);
+//		//진짜좌표(numbers)
+//		String[] numbers = boundingBox.replaceAll("[\\[\\]]", "").split(",");
+//		int idx = 0;
+//		int left = Integer.parseInt(numbers[idx++]);
+//		int top = Integer.parseInt(numbers[idx++]);
+//		int width = Integer.parseInt(numbers[idx++]);
+//		int height = Integer.parseInt(numbers[idx++]);
+//		//좌표와 진짜를 비교(true 일치)
+//		boolean match = Math.abs(left-baseBox.left())<(info.BASELEFTOFFSET*ratio) 
+//				&& Math.abs(top-baseBox.top())<(info.BASETOPOFFSET*ratio) 
+//				&& Math.abs(width-baseBox.width())<(info.BASEWIDTHOFFSET*ratio) 
+//				&& Math.abs(height-baseBox.height())<(info.BASEHEIGHTOFFSET*ratio);
+//		logger.debug("{}, {}, {}, {} [{}, {}, {}, {}] ==> {}", 
+//				(int)baseBox.left(), (int)baseBox.top(), (int)baseBox.width(), (int)baseBox.height(), left, top, width, height, match);
+//		return match;
+//	}
+//	
+//	// 리턴타입 VO
+//	public void recognizeTextOCRLocal(ComputerVisionClient compVisClient, byte[] testData, double ratio) throws IOException{
+//		recognizeTextOCR(compVisClient, testData, ENDPOINT, OcrLanguages.KO, ratio);
+//	}
+//	// 리턴타입 VO
+//	public void recognizeTextOCRRemote(ComputerVisionClient compVisClient, String imageURL, double ratio) throws IOException{
+//		recognizeTextOCR(compVisClient, null, imageURL, OcrLanguages.KO, ratio);
+//	}
+//	// 리턴타입 VO
+//	private static void recognizeTextOCR(ComputerVisionClient compVisClient, byte[] testData, String imageURL, OcrLanguages lang, double ratio) throws IOException{
+//		ComputerVision computerVision = compVisClient.computerVision();
+//		OcrResult result = null;
+//		String target = null;
+//		if(testData!=null) {
+//			result = computerVision.recognizePrintedTextInStream()
+//							.withDetectOrientation(true)
+//							.withImage(testData)
+//							.withLanguage(OcrLanguages.KO)
+//							.execute();
+//			target = "Local(classpath)";
+//		}else if(imageURL!=null) {
+//			result = computerVision.recognizePrintedText()
+//					.withDetectOrientation(true)
+//					.withUrl(imageURL)
+//					.withLanguage(OcrLanguages.KO).execute();
+//			target = "Remote URL";
+//		}else {
+//			throw new IllegalArgumentException("문자를 추출할 이미지가 없음.");
+//		}
+//		
+//		logger.info("{} Image Analysis ==============================================", target);
+//		
+//		logger.info("언어 : {}", result.language());
+//		logger.info("글자 각도 : {}", result.textAngle());
+//		logger.info("글자 방향 : {}", result.orientation());
+//		
+//		boolean firstWord = true;
+//		String companyNumber = null;
+//		String employeeName = null;
+//		for( OcrRegion region : result.regions()) {
+//			for(OcrLine line :  region.lines()) {
+//				StringBuffer lineBuffer = new StringBuffer();
+//				for( OcrWord word  : line.words()) {
+//					if(firstWord) {
+//						logger.debug("첫번째 줄의 첫단어 - {} : [{}]" , word.text(), word.boundingBox());
+//						firstWord = false;
+//					}
+//					lineBuffer.append(word.text()+"\t");
+//				}
+//				if(collisionNubmer(line.boundingBox(), ratio, null)) {
+//					companyNumber = String.format("%s[%s]", lineBuffer.toString(), line.boundingBox());
+////					employeeName = String.format("%s[%s]", lineBuffer.toString(), line.boundingBox());
+//				}
+//				logger.debug("{}[{}]", lineBuffer, line.boundingBox());
+//			}
+//		}
+//		if(companyNumber!=null) {
+//			logger.info("이름 : {}\n", EmployeeName(employeeName)); //vo setter에 넘기기, 
+//			logger.info("Cellular : {}\n", parseCompanyNumber(companyNumber));
+//		}
+//	}
+//}

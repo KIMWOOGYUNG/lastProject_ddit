@@ -1,0 +1,73 @@
+package kr.or.ddit.login_logout.controller;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpSession;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.login_logout.service.LoginServiceImpl;
+import kr.or.ddit.vo.EmployeeVO;
+
+
+
+@Controller
+@RequestMapping("/")
+public class LoginController {
+	
+	@Inject
+	LoginServiceImpl service;
+	
+	@GetMapping
+    public String login(HttpSession session) {
+		Object empVO = session.getAttribute("authUser");
+		if(empVO != null) {
+			return "redirect:/index";
+		}else {
+			return "main/login";
+		}
+    }
+	@GetMapping("logout")
+	public String logout(HttpSession session) {
+		session.removeAttribute("authUser");
+		return "redirect:/";
+	}
+	
+	@PostMapping
+	public String loginCheck(RedirectAttributes redirectAttributes,
+			HttpSession session,
+			@RequestParam(required = false) String emp_code, 
+			@RequestParam(required = false) String emp_pw ) { //성공 실패 판별
+		String goPage = null;
+		String message = null;
+		
+		if(StringUtils.isBlank(emp_code) || StringUtils.isBlank(emp_pw) ) {
+			goPage = "redirect:/";
+			message = "사원번호,비밀번호 모두 입력해주세요.";
+		}else {
+			EmployeeVO employeeVO = new EmployeeVO(emp_code,emp_pw);
+			ResultState result = service.checkEmployeeCode(employeeVO); //이게 success를 반환하나?ㅇㅇ
+			
+			if(ResultState.SUCCESSES.equals(result)) { //로그인 성공
+				employeeVO = service.getEmpInfo(employeeVO);
+				goPage = "redirect:/index";
+				session.setAttribute("authUser", employeeVO);
+			}else {
+				goPage = "redirect:/";
+				message = "존재하지 않는 사원번호거나 비밀번호가 틀렸습니다.";
+				
+			}
+			
+		}
+		redirectAttributes.addFlashAttribute("message", message);
+		return goPage;
+		
+	}
+	
+}

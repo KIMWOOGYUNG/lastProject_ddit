@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.project.dao.ITaskListDAO">
+	<sql id="searchFrag">
+		<trim prefix="where" prefixOverrides="and">
+			<if test="detailSearch.project_code!=null and @org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.project_code)">
+	  	 	 	<choose>
+	  	 	 		<when test="detailSearch.emp_code_task!=null and @org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.emp_code_task)">
+							 
+						AND TASK_CODE IN ( 
+						    SELECT TASK_CODE 
+						    FROM TASK 
+						    WHERE PJ_MEMCODE IN ( 
+						        SELECT PJ_MEMCODE 
+						        FROM PJ_MEMBER 
+						        WHERE PRG_CODE IN (
+						            SELECT PRG_CODE 
+						            FROM PJ_RGROUP 
+						            WHERE PROJECT_CODE = #{detailSearch.project_code})) 
+						          AND PJ_MEMCODE IN (
+						            SELECT PJ_MEMCODE 
+						            FROM PJ_MEMBER 
+						            WHERE EMP_CODE = #{detailSearch.emp_code_task})
+						   AND PROJECT_CODE = #{detailSearch.project_code}
+						   ) 
+	  	 	 		</when>
+	  	 	 		
+	  	 	 		<when test="detailSearch.emp_code_task==null and @org.apache.commons.lang3.StringUtils@isBlank(detailSearch.emp_code_task)">
+	  	 	 			AND	TASK_CODE IN ( 
+						    SELECT TASK_CODE 
+						    FROM TASK 
+						    WHERE PJ_MEMCODE IN ( 
+						          SELECT PJ_MEMCODE 
+						          FROM PJ_MEMBER 
+						          WHERE PRG_CODE IN (
+						              SELECT PRG_CODE 
+						              FROM PJ_RGROUP 
+						              WHERE PROJECT_CODE = #{detailSearch.project_code})))
+						 AND PROJECT_CODE = #{detailSearch.project_code}
+	  	 	 		</when>
+	  	 	 		
+	  	 	 	</choose>
+			 </if>
+		
+	  	 	 
+			 <if test="detailSearch.project_code==null and @org.apache.commons.lang3.StringUtils@isBlank(detailSearch.project_code)">
+			 	<choose>
+			 		<when test="detailSearch.emp_code_task!=null and @org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.emp_code_task)">
+	  	 	 			AND TASK_CODE IN ( 
+						    SELECT TASK_CODE 
+						    FROM TASK 
+						    WHERE PJ_MEMCODE IN ( 
+						        SELECT PJ_MEMCODE 
+						        FROM PJ_MEMBER 
+						        WHERE EMP_CODE = #{detailSearch.emp_code_task}
+						        ))
+	  	 	 		</when>
+			 	
+	  	 	 		<when test="detailSearch.emp_code_task==null and @org.apache.commons.lang3.StringUtils@isBlank(detailSearch.emp_code_task)">
+	  	 	 			AND TASK_CODE IN ( 
+						    SELECT TASK_CODE 
+						    FROM TASK 
+						    WHERE PJ_MEMCODE IN ( 
+						        SELECT PJ_MEMCODE 
+						        FROM PJ_MEMBER )) 
+	  	 	 		</when>
+	  	 	 		
+	  	 	 	</choose>
+			 </if>
+			 
+			 <if test="searchVO!=null and @org.apache.commons.lang3.StringUtils@isNotBlank(searchVO.searchWord)">
+			 	<choose>
+			 		<when test="'name'.equals(searchVO.searchType)">
+			 			AND INSTR(TASK_NAME, #{searchVO.searchWord}) > 0
+			 		</when>
+			 		<when test="'employee'.equals(searchVO.searchType)">
+			 			AND F.EMP_KOR LIKE '%' || #{searchVO.searchWord} || '%'
+			 		</when>
+			 	</choose>
+			 </if>
+		</trim>
+	</sql>
+	
+	<select id="selectTaskCount" resultType="int" parameterType="PagingVO">
+		SELECT COUNT(*)
+		FROM TASK A INNER JOIN STANDARD B ON (A.TASK_TYPE = B.STANDARD_CODE)
+		            INNER JOIN STANDARD C ON (A.TASK_STAT = C.STANDARD_CODE)
+		            INNER JOIN STANDARD D ON (A.TASK_IMPORTANT = D.STANDARD_CODE)
+		            INNER JOIN PJ_MEMBER E ON (A.PJ_MEMCODE = E.PJ_MEMCODE)
+		            INNER JOIN EMPLOYEE F ON (E.EMP_CODE = F.EMP_CODE)
+		<include refid="searchFrag" />
+	</select>
+	
+	<select id="selectTaskList" resultType="TaskVO" parameterType="PagingVO">
+		SELECT G.*
+		FROM (
+			SELECT ROWNUM RNUM, TASK_CODE, TASK_NAME, B.STANDARD_NAME TASK_TYPE, C.STANDARD_NAME TASK_STAT, D.STANDARD_NAME TASK_IMPORTANT, F.EMP_KOR, TO_CHAR(TASK_CHANGE,'YYYY-MM-DD') TASK_CHANGE, TASK_PROGRESS
+			FROM TASK A INNER JOIN STANDARD B ON (A.TASK_TYPE = B.STANDARD_CODE)
+		            INNER JOIN STANDARD C ON (A.TASK_STAT = C.STANDARD_CODE)
+		            INNER JOIN STANDARD D ON (A.TASK_IMPORTANT = D.STANDARD_CODE)
+		            INNER JOIN PJ_MEMBER E ON (A.PJ_MEMCODE = E.PJ_MEMCODE)
+		            INNER JOIN EMPLOYEE F ON (E.EMP_CODE = F.EMP_CODE)
+			<include refid="searchFrag" />
+			ORDER BY TASK_CODE ASC
+		) G
+		<![CDATA[
+			WHERE RNUM >= #{startRow} AND RNUM <= #{endRow}
+		]]>   
+	</select>
+	
+	<resultMap type="TaskVO" id="taskMap" autoMapping="true">
+		<id property="task_code" column="TASK_CODE"/>
+		<collection property="task_attList" javaType="java.util.List" ofType="Task_AttVO" autoMapping="true" />
+	</resultMap>
+	
+	<select id="selectTask" parameterType="String" resultMap="taskMap">
+		SELECT A.TASK_CODE, TASK_NAME, B.STANDARD_NAME AS TASK_TYPE, C.STANDARD_NAME AS TASK_STAT, D.STANDARD_NAME AS TASK_IMPORTANT,        
+		        A.PJ_MEMCODE, G.EMP_KOR AS EMP_KOR, TO_CHAR(TASK_CHANGE, 'YYYY-MM-DD') TASK_CHANGE, TO_CHAR(TASK_START, 'YYYY-MM-DD') TASK_START, 
+		        TO_CHAR(TASK_END, 'YYYY-MM-DD') TASK_END, TASK_PROGRESS, A.PROJECT_CODE, TASK_CONTENT, E.PROJECT_NAME, 
+		        H.TASK_ATTCODE, H.FILE_PATH, H.FILE_SIZE, H.ORG_NAME, H.SAVE_NAME       
+        FROM TASK A INNER JOIN STANDARD B ON (A.TASK_TYPE = B.STANDARD_CODE)       
+	        INNER JOIN STANDARD C ON (A.TASK_STAT = C.STANDARD_CODE)       
+	        INNER JOIN STANDARD D ON (A.TASK_IMPORTANT = D.STANDARD_CODE)       
+	        INNER JOIN PROJECT E ON (A.PROJECT_CODE = E.PROJECT_CODE)            
+	        INNER JOIN PJ_MEMBER F ON (A.PJ_MEMCODE = F.PJ_MEMCODE)          
+	        INNER JOIN EMPLOYEE G ON (F.EMP_CODE = G.EMP_CODE)          
+	        LEFT OUTER JOIN TASK_ATT H ON (A.TASK_CODE = H.TASK_CODE) 
+		 WHERE A.TASK_CODE = #{task_code}
+	</select>
+	
+	<select id="selectPJ_Member" parameterType="String" resultType="String">
+		SELECT PJ_MEMCODE FROM PJ_MEMBER WHERE EMP_CODE = #{emp_code}
+	</select>
+	
+	<insert id="insertTask" parameterType="TaskVO">
+		<selectKey resultType="String" keyProperty="task_code" order="BEFORE">
+			SELECT 'TS' || LPAD(NVL(TO_NUMBER(SUBSTR(MAX(TASK_CODE), 3)), 0)+1, 3, '0') 
+			FROM TASK
+		</selectKey>
+		INSERT INTO TASK (
+		    TASK_CODE, TASK_NAME, TASK_TYPE, TASK_STAT, TASK_IMPORTANT,
+		    PJ_MEMCODE, TASK_CHANGE, TASK_START, TASK_END, TASK_PROGRESS, PROJECT_CODE, TASK_CONTENT
+		) VALUES (
+		   #{task_code}, #{task_name,jdbcType=VARCHAR}, #{task_type,jdbcType=VARCHAR}, #{task_stat,jdbcType=VARCHAR}, #{task_important,jdbcType=VARCHAR}
+		   , #{pj_memcode,jdbcType=VARCHAR}, SYSDATE, #{task_start,jdbcType=DATE}, #{task_end,jdbcType=DATE}, #{task_progress,jdbcType=NUMERIC}
+		   , #{project_code,jdbcType=VARCHAR}, #{task_content,jdbcType=CLOB}
+		)
+	</insert>
+	
+	<delete id="deleteTask" parameterType="String">
+		DELETE FROM TASK
+		WHERE TASK_CODE = #{task_code}
+	</delete>
+	
+	
+</mapper>

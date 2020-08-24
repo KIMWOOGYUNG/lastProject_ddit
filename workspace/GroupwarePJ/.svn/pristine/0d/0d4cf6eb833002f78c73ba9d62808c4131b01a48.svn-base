@@ -1,0 +1,113 @@
+package kr.or.ddit.project.controller;
+
+import java.util.List;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpSession;
+import javax.validation.Valid;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.Errors;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.project.dao.IPJStandardDAO;
+import kr.or.ddit.project.service.IProjectListService;
+import kr.or.ddit.project.service.ITaskListService;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.ProjectVO;
+import kr.or.ddit.vo.TaskVO;
+
+@Controller
+public class TaskFormController {
+	
+	@Inject
+	ITaskListService service;
+	@Inject
+	IPJStandardDAO stdDao;
+	@Inject
+	IProjectListService pjService;
+	
+	private void attibuteSetting(Model model){
+		model.addAttribute("deptList", stdDao.selectDept());
+		model.addAttribute("impList", stdDao.selectImportant());
+		model.addAttribute("sttList", stdDao.selectStatus());
+		model.addAttribute("tskList", stdDao.selectTaskType());  
+	}
+	
+	//일감 등록 폼
+	@GetMapping("/project/newTask/{whoseTask}/{project_code}")
+	public String newTask(@ModelAttribute("task") TaskVO task, Model model, HttpSession session, @PathVariable String whoseTask, @PathVariable String project_code, @ModelAttribute(name="projectCommon") ProjectVO projectVO) {
+		attibuteSetting(model);
+		
+		EmployeeVO employeeVO = (EmployeeVO) session.getAttribute("authUser");
+//		PJ_RgroupVO rgroupVO = service.selectProjectMembers(project_code);
+		
+//		System.out.println(projectVO.toString());//모든일감에서 등록하면 null나옴.
+		List<ProjectVO> projectList = pjService.selectProjectListForTask(employeeVO.getEmp_code());
+		model.addAttribute("projectListForTask", projectList);
+		model.addAttribute("authUser", employeeVO);
+		model.addAttribute("project", projectVO);
+		model.addAttribute("state","insertTask");
+		
+		return "newTask.project";
+	}
+	
+	//일감 등록
+	@PostMapping(value = "/project/insertTask", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public String insertTask(@Valid @ModelAttribute("task") TaskVO taskVO, Errors errors, Model model, HttpSession session, RedirectAttributes redirectAttributes, @RequestParam String prg_code) {
+		EmployeeVO employeeVO = (EmployeeVO) session.getAttribute("authUser");
+		
+		String emp_code = employeeVO.getEmp_code();
+		taskVO.setEmp_code_task(emp_code);
+//		map.put("emp_code", emp_code);
+//		map.put("project_code", taskVO.getProject_code());
+//		String pj_memcode = service.selectPJ_Member(map);
+		if(taskVO.getPrg_code() == null || taskVO.getPrg_code().equals("null")) {
+			ProjectVO searchPrg = new ProjectVO();
+			String project_code = taskVO.getProject_code();
+			searchPrg.setProject_code(project_code);
+			searchPrg.setEmp_code(emp_code);
+			prg_code = service.selectPrgCode(searchPrg);
+			taskVO.setPrg_code(prg_code);
+		}
+		String pj_memcode = service.selectPJ_Member(taskVO);
+		taskVO.setPj_memcode(pj_memcode);
+		
+		
+		String goPage = null;
+		String message = null;
+		if(!errors.hasErrors()) {
+			ResultState result = service.insertTask(taskVO);
+			System.out.println(result);
+			switch (result) {
+			case FAIL:
+				goPage = "newTask.project";
+				message = "다시 입력하세요";
+				model.addAttribute("message", message);
+				break;
+
+			default:
+				goPage = "redirect:/project/tasklist/"+taskVO.getProject_code()+"/"+emp_code;
+				message = "insert성공";
+				redirectAttributes.addFlashAttribute("message", message);
+				break;
+			}
+			
+		}else {
+			goPage = "newTask.project";
+			model.addAttribute("message", message);
+		}
+		
+		
+		return goPage;
+	}
+	
+}

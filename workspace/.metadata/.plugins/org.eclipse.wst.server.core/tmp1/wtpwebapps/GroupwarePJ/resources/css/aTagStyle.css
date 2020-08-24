@@ -1,0 +1,9 @@
+@charset "UTF-8";
+a:hover.url-link{
+	font-weight: 700;
+	text-decoration: underline;
+}
+
+a.url-link{
+	font-weight: 700;
+}

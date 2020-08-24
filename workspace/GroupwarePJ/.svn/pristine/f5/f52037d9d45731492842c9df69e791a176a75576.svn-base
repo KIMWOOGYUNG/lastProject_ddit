@@ -1,0 +1,169 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+
+<script src="${cPath }/resources/ckeditor/ckeditor.js"></script>
+
+<h2>보고서 작성</h2>
+
+<table class="w-100" id="apprSettingArea">
+	<tr>
+		<td style="width:150px"><button class="btn btn-primary btn-sm" data-type="apprLine" data-toggle="modal" data-target="#addrModal" >
+<i class=" fas fa-save"></i> 결제라인등록 
+</button></td>
+		<td ><input id="apprLineArea" style="width:80%" type="text" ></td>
+	</tr>
+	<tr>
+		<td><button class="btn btn-primary btn-sm" data-type="rg1Line" data-toggle="modal" data-target="#addrModal" readonly>
+<i class=" fas fa-save"></i> 참조자등록 
+</button></td>
+		<td><input id="rg1LineArea" style="width:80%" type="text"></td>
+	</tr>
+	<tr>
+		<td><button class="btn btn-primary btn-sm" data-type="rg2Line" data-toggle="modal"  data-target="#addrModal">
+<i class=" fas fa-save"></i> 열람권자등록 
+</button></td>
+		<td><input id="rg2LineArea" style="width:80%" type="text"></td>
+	</tr>
+		<tr>
+		<td><button class="btn btn-primary btn-sm" data-type="instead" data-toggle="modal" data-target="#addrModal">
+<i class=" fas fa-save"></i> 대결권자등록 
+</button></td>
+		<td><input id="insteadArea" style="width:80%" type="text"></td>
+	</tr>
+	
+	</tr>
+		<tr>
+		<td>제목 : </td>
+		<td><input id="title" style="width:80%" type="text"></td>
+	</tr>
+</table>
+
+<!-- Modal -->
+<div class="modal fade" id="addrModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        
+        <h4 class="modal-title" id="myModalLabel">라인 등록</h4>
+      </div>
+      <div  class="modal-body">
+		 <nav class="mt-2">
+       		<ul id="myModalBody" class="nav nav-pills nav-sidebar flex-column treeview" role="menu" data-accordion="false" data-widget="treeview">
+       			<jsp:include page="setAddList.jsp"/>
+       		</ul>	
+     	 </nav>
+		</div>
+      <div id="myModalFooter"class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">취소</button>
+        <button type="button" class="btn btn-primary" data-dismiss="modal">등록</button>
+<!--         <button type="button" id="addApprLineBtn" class="btn btn-success" data-dismiss="modal">결재라인 추가</button> -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<textarea class="form-control" name="bo_content" id="bo_content">
+${board.bo_content }
+</textarea>
+<button class="btn btn-primary btn-sm" href="#">
+<i class="fas fa-folder">
+</i>
+저장
+</button>
+<button class="btn btn-primary btn-sm" href="#">
+<i class="fas fa-download">
+</i>
+상신
+</button>
+<script type="text/javascript">
+$("#apprSettingArea").find("input").attr("readonly",true);
+$("#apprSettingArea").on("click","button",function(){
+	let sendNode = $("#tree2").dynatree("getRoot");
+	let pos = $(this).attr("data-type");
+	
+	$.ajax({
+		url:"${cPath}/approval/approvalwrite/"+pos
+		,dataType:'json'
+		,success : function(resp){
+			sendnode = $("#tree2").dynatree("getTree").selectKey("group");
+			sendnode.removeChildren();
+			let basetree = $("#tree1").dynatree("getTree");
+			let basenode = $("#tree1").dynatree("getRoot");
+			if(basetree.selectKey("group") == null ){
+				basenode.addChild({title: "즐겨찾기", key: "group",isFolder:true});
+			}
+			
+			topnode = basetree.selectKey("group");
+			topnode.removeChildren();
+			$.each(resp,function(idx,group){
+				let line_name = group.line_name;
+				let line_code = group.line_code;
+				topnode.addChild({title: line_name, key: line_code,isFolder:true});
+					
+				if(group.empList!=null){
+					let bottomnode = basetree.selectKey(line_code);
+					$.each(group.empList,function(idy,emp){
+						let emp_code = emp.emp_code;
+						let emp_name = emp.emp_kor;
+						let position_name = emp.position_name;
+						bottomnode.addChild({title:emp_name+"("+position_name+")", key: emp_code});
+					})
+				}
+			})
+em,			basenode.visit(function (childNode) {
+		        childNode.expand(false);
+		    });
+
+		}
+		,error :function(error){
+			console.log(error);
+		}
+	})
+	
+	$("#addrModal").modal();
+})
+
+// $("#myModalFooter").on("click",".btn-primary",function(){
+// 	let inputData = $(".apprChk:checked").parent().parent().find("p");
+// 	console.log(inputData);
+// 	let data_type = $("#myModalFooter").attr("data-tye");
+// 	let data = "";
+// 	$.each(inputData,function(idx,input){
+// 		if(idx != 0){
+// 			data += ", ";
+// 		}
+// 		data += $(input).text();
+// 		console.log(data);
+// 	}) 
+	
+	
+// 	if(data_type == 'rg1Line'){
+// 		$("#rg1LineArea").val(data);
+// 	}else if(data_type == 'rg2Line'){
+// 		$("#rg2LineArea").val(data);
+// 	}else if(data_type == 'apprLine'){
+// 		$("#apprLineArea").val(data);
+// 	}else if(data_type == 'instead'){
+// 		$("#insteadArea").val(data);
+// 	} 
+// });
+
+// var modalBody = $("#myModalBody");
+// 	$("button[data-target='#addrModal']").on("click",function(){
+// 		let data_type = $(this).attr("data-type")
+		
+// 		$("#myModalFooter").attr("data-tye",data_type);
+// 	})	
+	
+	CKEDITOR.replace('bo_content',{
+		 // Adding drag and drop image upload.
+	      uploadUrl: '${pageContext.request.contextPath}/board/image?command=QuickUpload&type=Files&responseType=json',
+
+	     // Configure your file manager integration. This example uses CKFinder 3 for PHP.
+	      filebrowserImageUploadUrl: '${pageContext.request.contextPath}/board/image?command=QuickUpload&type=Images',
+	});
+	
+</script>
+
+
+

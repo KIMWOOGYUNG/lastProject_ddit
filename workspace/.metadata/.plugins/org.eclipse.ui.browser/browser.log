@@ -1,0 +1,30 @@
+
+8월 14, 2020 09:55:57.180 NEW SESSION
+8월 14, 2020 09:55:57.180 [10892:1788:0814/095557.178:ERROR:device_event_log_impl.cc(208)] [09:55:57.179] Bluetooth: bluetooth_adapter_winrt.cc:1074 Getting Default Adapter failed.
+
+8월 18, 2020 10:06:49.78 NEW SESSION
+8월 18, 2020 10:06:49.78 [5724:6728:0818/100649.076:ERROR:device_event_log_impl.cc(208)] [10:06:49.076] Bluetooth: bluetooth_adapter_winrt.cc:1074 Getting Default Adapter failed.
+8월 18, 2020 19:35:17.934 [5724:6728:0818/193517.933:ERROR:CONSOLE(1232)] "console.assert", source: devtools://devtools/bundled/sdk/sdk.js (1232)
+8월 18, 2020 19:35:20.216 [5724:6728:0818/193520.215:ERROR:CONSOLE(1232)] "console.assert", source: devtools://devtools/bundled/sdk/sdk.js (1232)
+8월 18, 2020 19:35:20.271 [5724:6728:0818/193520.271:ERROR:CONSOLE(1232)] "console.assert", source: devtools://devtools/bundled/sdk/sdk.js (1232)
+8월 18, 2020 19:35:31.922 [5724:6728:0818/193531.921:ERROR:CONSOLE(1232)] "console.assert", source: devtools://devtools/bundled/sdk/sdk.js (1232)
+8월 18, 2020 19:35:34.384 [5724:6728:0818/193534.384:ERROR:CONSOLE(1232)] "console.assert", source: devtools://devtools/bundled/sdk/sdk.js (1232)
+8월 18, 2020 19:35:39.81 [5724:6728:0818/193539.081:ERROR:CONSOLE(1232)] "console.assert", source: devtools://devtools/bundled/sdk/sdk.js (1232)
+8월 18, 2020 19:36:51.471 [5724:6728:0818/193651.471:ERROR:CONSOLE(1232)] "console.assert", source: devtools://devtools/bundled/sdk/sdk.js (1232)
+8월 18, 2020 19:37:01.467 [5724:6728:0818/193701.467:ERROR:CONSOLE(1232)] "console.assert", source: devtools://devtools/bundled/sdk/sdk.js (1232)
+8월 18, 2020 19:37:31.273 [5724:6728:0818/193731.273:ERROR:CONSOLE(1232)] "console.assert", source: devtools://devtools/bundled/sdk/sdk.js (1232)
+8월 18, 2020 19:37:35.274 [5724:6728:0818/193735.274:ERROR:CONSOLE(1232)] "console.assert", source: devtools://devtools/bundled/sdk/sdk.js (1232)
+8월 18, 2020 19:37:39.281 [5724:6728:0818/193739.280:ERROR:CONSOLE(1232)] "console.assert", source: devtools://devtools/bundled/sdk/sdk.js (1232)
+8월 18, 2020 19:37:43.273 [5724:6728:0818/193743.273:ERROR:CONSOLE(1232)] "console.assert", source: devtools://devtools/bundled/sdk/sdk.js (1232)
+
+8월 19, 2020 10:04:34.878 NEW SESSION
+8월 19, 2020 10:04:34.878 [6472:10084:0819/100434.876:ERROR:connection_factory_impl.cc(420)] Failed to connect to MCS endpoint with error -106
+8월 19, 2020 10:04:34.923 [6472:4932:0819/100434.923:ERROR:device_event_log_impl.cc(208)] [10:04:34.923] Bluetooth: bluetooth_adapter_winrt.cc:1074 Getting Default Adapter failed.
+8월 19, 2020 10:05:03.203 [6472:10084:0819/100503.202:ERROR:connection_factory_impl.cc(420)] Failed to connect to MCS endpoint with error -106
+8월 19, 2020 10:05:06.571 [6472:4932:0819/100506.571:ERROR:account_info_fetcher.cc(60)] OnGetTokenFailure: Connection failed (-106).
+8월 19, 2020 11:41:40.451 [6472:10084:0819/114140.451:ERROR:connection_factory_impl.cc(420)] Failed to connect to MCS endpoint with error -106
+8월 19, 2020 11:42:08.795 [6472:10084:0819/114208.794:ERROR:connection_factory_impl.cc(420)] Failed to connect to MCS endpoint with error -106
+8월 19, 2020 11:43:08.722 [6472:10084:0819/114308.721:ERROR:connection_factory_impl.cc(420)] Failed to connect to MCS endpoint with error -106
+8월 19, 2020 11:44:14.660 [6472:10084:0819/114414.660:ERROR:connection_factory_impl.cc(420)] Failed to connect to MCS endpoint with error -105
+8월 19, 2020 13:14:51.751 [6472:4932:0819/131451.751:ERROR:CONSOLE(1232)] "console.assert", source: devtools://devtools/bundled/sdk/sdk.js (1232)
+8월 19, 2020 13:19:41.313 [6472:4932:0819/131941.313:ERROR:CONSOLE(1232)] "console.assert", source: devtools://devtools/bundled/sdk/sdk.js (1232)

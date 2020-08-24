@@ -1,0 +1,103 @@
+package kr.or.ddit.hr_admin.controller;
+
+import java.util.List;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import kr.or.ddit.hr_admin.dao.IEmpinfoStandardDAO;
+import kr.or.ddit.hr_admin.service.IAdminEmployService;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.SearchVO;
+
+@Controller
+public class AdminEmpController {
+	
+	@Inject
+	IAdminEmployService service;
+	@Inject
+	IEmpinfoStandardDAO infoDAO;
+	
+	@GetMapping(value="/hr/employer/entiremanage", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public PagingVO<EmployeeVO> ajaxForlist(
+		@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+		SearchVO searchVO, Model model
+		){
+		adminemployList(currentPage, searchVO, model);
+		return (PagingVO<EmployeeVO>) model.asMap().get("pagingVO");
+	}
+
+	//전 사원 목록
+	@GetMapping("/hr/employer/entiremanage")
+	public String adminemployList(@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+			SearchVO searchVO, Model model) {
+		PagingVO<EmployeeVO> pagingVO = new PagingVO<>();
+		pagingVO.setSearchVO(searchVO);
+		pagingVO.setCurrentPage(currentPage);
+		int totalRecord = service.selectEmpmanageCount(pagingVO);
+		pagingVO.setTotalRecord(totalRecord);
+		
+		List<EmployeeVO> empList = service.selectEmpmanageList(pagingVO);
+		pagingVO.setDataList(empList);
+		
+		model.addAttribute("pagingVO", pagingVO);
+		
+		return "AdminEmpManage.hr";
+	}
+	
+	//퇴사자 관리
+	@GetMapping("/hr/employer/retiremanage")
+	public String retireempmanage() {
+		String goPage = "AdminRtrManage.hr";
+		return goPage;
+	}
+	
+
+	
+	//사원 이름 클릭 후 사원 상세 정보
+	@GetMapping("/hr/employer/detailempinfo/{emp_code}")
+	public String detailempmanage(@PathVariable(name = "emp_code") String emp_code, Model model) {
+	
+		EmployeeVO 	employeevo = service.selectEmpmanage(emp_code);
+		model.addAttribute("employ", employeevo);
+		
+		return "AdminDetailEmp.hr";
+	}
+
+	
+	//사원 삭제(체크박스)
+	@PostMapping("/hr/employer/deleteemp")
+	public String deleteempinfo(@RequestParam String emp_code, Model model, HttpSession session) {
+		
+		if(emp_code.contains(",")) {
+			String[] splited = emp_code.split(",");
+			for(int i = 0; i < splited.length; i++) {
+				service.deleteEmp(splited[i]);
+			}
+		}else {
+			service.deleteEmp(emp_code);
+		}
+		EmployeeVO employeevo = (EmployeeVO) session.getAttribute("authUser");
+		model.addAttribute("who", employeevo.getEmp_code());
+		return "AdminEmpManage.hr";
+		
+	}
+	
+	
+	
+	
+	
+	
+
+}

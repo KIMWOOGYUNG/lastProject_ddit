@@ -1,0 +1,152 @@
+package kr.or.ddit.work.service;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.WorkLogVO;
+import kr.or.ddit.work.dao.IMyWorkLogDAO;
+
+@Service
+public class MyWorkLogServiceImpl implements IMyWorkLogService{
+
+	@Inject
+	private IMyWorkLogDAO dao;
+	
+	// 老老诀公老瘤
+	@Override
+	public ResultState createWorkLogday(WorkLogVO worklogVO) {
+		ResultState result = null;
+		int cnt = dao.insertWorkLogday(worklogVO);
+		if(cnt > 0) {
+			result = ResultState.SUCCESSES;
+		}else {
+			result = ResultState.FAIL;
+		}
+		
+		return result;
+	}
+
+	@Override
+	public WorkLogVO readWorkLogday(String wl_code) {
+		WorkLogVO worklog = dao.selectWorkLogday(wl_code);
+		return worklog;
+	}
+
+	@Override
+	public int readWorkLogCountday(PagingVO<WorkLogVO> pagingVO) {
+		return dao.selectWorkLogCountday(pagingVO);
+	}
+
+	@Override
+	public List<WorkLogVO> readWorkLogListday(PagingVO<WorkLogVO> pagingVO) {
+		return dao.selectWorkLogListday(pagingVO);
+	}
+
+	@Override
+	public ResultState modifyWorkLogday(WorkLogVO worklogVO) {
+		ResultState result = null;
+		int cnt = dao.updateWorkLogday(worklogVO);
+		if(cnt > 0) {
+			result = ResultState.SUCCESSES;
+		}else {
+			result = ResultState.FAIL;
+		}
+		
+		return result;
+	}
+
+	@Override
+	public ResultState removeWorkLogday(WorkLogVO worklogVO) {
+		ResultState result = null;
+		int cnt = dao.deleteWorkLogday(worklogVO.getWl_code());
+		if(cnt > 0) {
+			result = ResultState.SUCCESSES;
+		}else {
+			result = ResultState.FAIL;
+		}
+		
+		return result;
+	}
+
+//-----------------------------------------------------------------------------------------------
+	// 林埃诀公老瘤
+	@Override
+	public ResultState createWorkLogweek(WorkLogVO worklogVO) {
+		ResultState result = null;
+		int cnt = dao.insertWorkLogweek(worklogVO);
+		if(cnt > 0) {
+			result = ResultState.SUCCESSES;
+		}else {
+			result = ResultState.FAIL;
+		}
+		
+		return result;
+	}
+
+	@Override
+	public WorkLogVO readWorkLogweek(String wl_code) {
+		WorkLogVO worklog = dao.selectWorkLogweek(wl_code);
+		return worklog;
+	}
+
+
+	@Override
+	public ResultState modifyWorkLogweek(WorkLogVO worklogVO) {
+		ResultState result = null;
+		int cnt = dao.updateWorkLogweek(worklogVO);
+		if(cnt > 0) {
+			result = ResultState.SUCCESSES;
+		}else {
+			result = ResultState.FAIL;
+		}
+		
+		return result;
+	}
+
+	@Override
+	public ResultState removeWorkLogweek(WorkLogVO worklogVO) {
+		ResultState result = null;
+		int cnt = dao.deleteWorkLogweek(worklogVO.getWl_code());
+		if(cnt > 0) {
+			result = ResultState.SUCCESSES;
+		}else {
+			result = ResultState.FAIL;
+		}
+		
+		return result;
+	}
+	
+//-------------------------------------------------------------------------------------------------
+	// 昏力窃
+	
+
+	@Override
+	public ResultState removeWorkLogtrash(WorkLogVO worklogVO) {
+		ResultState result = null;
+		int cnt = dao.deleteWorkLogtrash(worklogVO.getWl_code());
+		if(cnt > 0) {
+			result = ResultState.SUCCESSES;
+		}else {
+			result = ResultState.FAIL;
+		}
+		return result;
+	}
+
+	@Override
+	public ResultState backWorkLogtrash(WorkLogVO worLogVO) {
+		ResultState result = null;
+		int cnt = dao.backWorkLogtrash(worLogVO);
+		if(cnt > 0) {
+			result = ResultState.SUCCESSES;
+		}else {
+			result = ResultState.FAIL;
+		}
+		
+		return result;
+	}
+}

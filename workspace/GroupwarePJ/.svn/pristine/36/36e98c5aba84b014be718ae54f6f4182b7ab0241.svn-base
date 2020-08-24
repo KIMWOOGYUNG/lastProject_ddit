@@ -1,0 +1,15 @@
+package kr.or.ddit.mypage.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+
+@Controller
+public class MyAttController {
+
+	@GetMapping("/mypage/myAttCalendar")
+	public String myVacation() {
+		String goPage = "myAttCalendar.mypage";
+		return goPage;
+		
+	}
+}

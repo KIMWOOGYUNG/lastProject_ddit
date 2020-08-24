@@ -1,0 +1,101 @@
+package kr.or.ddit.message.controller;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpSession;
+import javax.validation.Valid;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.Errors;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.message.service.IMessageService;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.MessageVO;
+
+@Controller
+public class MsgInsertController {//쪽지쓰기
+	@Inject
+	IMessageService service;
+	
+	@GetMapping("note/writenote")
+	public String writenote() {
+		String goPage="writenote.note";
+		return goPage;
+		
+	}
+	@GetMapping("/note{pos}/writenote") //쪽지쓰기누르면 그 주소로 이동
+	public String form(Model model, HttpSession session) {
+		attributeSetting(model);
+		EmployeeVO empVO = (EmployeeVO) session.getAttribute("authUser");
+		model.addAttribute("authUser", empVO);
+		return "writenote.note";
+	}
+	@PostMapping(value = "/note{pos}/writenote", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public String writemsag(@Valid @ModelAttribute("writer") MessageVO messageVO, Errors errors, Model model
+			,HttpSession session) {
+		EmployeeVO empVO = (EmployeeVO) session.getAttribute("authUser");
+		messageVO.setEmp_sender(empVO.getEmp_code());
+		
+		String goPage = null;
+		String message = null;
+		if(errors.hasErrors()) {
+			ResultState result = service.createmsg(messageVO);
+			switch(result) {
+			case FAIL:
+				goPage ="writenote.note";
+				message ="다시 입력하세요";
+				break;
+				
+				default:
+					goPage="note";
+					message ="insert 성공";
+				    break;
+			}
+		}else {
+			goPage="writenote.note";
+		}
+		model.addAttribute("message", message);
+		return goPage;
+		
+	}
+//	@PostMapping
+//	public String insertnote(
+//			@Validated @ModelAttribute("note") MessageVO msg,
+//			BindingResult errors,
+//			Model model,
+//			@RequestParam(required = false)String currentPage,
+//			RedirectAttributes redirectAttributes
+//			)throws IllegalStateException, IOException{
+//		model.addAttribute("currentAction","/note");
+//		String goPage = null;
+//		String message=null;
+//		if(!errors.hasErrors()) {
+//			ResultState result = service.createmsg(msg);
+//			switch(result) {
+//			case FAIL:
+//				message="내용을 작성해주세요";
+//				goPage = "note/writenote";
+//				break;
+//				default:
+//					goPage="redirect:/note/"+msg.getEmp_sender();
+//					redirectAttributes.addFlashAttribute("lastUpdateNote", msg);
+//					break;
+//			}
+//		}else{
+//				goPage="note/writenote";
+//			
+//		}
+//		model.addAttribute("message",message);
+//		return goPage;
+//
+//}
+	private void attributeSetting(Model model) {
+		// TODO Auto-generated method stub
+		
+	}
+}

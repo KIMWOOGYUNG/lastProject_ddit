@@ -1,0 +1,90 @@
+package kr.or.ddit.hr_admin.controller;
+
+import java.util.List;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import kr.or.ddit.hr_admin.dao.IEmpinfoStandardDAO;
+import kr.or.ddit.hr_admin.service.IAdminDepartService;
+import kr.or.ddit.vo.DepartmentVO;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.SearchVO;
+
+@Controller
+public class AdminDepController {
+	
+	@Inject
+	IAdminDepartService service;
+	
+	@Inject
+	private IEmpinfoStandardDAO infoDAO;
+	
+	@GetMapping(value="/hr/departmentmanage", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public PagingVO<DepartmentVO> ajaxForlist(
+		@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+		SearchVO searchVO, Model model
+		){
+		admindepartList(currentPage, searchVO, model);
+		return (PagingVO<DepartmentVO>) model.asMap().get("pagingVO");
+	}
+	
+	
+	@GetMapping("/hr/departmentmanage")
+	public String admindepartList(@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+			SearchVO searchVO, Model model) {
+		PagingVO<DepartmentVO> pagingVO = new PagingVO<>();
+		pagingVO.setSearchVO(searchVO);
+		pagingVO.setCurrentPage(currentPage);
+		int totalRecord = service.selectDepmanageCount(pagingVO);
+		pagingVO.setTotalRecord(totalRecord);
+		
+		List<DepartmentVO> departList = service.selectDepmanageList(pagingVO);
+		pagingVO.setDataList(departList);
+		
+		model.addAttribute("pagingVO", pagingVO);
+		
+		return "AdminDepManage.hr";
+	}
+	
+	@GetMapping("/hr/employer/depenroll")
+	public String empenroll(Model model) {
+		model.addAttribute("departnm", infoDAO.selectDepartname());
+		return "AdminDepEnroll.hr";
+	}
+	
+	//부서 삭제(체크박스)
+	@PostMapping("/hr/employer/deletedept")
+	public String deletedept(@RequestParam String dept_code, Model model, HttpSession session) {
+	
+		if(dept_code.contains(",")) {
+			String[] splited = dept_code.split(",");
+			for(int i = 0; i < splited.length; i++) {
+				service.deletedept(splited[i]);
+			}
+		}else {
+			service.deletedept(dept_code);
+		}
+		return "AdminDepManage.hr";
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+}

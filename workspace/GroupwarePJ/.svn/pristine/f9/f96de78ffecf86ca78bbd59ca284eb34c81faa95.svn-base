@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.login_logout.dao.ILoginDAO">
+	<select id="selectEmployee" parameterType="kr.or.ddit.vo.EmployeeVO" resultType="kr.or.ddit.vo.EmployeeVO">
+		select A.*, B.DEPT_NAME, C.POSITION_NAME, D.TEAM_NAME
+		  from employee A INNER JOIN DEPARTMENT B ON(A.DEPT_CODE = B.DEPT_CODE)
+		  				  INNER JOIN POSITION C ON(A.POSITION_CODE = C.POSITION_CODE ) 
+		  				  INNER JOIN TEAM D ON(A.TEAM_CODE = D.TEAM_CODE)
+		 where emp_code = #{emp_code}
+	</select>
+	
+	<select id="selectEmpMail" parameterType="String" resultType="kr.or.ddit.vo.EmployeeVO">
+		select emp_mail
+		from employee
+		where emp_code = #{emp_code}
+	</select>
+	
+	<update id="updateEmpPassword" parameterType="EmployeeVO">
+		update employee
+		set emp_pw = #{emp_pw}
+		where emp_code = #{emp_code}
+	</update>
+	
+</mapper>

@@ -1,0 +1,170 @@
+package kr.or.ddit.community.controller;
+
+import javax.inject.Inject;
+import javax.validation.Valid;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import kr.or.ddit.community.dao.IBoardDAO;
+import kr.or.ddit.community.service.IBoardService;
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.vo.BoardVO;
+
+@Controller
+public class BoardModifyController {
+	@Inject
+	IBoardService service;
+	
+	@Inject
+	IBoardDAO dao;
+	
+	@ModelAttribute("methodType")
+	public String methodName() {
+		return "put";
+	}
+	
+	// 수정
+	@GetMapping("/board/boardList/updateBoard/{board_code}/{pos}")
+	public String form(@PathVariable(required = true) String board_code, Model model, @PathVariable(name = "pos") String pos) {
+//		BoardVO board = service.selectBoard(board_code);
+//		model.addAttribute("board", board);
+
+		String goPage = null;
+		
+		model.addAttribute("state", "updateBoard");
+		model.addAttribute("board_code" + board_code);
+		if(!model.containsAttribute("board")) {
+			BoardVO board = service.selectBoard(board_code);
+			model.addAttribute("board",board);
+			model.addAttribute("pos" ,board.getBoard_catag());
+			model.addAttribute("catagList", dao.selectCatagList());
+			
+		if(pos.equals("BOD400")) {
+			goPage = "restaurantForm.community";
+		}else if(pos.equals("BOD100")) {
+			board.setBoard_catag("BOD100");
+			goPage = "boardForm.community";
+		}else if(pos.equals("BOD200")) {
+			board.setBoard_catag("BOD200");
+			goPage = "boardForm.community";
+		}else if(pos.equals("BOD300")) {
+			board.setBoard_catag("BOD300");
+			goPage = "boardForm.community";
+		}else if(pos.equals("BOD500")) {
+			board.setBoard_catag("BOD500");
+			goPage = "boardForm.community";
+		}
+			
+		}
+		return goPage;
+	}
+	
+	@PostMapping("/board/boardList/updateBoard/{board_code}/{pos}")
+	public String update(@Valid @ModelAttribute("board") BoardVO board, BindingResult errors,
+			Model model, RedirectAttributes redirectAttributes, @PathVariable(name = "pos") String pos
+			) {
+		
+		String goPage = null;
+		String message = null;
+		
+		
+		if(!errors.hasErrors()) {
+			ResultState result = service.updateBoard(board);
+			switch(result) {
+			case FAIL:
+				message = "boardList.community";
+				redirectAttributes.addFlashAttribute("board", board);
+				if(pos.equals("BOD400")) {
+					board.setBoard_catag("BOD400");
+					goPage = "restaurantForm.community";
+				}else{
+					goPage = "boardForm.community";
+				}
+				break;
+			default:
+				if(pos.equals("BOD100")) {
+					board.setBoard_catag("BOD100");
+					goPage = "boardList.community";
+				}else if(pos.equals("BOD200")){
+					board.setBoard_catag("BOD200");
+					goPage = "boardList.community";
+				}else if(pos.equals("BOD300")){
+					board.setBoard_catag("BOD300");
+					goPage = "boardList.community";
+				}else if(pos.equals("BOD400")){
+					board.setBoard_catag("BOD400");
+					goPage = "boardList.community";
+				}else if(pos.equals("BOD500")){
+					board.setBoard_catag("BOD500");
+					goPage = "boardList.community";
+				}else {
+					
+				}
+				break;
+			}
+		}else {
+			goPage = "boardForm.community";
+			redirectAttributes.addFlashAttribute("board", board);
+			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.board", errors);
+		}
+		
+		
+		model.addAttribute("message", message);
+		model.addAttribute("board_catag", pos);
+		model.addAttribute("catagList", dao.selectCatagList());
+		
+		return goPage;
+	}
+	
+	// 삭제
+	@PostMapping("/board/boardList/deleteBoard/{board_code}/{pos}")
+	public String delete(@RequestParam String board_code, @PathVariable(name = "pos") String pos, Model model) {
+		BoardVO board = new BoardVO();
+		
+		String goPage = null;
+		ResultState result = null;
+
+		result = service.deleteBoard(board_code);
+		
+//		BOD100	공지사항	Notice
+//		BOD200	자유게시판	Freeboard
+//		BOD300	사내동호회	Internalclub
+//		BOD400	맛집		Restaurant
+//		BOD500	마켓		Market 
+		
+		if(pos.equals("BOD100")) {
+			board.setBoard_catag("BOD100");
+		}else if(pos.equals("BOD200")){
+			board.setBoard_catag("BOD200");
+		}else if(pos.equals("BOD300")){
+			board.setBoard_catag("BOD300");
+		}else if(pos.equals("BOD400")){
+			board.setBoard_catag("BOD400");
+		}else if(pos.equals("BOD500")){
+			board.setBoard_catag("BOD500");
+		}else {
+			
+		}
+		
+		switch(result) {
+		case FAIL:
+			goPage = "boardList.community";
+			break;
+		default:
+			goPage = "redirect:/board/boardList/" + pos;
+			break;
+		}
+		
+		model.addAttribute("board_catag", pos);
+		
+		return goPage;
+	}
+}

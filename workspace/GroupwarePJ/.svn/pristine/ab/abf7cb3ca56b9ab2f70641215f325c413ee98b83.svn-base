@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.main.dao.IindexDAO">
+	
+	<resultMap type="HashMap" id="attendMap">
+		<id property="attendAVG" column="MONTHLYDATA"/>
+	</resultMap>
+	<select id="selectNomal" resultMap="attendMap" parameterType="String">
+		SELECT COUNT(*) as COUNT, TO_CHAR(TO_DATE(TA_START), 'YYYY-MM') as MONTHLYDATA
+		FROM TIME_ATTEND 
+		WHERE emp_code = #{emp_code}
+		<![CDATA[
+		  and TA_START>='20190101' and TA_START<'20200101'
+		]]>
+		  AND TA_CATAG_CODE = 'TC001'
+		GROUP BY TO_CHAR(TO_DATE(TA_START), 'YYYY-MM')
+		ORDER BY MONTHLYDATA
+
+	</select>
+	
+	<select id="selectLate" resultMap="attendMap" parameterType="String">
+		SELECT COUNT(*) as COUNT, TO_CHAR(TO_DATE(TA_START), 'YYYY-MM') as MONTHLYDATA
+		FROM TIME_ATTEND 
+		WHERE emp_code = #{emp_code}
+		  <![CDATA[
+		  and TA_START>='20190101' and TA_START<'20200101'
+		  ]]>
+		  AND TA_CATAG_CODE = 'TC002'
+		GROUP BY TO_CHAR(TO_DATE(TA_START), 'YYYY-MM')
+		ORDER BY MONTHLYDATA
+
+	</select>
+
+
+	
+</mapper>
+
+
+
+

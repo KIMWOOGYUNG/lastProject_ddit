@@ -1,0 +1,105 @@
+package kr.or.ddit.message.controller;
+
+import java.util.List;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import kr.or.ddit.message.service.IMessageService;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.MessageVO;
+import kr.or.ddit.vo.PagingVO;
+
+@Controller
+public class MsgController {
+	@Inject
+	IMessageService service;
+	
+	@GetMapping("/note/noteList")
+	public String mymsg() {
+		return "noteList.note";
+	}
+	
+	@GetMapping(value = "/note/{pos}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE) //
+	@ResponseBody
+	public PagingVO<MessageVO> ajaxForlist(@PathVariable(name = "pos") String pos,
+			@RequestParam(name = "page", required = false, defaultValue = "1") int currentPage,
+			HttpSession session, Model model
+			){
+		Entirenote(pos, currentPage, session, model);
+				return (PagingVO<MessageVO>) model.asMap().get("pagingVO");
+	}
+	
+
+	@GetMapping("/note/{pos}")//전체쪽지리스트 
+	public String Entirenote(@PathVariable(name  = "pos") String pos,
+			@RequestParam(name = "page",required =false,defaultValue = "1")
+	int currentPage, HttpSession session, Model model) {
+		PagingVO<MessageVO> pagingVO = new PagingVO<>();
+		EmployeeVO empVO=(EmployeeVO) session.getAttribute("authUser");
+//		System.out.println(pos + "   Dawdawdawdawdawd");
+		MessageVO msgVO= new MessageVO();
+		
+		if("entirenote".equals(pos)) {
+			msgVO.setEmp_receiver(empVO.getEmp_code());
+			msgVO.setEmp_sender(empVO.getEmp_code());
+			model.addAttribute("title", "전체 쪽지함");
+		}else if("receivenote".equals(pos)) {
+			msgVO.setEmp_receiver(empVO.getEmp_code());
+			model.addAttribute("title", "수신쪽지함");
+		}else if("sendnote".equals(pos)) {
+			msgVO.setEmp_sender(empVO.getEmp_code());
+			model.addAttribute("title", "발신쪽지함");
+		}
+
+		pagingVO.setDetailSearch(msgVO);
+		pagingVO.setCurrentPage(currentPage);
+		
+		int totalRecord = service.selectMessageCount(pagingVO);
+		List<MessageVO> dataList = service.msgList(pagingVO);
+		
+		pagingVO.setTotalRecord(totalRecord);
+		pagingVO.setDataList(dataList);
+		
+		model.addAttribute("pagingVO",pagingVO);
+		model.addAttribute("pos",pos);
+		return "Entirenote.note";
+		
+	}
+	
+
+	
+	
+	@GetMapping("/note/detailnote") //상세페이지
+	public String Detailnote() {
+		String goPage="Detailnote.note";
+		return goPage;
+		
+	}
+	
+	
+
+	@GetMapping("/note/importantnote") //중요보관함
+	public String Importnote() {
+		String goPage="Importantnote.note";
+		return goPage;
+		
+	}
+	@GetMapping("/note/deletenote") //삭제쪽지
+	public String Deletenote() {
+		String goPage="Deletenote.note";
+		return goPage;
+		
+	}
+	
+	
+	
+}

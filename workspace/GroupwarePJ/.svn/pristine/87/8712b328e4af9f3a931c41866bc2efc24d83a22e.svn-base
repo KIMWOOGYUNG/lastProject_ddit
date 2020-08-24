@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.main.dao.IindexDAO">
+	
+	<resultMap type="HashMap" id="attendMap">
+		<id property="attendAVG" column="MONTHLYDATA"/>
+	</resultMap>
+	<select id="selectNomal" resultMap="attendMap" parameterType="String">
+		SELECT COUNT(*) as COUNT, TO_CHAR(TO_DATE(TA_START), 'YYYY-MM') as MONTHLYDATA
+		FROM TIME_ATTEND 
+		WHERE emp_code = #{emp_code}
+		<![CDATA[
+		  and TA_START>='20190101' and TA_START<'20200101'
+		]]>
+		  AND TA_CATAG_CODE = 'TC001'
+		GROUP BY TO_CHAR(TO_DATE(TA_START), 'YYYY-MM')
+		ORDER BY MONTHLYDATA
+
+	</select>
+	
+	<select id="selectLate" resultMap="attendMap" parameterType="String">
+		SELECT COUNT(*) as COUNT, TO_CHAR(TO_DATE(TA_START), 'YYYY-MM') as MONTHLYDATA
+		FROM TIME_ATTEND 
+		WHERE emp_code = #{emp_code}
+		  <![CDATA[
+		  and TA_START>='20190101' and TA_START<'20200101'
+		  ]]>
+		  AND TA_CATAG_CODE = 'TC002'
+		GROUP BY TO_CHAR(TO_DATE(TA_START), 'YYYY-MM')
+		ORDER BY MONTHLYDATA
+
+	</select>
+	
+	<select id="selectNotice" resultType="BoardVO">
+		SELECT ROWNUM RNUM, A.*
+		FROM (SELECT BOARD_CODE, BOARD_CATAG, EMP_CODE, BOARD_TITLE, TO_CHAR(BOARD_DATE, 'YYYY-MM-DD mm:ss') BOARD_DATE, BOARD_HIT, BOARD_CONTENT, PARENT_BOARD, BOARD_DEL
+		        FROM BOARD
+		        WHERE BOARD_CATAG = 'BOD100'
+		        ORDER BY BOARD_DATE DESC) A
+		<![CDATA[
+		WHERE ROWNUM < 6
+		]]>
+	
+	</select>
+	
+	<resultMap type="ProjectVO" id="ProjectMap" autoMapping="true">
+      <id property="project_code" column="PROJECT_CODE"/>
+      <collection property="pj_rgroupList" javaType="java.util.List" ofType="PJ_RgroupVO" autoMapping="true">
+         <id property="prg_code" column="PRG_CODE"/>
+         <collection property="pj_memberList" javaType="java.util.List" ofType="PJ_MemberVO" autoMapping="true"/>
+      </collection>
+   </resultMap>
+	<select id="selectProject" resultMap="ProjectMap" parameterType="String">
+		SELECT A.PROJECT_CODE, PROJECT_NAME, B.PRG_CODE, B.PR_CODE, PR_NAME, C.EMP_CODE, EMP_KOR, EMP_ATTCODE
+	  FROM PROJECT A LEFT OUTER JOIN PJ_RGROUP B ON (A.PROJECT_CODE = B.PROJECT_CODE)
+	                 LEFT OUTER JOIN PJ_MEMBER C ON (B.PRG_CODE = C.PRG_CODE)
+	                 LEFT OUTER JOIN PROJECT_ROLE D ON (B.PR_CODE = D.PR_CODE)
+	                 LEFT OUTER JOIN EMPLOYEE E ON (C.EMP_CODE = E.EMP_CODE)
+	                 LEFT OUTER JOIN IMAGE_ATTATCH F ON (E.EMP_CODE = F.EMP_CODE)
+	 WHERE A.PROJECT_CODE = (SELECT PROJECT_CODE
+	                            FROM (SELECT A.PROJECT_CODE, PROJECT_NAME, PROJECT_START
+	                              FROM PROJECT A LEFT OUTER JOIN PJ_RGROUP B ON (A.PROJECT_CODE = B.PROJECT_CODE)
+	                                             LEFT OUTER JOIN PJ_MEMBER C ON (B.PRG_CODE = C.PRG_CODE)
+	                                             LEFT OUTER JOIN EMPLOYEE D ON (C.EMP_CODE = D.EMP_CODE)
+	                                             LEFT OUTER JOIN STANDARD E ON (PROJECT_STAT = E.STANDARD_CODE)
+	                             WHERE D.EMP_CODE = #{emp_code}
+	                               AND PROJECT_STAT = 'STT200'
+	                             ORDER BY PROJECT_START)
+	                             <![CDATA[
+	                        WHERE ROWNUM < 2)
+	                        ]]>
+	   AND IMG_CATAG='IMG300'
+	
+	</select>
+	
+	<select id="selectPJProgress" parameterType="String" resultType="int">
+		SELECT NVL(AVG(TASK_PROGRESS), 0) PROJECT_PROGRESS
+        FROM TASK
+       WHERE PROJECT_CODE = #{project_code}
+	</select>
+
+
+	
+</mapper>
+
+
+
+

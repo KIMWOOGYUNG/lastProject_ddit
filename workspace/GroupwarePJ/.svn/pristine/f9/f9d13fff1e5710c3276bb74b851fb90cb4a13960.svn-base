@@ -1,0 +1,108 @@
+package kr.or.ddit.addr.service;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+
+import exception.DataNotFoundException;
+import kr.or.ddit.addr.dao.IAddressDAO;
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.vo.AddressVO;
+import kr.or.ddit.vo.DepartmentVO;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.TeamVO;
+
+@Service("AddrService")
+public class AddrServiceImpl implements IaddrService {
+ @Inject
+ private IAddressDAO dao;
+ 
+  //내 주소록 신규등록 
+	@Override
+	public ResultState createAddress(AddressVO addr) {
+		int rowcnt = dao.insertAddress(addr);
+		ResultState result = ResultState.OK;
+		if(rowcnt<=0) result = ResultState.FAIL;
+		return result;
+	}
+
+	@Override//내 주소록 상세조회 
+	public AddressVO readAddress(String add_name) {
+		AddressVO address = dao.selectAddress(add_name);
+		if(address == null) throw new DataNotFoundException();
+		return address;
+	}
+
+	@Override // 내 주소록 사원수 
+	public int readAddressCount(PagingVO pagingVO) {
+		return dao.selectAddressCount(pagingVO);
+	}
+
+	@Override //검색 조건에 맞는 내 주소록 사원목록
+	public List<AddressVO> readAddressList(PagingVO pagingVO) {
+		return dao.selectAddressList(pagingVO);
+	}
+
+	@Override //내 주소록 수정
+	public ResultState modifyAddress(AddressVO addr) {
+		ResultState result = null;
+		AddressVO savedAddress = readAddress(addr.getAdd_name());
+		if(savedAddress.getEmp_code().equals(addr.getEmp_code())) {
+			int cnt =dao.updateAddress(addr);
+			if(cnt>0) {
+				result = ResultState.OK;
+			}else {
+				result=ResultState.FAIL;
+			}
+		}
+		return result;
+	}
+
+	@Override //내 주소록 사원 삭제 
+	public ResultState removeAddress(AddressVO addr) {
+		ResultState result = null;
+		AddressVO saveAddress = readAddress(addr.getAdd_name());
+		if(saveAddress.getEmp_code().equals(addr.getEmp_code())){
+			int cnt =dao.deleteAddress(addr.getAdd_name());
+			if(cnt>0) {
+				result=ResultState.OK;
+			}else {
+				result=ResultState.FAIL;
+			}
+		}
+		return result;
+	}
+	////////////////사내 주소록
+	@Override //사내주소록 상세조회 
+	public AddressVO readAddr(String add_name) {
+		AddressVO addr = dao.selectAddr(add_name);
+		if(addr == null) throw new DataNotFoundException();
+		return addr;
+	}
+
+	@Override //사내주소록 검색 조건에 맞는 사원수 
+	public int readAddrCount(PagingVO pagingVO) {
+		return dao.selectAddrCount(pagingVO);
+	}
+
+	@Override //검색 조건에 맞는 사원목록
+	public List<AddressVO> readAddrList(PagingVO pagingVO) {
+		return dao.selectAddrList(pagingVO);
+	}
+
+	@Override//전체 부서 반환
+	public List<DepartmentVO> readDepartmentList() {
+		return dao.selectDepartmentList();
+	}
+
+	@Override //부서에 속해있는 팀 반환
+	public List<TeamVO> readTeamList(String dept_code) {
+		return dao.selectTeamList(dept_code);
+	}
+
+	
+
+}

@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN" "http://tiles.apache.org/dtds/tiles-config_3_0.dtd" >
+<tiles-definitions>
+
+	<definition name="parent"
+		template="/WEB-INF/views/layout.jsp">
+		<put-attribute name="topMenu"
+			value="/includee/topMenu.jsp" />
+		<put-attribute name="leftMenu"
+			value="/includee/leftMenu.jsp" />
+	</definition>
+
+	<definition name="*.index" extends="parent">
+		<put-attribute name="content"
+			value="/WEB-INF/views/index.jsp" />
+	</definition>
+
+
+	<definition name="mail" template="/WEB-INF/views/layout.jsp">
+		<put-attribute name="topMenu"
+			value="/includee/topMenu.jsp" />
+		<put-attribute name="leftMenu"
+			value="/includee/leftMenu/mail_leftMenu.jsp" />
+	</definition>
+
+	<definition name="*.mail" extends="mail">
+		<put-attribute name="content"
+			value="/WEB-INF/views/mail/{1}.jsp" />
+	</definition>
+
+
+	<definition name="address"
+		template="/WEB-INF/views/layout.jsp">
+		<put-attribute name="topMenu"
+			value="/includee/topMenu.jsp" />
+		<put-attribute name="leftMenu"
+			value="/includee/leftMenu/address_leftMenu.jsp" />
+	</definition>
+
+	<definition name="*.address" extends="address">
+		<put-attribute name="content"
+			value="/WEB-INF/views/address/{1}.jsp" />
+	</definition>
+
+
+	<definition name="approval"
+		template="/WEB-INF/views/layout.jsp">
+		<put-attribute name="topMenu"
+			value="/includee/topMenu.jsp" />
+		<put-attribute name="leftMenu"
+			value="/includee/leftMenu/approval_leftMenu.jsp" />
+	</definition>
+	<definition name="*.approval" extends="approval">
+		<put-attribute name="content"
+			value="/WEB-INF/views/approval/{1}.jsp" />
+	</definition>
+
+
+	<definition name="hr" template="/WEB-INF/views/layout.jsp">
+		<put-attribute name="topMenu"
+			value="/includee/topMenu.jsp" />
+		<put-attribute name="leftMenu"
+			value="/includee/leftMenu/hr_leftMenu.jsp" />
+	</definition>
+	<definition name="*.hr" extends="hr">
+		<put-attribute name="content"
+			value="/WEB-INF/views/hr/{1}.jsp" />
+	</definition>
+
+
+	<definition name="work" template="/WEB-INF/views/layout.jsp">
+		<put-attribute name="topMenu"
+			value="/includee/topMenu.jsp" />
+		<put-attribute name="leftMenu"
+			value="/includee/leftMenu/work_leftMenu.jsp" />
+	</definition>
+	<definition name="*.work" extends="work">
+		<put-attribute name="content"
+			value="/WEB-INF/views/work/{1}.jsp" />
+	</definition>
+
+
+
+	<definition name="project"
+		template="/WEB-INF/views/layout.jsp">
+		<put-attribute name="topMenu"
+			value="/includee/topMenu.jsp" />
+		<put-attribute name="leftMenu"
+			value="/includee/leftMenu/project_leftMenu.jsp" />
+	</definition>
+<!-- 	<definition name="projectList.project" extends="project"> -->
+<!-- 		<put-attribute name="content" -->
+<!-- 			value="/WEB-INF/views/project/projectList.jsp" /> -->
+<!-- 	</definition> -->
+<!-- 	<definition name="myProjectList.project" extends="project"> -->
+<!-- 		<put-attribute name="content" -->
+<!-- 			value="/WEB-INF/views/project/myProjectList.jsp" /> -->
+<!-- 	</definition> -->
+	<definition name="*.project" extends="project">
+		<put-attribute name="content"
+			value="/WEB-INF/views/project/{1}.jsp" />
+	</definition>
+
+
+	<definition name="plan" template="/WEB-INF/views/layout.jsp">
+		<put-attribute name="topMenu"
+			value="/includee/topMenu.jsp" />
+		<put-attribute name="leftMenu"
+			value="/includee/leftMenu/plan_leftMenu.jsp" />
+	</definition>
+	<definition name="*.plan" extends="plan">
+		<put-attribute name="content"
+			value="/WEB-INF/views/plan/{1}.jsp" />
+	</definition>
+
+	<definition name="cloud"
+		template="/WEB-INF/views/layout.jsp">
+		<put-attribute name="topMenu"
+			value="/includee/topMenu.jsp" />
+		<put-attribute name="leftMenu"
+			value="/includee/leftMenu/cloud_leftMenu.jsp" />
+	</definition>
+	<definition name="*.cloud" extends="cloud">
+		<put-attribute name="content"
+			value="/WEB-INF/views/cloud/{1}.jsp" />
+	</definition>
+
+	<definition name="community"
+		template="/WEB-INF/views/layout.jsp">
+		<put-attribute name="topMenu"
+			value="/includee/topMenu.jsp" />
+		<put-attribute name="leftMenu"
+			value="/includee/leftMenu/community_leftMenu.jsp" />
+	</definition>
+	<definition name="*.community" extends="community">
+		<put-attribute name="content"
+			value="/WEB-INF/views/community/{1}.jsp" />
+	</definition>
+
+	<definition name="mypage"
+		template="/WEB-INF/views/layout.jsp">
+		<put-attribute name="topMenu"
+			value="/includee/topMenu.jsp" />
+		<put-attribute name="leftMenu"
+			value="/includee/leftMenu/mypage_leftMenu.jsp" />
+	</definition>
+	<definition name="*.mypage" extends="mypage">
+		<put-attribute name="content"
+			value="/WEB-INF/views/mypage/{1}.jsp" />
+	</definition>
+
+	<definition name="note"
+		template="/WEB-INF/views/layout.jsp">
+		<put-attribute name="topMenu"
+			value="/includee/topMenu.jsp" />
+		<put-attribute name="leftMenu"
+			value="/includee/leftMenu/note_leftMenu.jsp" />
+	</definition>
+	<definition name="*.note" extends="note">
+		<put-attribute name="content"
+			value="/WEB-INF/views/note/{1}.jsp" />
+	</definition>
+</tiles-definitions>

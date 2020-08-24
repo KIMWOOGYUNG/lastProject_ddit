@@ -1,0 +1,131 @@
+//package kr.or.ddit.faceidentify;
+//
+//import java.io.File;
+//import java.io.IOException;
+//import java.net.URI;
+//import java.nio.file.Files;
+//import java.nio.file.Paths;
+//import java.util.List;
+//import java.util.Map;
+//
+//import org.apache.http.HttpEntity;
+//import org.apache.http.HttpResponse;
+//import org.apache.http.entity.ByteArrayEntity;
+//import org.apache.http.entity.ContentType;
+//import org.apache.http.entity.StringEntity;
+//import org.apache.http.util.EntityUtils;
+//
+//import net.minidev.json.JSONArray;
+//import net.minidev.json.JSONObject;
+//import sun.net.www.http.HttpClient;
+//
+//public class AzureFace01_Detection {
+//	// 구독키
+//	private static String SUBSCRIPTIONKEY="3bdac3b821624790ba923fb61c1bba35";
+//	// ENDPOINT
+////	https://faceareum.cognitiveservices.azure.com/face/v1.0/detect
+//	private static String ENDPOINT="https://faceareum.cognitiveservices.azure.com/face/v1.0";
+//	private static String URIBASE = ENDPOINT + "/detect";
+//	
+//	// Face Detection으로 추출할 속성들
+//	// REST 요청의 쿼리스트링으로 포함시킨다.
+//	private static String FACEATTRIBUTES = "age,gender,headPose,smile,facialHair,glasses,emotion,hair,makeup,occlusion,accessories,blur,exposure,noise";
+//	
+//	public static void main(String[] args) throws IOException {
+//		String imageURL1 = "/img/ar1.jpg";
+//		String imageURL2 = "/img/ar2.jpg";
+//		File file1 = new File(AzureFace01_Detection.class.getResource(imageURL1).getFile());
+// 		String faceId1 = faceDetect(Files.readAllBytes(Paths.get(file1.getPath())));
+//		File file2 = new File(AzureFace01_Detection.class.getResource(imageURL2).getFile());
+// 		String faceId2 = faceDetect(Files.readAllBytes(Paths.get(file2.getPath())));
+// 		System.out.println(faceId1);
+// 		System.out.println(faceId2);
+//		
+//	}
+//	
+//	public static String faceDetect(byte[] imageByteArray) {
+//		return	faceDetect(imageByteArray, null);
+//	}
+//	
+//	public static void faceDetect(String url) {
+//		faceDetect(null, url);
+//	}
+//	
+//	public static String faceDetect(byte[] imageByteArray, String url) {
+//		HttpClient httpClient = HttpClientBuilder.create().build();
+//		try {
+//			// endpoint URL 설정
+//			URIBuilder builder = new URIBuilder(URIBASE);
+//			
+//			// query String parameter 설정
+//			// detection 이후 FaceId 수령 여부
+//			builder.setParameter("returnFaceId", "true");
+//			
+//			// 랜드마크 데이터 수령 여부
+//			builder.setParameter("returnFaceLandmarks", "false");
+//			
+//			// Face Detection으로 추출할 얼굴의 속성
+//			builder.setParameter("returnFaceattributes", FACEATTRIBUTES);
+//			
+//			// Detection에서는 생략 가능. recognition_02가 성능 개선 버전
+//			builder.setParameter("recognitionModel", "recognition_01");
+//			
+//			// 사용된 recognition model 수령 여부
+//			builder.setParameter("returnRecognitionModel", "false");
+//			
+//			// Detection에서는 생략 가능. 이미지가 작거나 선명도가 낮은 경우, detection_02를 사용함. detection_02에서는 landmark, face attribute를 사용할 수 없음.
+//			builder.setParameter("detectionModel", "detection_01");
+//			URI uri = builder.build();
+//			HttpPost request = new HttpPost(uri);
+//			
+//			// subscription key 설정
+//			request.setHeader("Ocp-Apim-Subscription-Key", SUBSCRIPTIONKEY);
+//			HttpEntity reqEntity = null;
+//			ContentType contentType = null;
+//			if(imageByteArray!=null&&imageByteArray.length>0) {
+//				contentType = ContentType.APPLICATION_OCTET_STREAM;
+//				// face detection 대상 이미지 설정
+//				reqEntity = new ByteArrayEntity(imageByteArray, contentType);
+//			}else if(url != null&& url.trim().length()>0){
+//				contentType = contentType.APPLICATION_JSON;
+//				// face detection 대상 이미지 설정
+//				String imageWithFaces = "";
+//				reqEntity = new StringEntity(imageWithFaces);
+//			}
+//			
+//			if(reqEntity==null) return null;
+//			
+//			request.setHeader("Content-Type", contentType.toString());
+//			request.setEntity(reqEntity);
+//			String faceId = null;
+//			HttpResponse response = httpClient.execute(request);
+//			HttpEntity entity = response.getEntity();
+//			
+//			if(entity!=null) {
+//				System.out.println("REST Response : \n");
+//				String jsonString = EntityUtils.toString(entity).trim();
+//				if(jsonString.charAt(0)=='[') {
+//					JSONArray jsonArray = new JSONArray(jsonString);
+// 					List<Object> list = jsonArray.toList();
+//					System.out.println(jsonArray.toString(5));
+// 					for(Object tmp : list) {
+// 	 					faceId = (String)(((Map)tmp).get("faceId"));
+// 					}
+//				}else if(jsonString.charAt(0)=='{') {
+//					JSONObject jsonObject = new JSONObject(jsonString);
+//			
+// 					
+//					System.out.println(jsonObject.toString(2));
+//				}else {
+//					System.out.println(jsonString);
+//				}
+//				return faceId;
+//			}
+//		} catch (Exception e) {
+//			System.out.println(e.getMessage());
+//		}
+//		return null;
+//	}
+//	
+//
+//}

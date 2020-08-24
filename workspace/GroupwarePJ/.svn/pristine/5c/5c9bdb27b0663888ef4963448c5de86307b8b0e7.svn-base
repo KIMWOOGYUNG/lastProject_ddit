@@ -1,0 +1,57 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>    
+<%@ taglib uri="http://www.springframework.org/tags" prefix="spring" %>    
+
+<section class="content-header">
+
+</section>
+<div class="content">
+            <!-- Horizontal Form -->
+            <div class="card card-info">
+              <div class="card-header">
+                <h3 class="card-title">쪽지상세보기</h3>
+              </div>
+              <!-- /.card-header -->
+              <!-- form start -->
+              <form class="form-horizontal">
+                <div class="card-body">
+                  <div class="form-group row">
+                    <label for="inputEmail3" class="col-sm-2 col-form-label">받는사람</label>
+                    <div class="col-sm-10">
+                      <input type="email" class="form-control" id="inputEmail3" value="${msgVO.emp_receiver }"  readonly="readonly" >
+                    </div>
+                  </div>
+                  <div class="form-group row">
+                    <label for="inputPassword3" class="col-sm-2 col-form-label" >보낸사람</label>
+                    <div class="col-sm-10">
+                      <input type="text" class="form-control" id="inputPassword3" value="${msgVO.emp_sender }" readonly="readonly">
+                    </div>
+                  </div>
+                  
+                   <div class="form-group">
+				<label for="inputDescription">내용</label>
+				<textarea class="form-control" name="msg_content" id="msg_content" readonly="readonly" rows="20" >
+					${msgVO.msg_content}
+				</textarea>
+			</div>
+                  
+                </div>
+                <!-- /.card-body -->
+                <div class="card-footer" align="center">
+                  <button type="button" class="btn btn-info" onclick="location.href='${cPath}/note/writenote' ">답장</button>
+<%-- 					<input type="button" onclick="${cPath}/note/writenote">답장 --%>
+<!--                   <button type="submit" class="btn btn-default" onclick="/note/entriernote.note">뒤로가기</button> -->
+               <input type="button" class="btn btn-secondary mr-2" value="뒤로가기" 
+					onclick="history.back();"/>
+                </div>
+                <!-- /.card-footer -->
+              </form>
+           
+         
+            
+              
+            </div>
+            <!-- /.card -->
+          </div>
+          

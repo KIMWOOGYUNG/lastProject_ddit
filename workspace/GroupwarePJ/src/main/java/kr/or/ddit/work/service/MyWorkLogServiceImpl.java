@@ -1,0 +1,247 @@
+package kr.or.ddit.work.service;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+
+import javax.annotation.PostConstruct;
+import javax.inject.Inject;
+
+import org.apache.commons.io.FileUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.WebApplicationContext;
+
+import exception.DataNotFoundException;
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.WorkLogVO;
+import kr.or.ddit.vo.WorkLog_AttatchVO;
+import kr.or.ddit.work.dao.IMyWorkLogDAO;
+import kr.or.ddit.work.dao.IWorkAttatchDAO;
+
+@Service
+public class MyWorkLogServiceImpl implements IMyWorkLogService{
+
+	@Inject
+	private IMyWorkLogDAO dao;
+	
+	@Inject
+	private IWorkAttatchDAO attatchDao;
+	
+	@Inject
+	WebApplicationContext context;
+	
+	@Value("#{appInfo.attatchPath}")
+	String attachPath;
+	@Value("#{appInfo.attatchPath}")
+	File saveFolder;
+	
+	@PostConstruct
+	public void init() {
+		if(!saveFolder.exists()) saveFolder.mkdirs();
+	}
+	
+	private void deleteBinary(String[] delAttSaveName) {
+		if(delAttSaveName == null || delAttSaveName.length == 0)return;
+		try {
+			for(String delName : delAttSaveName) {
+				FileUtils.forceDelete(new File(saveFolder, delName));
+			}
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public int processAttatches(WorkLogVO worklog) {
+		String[] delNos = worklog.getDeleteAttatches();
+		int cnt = 0;
+		String[] delAttSaveNames = null;
+		if(delNos != null && delNos.length > 0) {
+			delAttSaveNames = new String[delNos.length];
+			for(int i = 0; i < delNos.length; i++) {
+				delAttSaveNames[i] = attatchDao.selectAttatch(delNos[i]).getSave_name();
+			}
+			cnt = attatchDao.deleteAttatchs(worklog);
+			deleteBinary(delAttSaveNames);
+		}
+		
+		List<WorkLog_AttatchVO> attatchList = worklog.getAttatchList();
+		if(attatchList != null && !attatchList.isEmpty()) {
+			
+			try {
+				for(WorkLog_AttatchVO attatch : attatchList) {
+					
+					attatch.setWl_code(worklog.getWl_code());
+					cnt += attatchDao.insertAttatchs(attatch);
+					attatch.getRealFile().transferTo(new File(saveFolder, attatch.getSave_name()));
+				}
+			} catch (IllegalStateException | IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		return cnt;
+		
+	}
+	
+	
+	// 일일업무일지
+	@Transactional
+	@Override
+	public ResultState createWorkLogday(WorkLogVO worklogVO) {
+		int cnt = dao.insertWorkLogday(worklogVO);
+		cnt += processAttatches(worklogVO);
+		ResultState result = null;
+		if(cnt > 0) {
+			result = ResultState.OK;
+		}else {
+			result = ResultState.FAIL;
+		}
+		return result;
+	}
+
+	@Override
+	public WorkLogVO readWorkLogday(WorkLogVO workLogVO) {
+		WorkLogVO worklog = dao.selectWorkLogday(workLogVO);
+		return worklog;
+	}
+
+	@Override
+	public int readWorkLogCountday(PagingVO<WorkLogVO> pagingVO) {
+		return dao.selectWorkLogCountday(pagingVO);
+	}
+
+	@Override
+	public List<WorkLogVO> readWorkLogListday(PagingVO<WorkLogVO> pagingVO) {
+		return dao.selectWorkLogListday(pagingVO);
+	}
+
+	@Override
+	public ResultState modifyWorkLogday(WorkLogVO worklogVO) {
+		ResultState result = null;
+		int cnt = dao.updateWorkLogday(worklogVO);
+		if(cnt > 0) {
+			processAttatches(worklogVO);
+			result = ResultState.OK;
+		}else {
+			result = ResultState.FAIL;
+		}
+		
+		return result;
+	}
+	
+	@Transactional
+	@Override
+	public ResultState removeWorkLogday(String wl_code) {
+		ResultState result = null;
+
+		int cnt = dao.deleteWorkLogday(wl_code);
+		
+		if(cnt > 0) {
+			result = ResultState.OK;
+		}else {
+			result = ResultState.FAIL;
+		}
+		
+		return result;
+	}
+
+
+	@Override
+	public WorkLog_AttatchVO downloadAttatch(String wl_attcode) {
+		WorkLog_AttatchVO attatch = attatchDao.selectAttatch(wl_attcode);
+		if(attatch == null) {
+			throw new DataNotFoundException(wl_attcode + " 파일이 없습니다.");
+		}
+		return attatch;
+	}
+	
+//-----------------------------------------------------------------------------------------------
+
+	// 삭제함
+
+	@Override
+	public ResultState removeWorkLogtrash(String wl_code) {
+		ResultState result = null;
+		
+		List<WorkLog_AttatchVO> attList = dao.selectAttList(wl_code);
+		String[] delAttNames = null;
+		if(attList != null && !attList.isEmpty()) {
+			delAttNames = new String[attList.size()];
+			for(int i = 0; i < delAttNames.length; i++) {
+				delAttNames[i] = attList.get(i).getSave_name();
+			}
+		}
+		
+		int cnt = dao.deleteWorkLogtrash(wl_code);
+		if(cnt > 0) {
+			deleteBinary(delAttNames);
+			result = ResultState.SUCCESSES;
+		}else {
+			result = ResultState.FAIL;
+		}
+		return result;
+	}
+
+	@Override
+	public ResultState backWorkLogtrash(WorkLogVO worLogVO) {
+		ResultState result = null;
+		int cnt = dao.backWorkLogtrash(worLogVO);
+		if(cnt > 0) {
+			result = ResultState.SUCCESSES;
+		}else {
+			result = ResultState.FAIL;
+		}
+		
+		return result;
+	}
+
+//-----------------------------------------------------------------------------------------------------------------
+	// 팀 업무일지
+
+	@Transactional
+	@Override
+	public ResultState createWorkLogteam(WorkLogVO worklogVO) {
+		int cnt = dao.insertWorkLogteam(worklogVO);
+		cnt += processAttatches(worklogVO);
+		ResultState result = null;
+		if(cnt > 0) {
+			result = ResultState.OK;
+		}else {
+			result = ResultState.FAIL;
+		}
+		return result;
+	}
+	
+	@Override
+	public WorkLogVO readWorkLogteam(String wl_code) {
+		WorkLogVO worklog = dao.selectWorkLogteam(wl_code);
+		return worklog;
+	}
+
+	@Override
+	public int readWorkLogCountteam(PagingVO<WorkLogVO> pagingVO) {
+		return dao.selectWorkLogCountteam(pagingVO);
+	}
+
+	@Override
+	public List<WorkLogVO> readWorkLogListteam(PagingVO<WorkLogVO> pagingVO) {
+		return dao.selectWorkLogListteam(pagingVO);
+	}
+
+	
+	@Override
+	public ResultState modifyWorkLogteam(WorkLogVO worklogVO) {
+		ResultState result = null;
+		int cnt = dao.updateWorkLogteam(worklogVO);
+		if(cnt > 0) {
+			processAttatches(worklogVO);
+			result = ResultState.OK;
+		}else {
+			result = ResultState.FAIL;
+		}
+		return result;
+	}
+
+}

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.mypage.dao.IMypageDAO">
+
+<!-- 근태현황   -->
+<select id="selectEmpAttendance" parameterType="String" resultType="Time_AttendVO">
+select A.EMP_CODE,
+CWS_CODE,
+TO_CHAR(TA_START,'yyyy-MM-dd HH24:mi') TA_START,
+TO_CHAR(TA_END,'yyyy-MM-dd HH24:mi') TA_END,
+TO_CHAR(TA_START, 'HH24:mi') COMETIME,
+TO_CHAR(TA_END, 'HH24:mi') GOTIME,
+TA_CATAG_NAME,
+EMP_KOR "employee.emp_kor",
+EMP_ENG "employee.emp_eng"
+from time_attend A INNER JOIN TA_CATAG B ON(A.TA_CATAG_CODE = B.TA_CATAG_CODE)
+     LEFT OUTER JOIN EMPLOYEE C ON(A.EMP_CODE = C.EMP_CODE)
+where A.emp_code =#{emp_code,jdbcType=VARCHAR}
+</select>
+
+</mapper>

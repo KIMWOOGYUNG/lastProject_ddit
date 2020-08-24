@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.att_admin.dao.IAdminAttDAO">
+	<!-- IP 설정페이지에 필요한 조건들 -->
+	<sql id="searchFrag1">
+		FROM EMPLOYEE A INNER JOIN DEPARTMENT B ON (A.DEPT_CODE=B.DEPT_CODE)
+		 			  INNER JOIN POSITION C ON (A.POSITION_CODE = C.POSITION_CODE)
+		<trim prefix="WHERE" prefixOverrides="AND">
+				<if test="detailSearch!=null"> 
+					<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.dept_code)">
+						AND A.DEPT_CODE = #{detailSearch.dept_code}
+					</if>
+					<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.emp_kor)">
+						 AND EMP_KOR LIKE '%' || #{detailSearch.emp_kor} || '%'
+					</if>
+				</if>
+		</trim>            
+	</sql>
+	
+	<!-- 전사원 월별 근태현황 조회에 필요한 조건들  -->
+	<sql id="searchFrag3">
+		<if test="detailSearch!=null"> 
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.selectedYear) and @org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.selectedMonth)">
+				 AND cws_code like #{detailSearch.selectedYear}||#{detailSearch.selectedMonth}||'%' 
+			</if>
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.emp_kor)">
+				AND F.DEPT_CODE=#{detailSearch.dept_code}
+			</if>
+		</if>
+	</sql>
+	<sql id="searchFrag2">
+		FROM
+	    (SELECT EMP_CODE, CWS_CODE FROM TIME_ATTEND ) E
+	    LEFT OUTER JOIN (select emp_code, count(ta_catag_code) normal from TIME_ATTEND where ta_catag_code = 'TC001' 
+	      group by emp_code) A ON(E.EMP_CODE = A.EMP_CODE)
+	    LEFT OUTER JOIN (select emp_code, count(ta_catag_code) late from TIME_ATTEND where ta_catag_code = 'TC002' <include refid="searchFrag3"/>  group by emp_code) B ON(E.EMP_CODE = B.EMP_CODE)
+	    LEFT OUTER JOIN (select emp_code, count(ta_catag_code) vaca from TIME_ATTEND where ta_catag_code = 'TC003'  <include refid="searchFrag3"/> group by emp_code) C ON(E.EMP_CODE = C.EMP_CODE)
+	    LEFT OUTER JOIN (select emp_code, count(ta_catag_code) holiday from TIME_ATTEND where ta_catag_code = 'TC004'  <include refid="searchFrag3"/> group by emp_code) D ON(E.EMP_CODE = D.EMP_CODE)
+	    LEFT OUTER JOIN (select emp_code, count(ta_catag_code) absent from TIME_ATTEND where ta_catag_code = 'TC005'  <include refid="searchFrag3"/> group by emp_code) I ON(E.EMP_CODE = I.EMP_CODE)
+	    LEFT OUTER JOIN (select emp_code, count(ta_catag_code) sick from TIME_ATTEND where ta_catag_code = 'TC006'  <include refid="searchFrag3"/> group by emp_code) J ON(E.EMP_CODE = J.EMP_CODE)
+	    LEFT OUTER JOIN (select emp_code, count(ta_catag_code) official from TIME_ATTEND where ta_catag_code = 'TC007'  <include refid="searchFrag3"/> group by emp_code) K ON(E.EMP_CODE = K.EMP_CODE)     
+	    
+	    INNER JOIN EMPLOYEE F ON (E.EMP_CODE = F.EMP_CODE)
+	    INNER JOIN DEPARTMENT G ON (G.DEPT_CODE = F.DEPT_CODE)
+	    INNER JOIN POSITION H ON(H.POSITION_CODE = F.POSITION_CODE)
+	</sql>
+
+	
+	<!-- 전사원 근태 현황을 위한 count -->
+	<select id="selectAttMonthlyCount" parameterType="pagingVO" resultType="int">
+		SELECT COUNT(*)
+		<include refid="searchFrag2"/>   
+	</select>
+	
+	<!-- 전사원 월별 근태 현황 -->
+	<select id="selectAttMonthlyList" parameterType="pagingVO" resultType="Time_AttendVO">
+		SELECT X.*
+		FROM(
+		SELECT Z.*,ROWNUM RNUM
+		FROM(
+	    select DISTINCT E.emp_code, SUBSTR(E.CWS_CODE,1,4) year, SUBSTR(E.CWS_CODE,5,2) month, nvl( A.normal,0) normal, nvl(B.late,0) late, nvl(C.vaca,0) vaca,
+   		 nvl(D.holiday,0) holiday, nvl(I.absent,0)absent, nvl(J.sick,0)sick, nvl(K.official,0)official,
+   		 F.EMP_KOR, F.DEPT_CODE, G.DEPT_NAME, F.POSITION_CODE, H.POSITION_NAME     
+		<include refid="searchFrag2"/>   
+		)Z )X
+		<![CDATA[
+		WHERE RNUM >= #{startRow} AND RNUM <= #{endRow}
+		]]>
+	</select>
+	
+	<!-- 상세근태현황(클라이언트사이드 페이징) -->
+	<select id="selectAttDetailList" resultType="Time_AttendVO">
+	SELECT A.CWS_CODE, A.EMP_CODE, B.EMP_KOR, C.DEPT_NAME, C.DEPT_CODE, 
+	TO_CHAR(A.TA_START,'HH24:MI'), TO_CHAR(A.TA_END,'HH24:MI')
+	FROM TIME_ATTEND A 
+	INNER JOIN EMPLOYEE B ON (A.EMP_CODE = B.EMP_CODE)
+	INNER JOIN DEPARTMENT C ON (B.DEPT_CODE = C.DEPT_CODE)
+	</select>
+	
+	<!-- IP리스트 띄우기  -->
+	<select id="selectEmpIpCount" parameterType="pagingVO" resultType="int">
+		SELECT COUNT(*)
+		<include refid="searchFrag1"/>   
+	</select>
+	
+	<select id="selectEmpIpList" parameterType="pagingVO" resultType="EmployeeVO">
+		SELECT A.*
+		FROM(
+		SELECT  ROWNUM RNUM, EMP_CODE, EMP_KOR, EMP_ENG,EMP_IP, EMP_IP2, A.DEPT_CODE
+		, B.DEPT_NAME
+			    ,POSITION_NAME
+		<include refid="searchFrag1"/>   
+		)A
+		WHERE RNUM BETWEEN #{startRow} AND #{endRow}
+	</select>
+
+   <!-- 부서명 -->
+   <select id="selectDeptName" resultType="hashMap">
+   	 SELECT DEPT_NAME "dept_name", DEPT_CODE "dept_code"
+	 FROM DEPARTMENT
+   </select>
+   
+   <!-- IP변경 -->
+   <update id="updateEmpIp" parameterType="EmployeeVO">
+	   UPDATE EMPLOYEE
+		SET EMP_IP =  #{emp_ip,jdbcType=VARCHAR},
+		    EMP_IP2 = #{emp_ip2,jdbcType=VARCHAR}
+		WHERE EMP_CODE = #{emp_code} 
+   </update>
+   
+   
+   <!-- 회사휴일기준일 확인 -->
+   <select id="selectCompanyStandard" parameterType="String" resultType="Com_WorkStdVO">
+		SELECT 
+		CWS_CODE,	YEAR,	MONTH,	DAY,	CWS_NAME,	CWS_CATAG,
+		CWS_ETC,	WEEK_TXT,	WEEK_NO
+	    FROM COM_WORKSTD
+		WHERE CWS_CODE =#{cws_code}
+   </select>
+   
+   <!-- 회사 정책 확인 -->
+   <select id="selectCompanyPolicy" resultType="Com_PolicyVO">
+	   SELECT 
+	   COM_NO,COM_NAME,COM_CORP,CORP_NO,COM_CATAG,COM_CEO,COM_ZIP,COM_ADD1,COM_ADD2,
+	   COM_PHONE,COM_FAX,COM_MAIL,FOUNDING_DATE,COME_TIME,LEAVE_TIME,MOR_HALF_START,
+	   MOR_HALF_END,AFT_HALF_START,AFT_HALF_END
+   	   FROM COM_POLICY
+   </select>
+   
+   <!-- 출근여부 확인  -->
+   <select id="selectAtt" parameterType="Time_AttendVO" resultType="Time_AttendVO">
+	   	SELECT EMP_CODE, CWS_CODE, TA_CATAG_CODE, TA_START, TA_END
+		FROM TIME_ATTEND
+		WHERE EMP_CODE = #{emp_code} 
+		AND CWS_CODE =#{cws_code}
+   </select>
+   
+   <!-- 위의 값이 없으면 출근입력 -->
+   <insert id="insertAttendence" parameterType="Time_AttendVO">
+    INSERT INTO time_attend (
+    emp_code,    cws_code,    ta_start, ta_catag_code
+    ) VALUES (
+        #{emp_code} , #{cws_code} , sysdate,  #{ta_catag_code,jdbcType=VARCHAR}
+    )
+   </insert>
+	<!-- 위의 값이 있으면 퇴근입력 -->
+   <update id="updateAttendence" parameterType="Time_AttendVO">
+	   UPDATE TIME_ATTEND
+		SET TA_END = sysdate
+		WHERE EMP_CODE = #{emp_code}
+		AND CWS_CODE=  #{cws_code} 
+   </update>
+	
+
+	
+
+</mapper>

@@ -1,0 +1,73 @@
+package kr.or.ddit.vo;
+
+
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import lombok.Data;
+import lombok.ToString;
+
+/**
+ * @author 작성자명
+ * @since 2020. 6. 29
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                          수정자               수정내용
+ * --------     --------    ----------------------
+ * 2020. 6. 29      박선정       최초작성
+ * Copyright (c) 2020 by DDIT All right reserved
+ * </pre>
+ */
+@Data
+@ToString
+public class Time_AttendVO {//사원근태
+	private EmployeeVO employee; //사원정보
+	private String emp_code;
+    private String cws_code;
+	private String ta_catag_code;
+	@JsonProperty("start")
+	private String ta_start;
+	@JsonProperty("end")
+	private String ta_end;
+	private String ta_catag_name;
+	
+	
+	private String emp_kor; //사원명
+	private String dept_code; //부서코드
+	private String dept_name; //부서명
+	private String position_name; //직급명
+	private int normal; //정상출근
+	private int late; //지각
+	private int vaca; //휴가
+	private int holiday; //휴무
+	private int absent; //결근
+	private int sick; //병가
+	private int official; //공가
+	
+	private String selectedYear;
+	private String selectedMonth;
+	
+	public String getId() {
+		return emp_code+cws_code;
+	}
+	
+	
+	
+	
+	
+	private String gotime; //퇴근시간
+	private String cometime; //출근시간
+	
+	@JsonProperty("comeTime")
+	public String getComeTime() {
+		return String.format("출근: %s", cometime);
+	}
+	@JsonProperty("goTime")
+	public String getGoTime() {
+		return String.format("퇴근: %s", gotime);
+	}
+	
+}

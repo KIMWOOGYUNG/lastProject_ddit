@@ -1,0 +1,22 @@
+
+package kr.or.ddit.work.dao;
+
+import org.springframework.stereotype.Repository;
+
+import kr.or.ddit.vo.Report_AttVO;
+import kr.or.ddit.vo.WorkLogVO;
+import kr.or.ddit.vo.WorkLog_AttatchVO;
+import kr.or.ddit.vo.Work_ReportVO;
+
+@Repository
+public interface IWorkAttatchDAO {
+	// 일지 첨부파일
+	public int insertAttatchs(WorkLog_AttatchVO log_AttatchVO);
+	public WorkLog_AttatchVO selectAttatch(String wl_attcode);
+	public int deleteAttatchs(WorkLogVO worklog);
+	
+	// 보고 첨부파일
+	public int re_insertAttatchs(Report_AttVO report_attVO);
+	public Report_AttVO re_selectAttatch(String report_attcode);
+//	public int re_deleteAttatchs(Work_ReportVO report);
+}

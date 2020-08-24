@@ -1,0 +1,103 @@
+package kr.or.ddit.vo;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.validation.constraints.NotBlank;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import lombok.Data;
+import lombok.ToString;
+
+/**
+ * @author �ۼ��ڸ�
+ * @since 2020. 6. 29
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[�����̷�(Modification Information)]]
+ * ������                          ������               ��������
+ * --------     --------    ----------------------
+ * 2020. 6. 29      �ڼ���       �����ۼ�
+ * Copyright (c) 2020 by DDIT All right reserved
+ * </pre>
+ */
+@Data
+@ToString
+public class TaskVO {//�ϰ�
+	
+	private String rnum;
+	private String task_code;
+	@NotBlank
+//	@JsonProperty("text")
+	private String task_name;
+	@NotBlank
+	private String task_type;
+	@NotBlank
+	private String task_stat;
+	@NotBlank
+	private String task_important;
+	private String pj_memcode;
+	private String task_change;
+	@NotBlank
+	private String task_start;
+	@NotBlank
+	private String task_end;
+	private Integer task_progress;
+	private String task_content;
+	@NotBlank
+	private String project_code;	
+
+	List<Task_AttVO> task_attList;
+	
+	private String emp_code_task;	//detailSearch
+	
+	private String emp_kor;
+	private String project_name;
+	private String prg_code;
+	
+	private MultipartFile[] task_files;
+	
+	public void setTask_files(MultipartFile[] task_files) {
+		this.task_files = task_files;
+		if(task_files == null || task_files.length == 0) return;
+		task_attList = new ArrayList<>();
+		for(MultipartFile task_file : task_files) {
+			if(StringUtils.isBlank(task_file.getOriginalFilename())) continue;
+			task_attList.add(new Task_AttVO(task_file));
+		}
+
+	}
+	
+	private String[] deleteAttatches; 
+	
+	private String start_taskattcode;
+	
+	//캘린더
+	List<TaskVO> taskList;
+	public CalendarVO sendDate() {
+		CalendarVO temp = new CalendarVO();
+		
+		temp.setId(task_code);
+		temp.setTitle(task_name);
+		temp.setEmp(emp_kor);
+		temp.setStart(task_start);
+		temp.setEnd(task_end.replace("00:00:00.0", "23:59:59.0"));
+		if(task_important.equals("IMP100")) {
+			temp.setColor("#fa6c5c");
+		}else if(task_important.equals("IMP200")) {
+			temp.setColor("#fff345");
+		}else {
+			temp.setColor("#30b0ff");
+		}
+		temp.setProgress(task_progress);
+		return temp;
+	}
+	
+	//간트
+	private int duration;
+}

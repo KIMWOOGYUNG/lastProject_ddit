@@ -1,0 +1,36 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+ <h3>${title}</h3>
+ 그룹명 : <input id="apprLineArea" style="width:80%" type="text" >
+ <div class="col-12">
+ 주소록 :
+ <select multiple="" class="col-2 custom-select">
+ 
+ 
+                          <option>option 1</option>
+                          <option>option 2</option>
+                          <option>option 3</option>
+                          <option>option 4</option>
+                          <option>option 5</option>
+                        </select>
+                       
+                        <button class="mr-3 btn btn-primary btn-sm p-10" >
+					  +
+					</button>
+					<button class="mr-3 btn btn-danger btn-sm">
+					  -
+					</button>
+                        그룹명 : 
+                        <select multiple="" class="col-2 custom-select">
+                          <option>option 1</option>
+                          <option>option 2</option>
+                          <option>option 3</option>
+                          <option>option 4</option>
+                          <option>option 5</option>
+                        </select>
+ 
+ 
+ </div>
+		<button class="mr-3 btn btn-primary btn-sm p-10" >
+					<i class="fas fa-folder"></i> 등록
+					</button>				

@@ -1,0 +1,86 @@
+package kr.or.ddit.event.controller;
+
+import java.util.List;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpSession;
+
+import org.apache.ibatis.annotations.Delete;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import kr.or.ddit.event.dao.IPushMessageDAO;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.PushMessageVO;
+import retrofit2.http.GET;
+
+@Controller
+@RequestMapping("/pushmesage")
+public class PushMessageController {
+
+	@Inject
+	IPushMessageDAO dao;
+//	
+	@DeleteMapping(value = "/{push_code}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public List<PushMessageVO> deletePushMessage(@PathVariable String push_code,HttpSession session) {
+		List<PushMessageVO> result = null;
+		EmployeeVO emp = (EmployeeVO)session.getAttribute("authUser");
+		
+		if("draft".equals(push_code) ||"message".equals(push_code)) {
+			if("draft".equals(push_code)) {
+				if(dao.deleteAllDraft(push_code)>0) {
+					result= dao.selectDraftPush(emp.getEmp_code());
+							
+				}
+			}
+			if("message".equals(push_code)) {
+				if(dao.deleteAllMessage(push_code)>0) {
+					result= dao.selectMessagePush(emp.getEmp_code());
+				}
+			}
+		}else {
+			
+			PushMessageVO messageVO = new PushMessageVO();
+			messageVO.setReceiver(emp.getEmp_code());
+			messageVO.setPush_code(push_code);
+
+			String type = dao.selectType(messageVO);
+			if(dao.deletePush(messageVO) > 0) {
+				if("draft".equals(type)) {
+					result = dao.selectDraftPush(emp.getEmp_code());
+				}else if("message".equals(type)) {
+					result = dao.selectMessagePush(emp.getEmp_code());
+				}
+			}
+		}
+		
+		
+		
+		return result;
+	}
+	
+	
+	@GetMapping(value = "/{type}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public List<PushMessageVO> getPushMessage(@PathVariable String type,HttpSession session) {
+		List<PushMessageVO> result = null;
+		EmployeeVO empVO = (EmployeeVO)session.getAttribute("authUser");
+		String emp_code = empVO.getEmp_code();
+		if("draft".equals(type)){
+			result = dao.selectDraftPush(emp_code);
+		}else if("message".equals(type)) {
+			result = dao.selectMessagePush(emp_code);
+		}
+		
+		return result;
+	}
+	
+	
+}

@@ -1,0 +1,43 @@
+package kr.or.ddit.att_admin.controller;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import kr.or.ddit.att_admin.service.IAdminAttService;
+import kr.or.ddit.vo.Time_AttendVO;
+
+@Controller
+public class AttDetailViewController {
+ 
+	@Inject
+	IAdminAttService service;
+
+	@GetMapping("/hr/att/detailList")
+	public String goAttDetailPage() {
+		return "attDetailList.hr";
+	}
+
+	@PostMapping("/hr/att/detailList")
+	@ResponseBody
+	public Map<String, Object> detailList(@RequestParam(required = false)String selectedDate1,@RequestParam(required = false)String selectedDate2 ) {
+		Map<String, Object> mp = new HashMap<String, Object>();
+		Time_AttendVO timeAttVO = new Time_AttendVO(); // 포맷맞춰주기
+//		String selectedDate1=dateData.get("selectedDate1");
+//		String selectedDate2=dateData.get("selectedDate2");
+		timeAttVO.setSelectedDate1(selectedDate1.replace("-", "")); 
+		timeAttVO.setSelectedDate2(selectedDate2.replace("-", "")); 
+		List<Time_AttendVO> list = service.readAttDetail(timeAttVO);
+		mp.put("data", list);
+		return mp;
+	}
+
+}

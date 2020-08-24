@@ -1,0 +1,109 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>    
+<%@ taglib uri="http://www.springframework.org/tags" prefix="spring" %>    
+<style>
+	#content{padding:50px;}
+	.chkBox{width:15px; height:15px;}
+</style>
+
+<div id="content">
+<h1>My Project</h1>
+<div id="top">
+		<div class="form-group" id="searchUI">
+             <select name="searchType" class="form-control select2 select2-hidden-accessible" style="width: 10%;float:left" data-select2-id="1" tabindex="-1" aria-hidden="true">
+               <option value="all" ${empty pagingVO.searchVO.searchType?"selected":"" } data-select2-id="3">전체</option>
+               <option value="department" ${pagingVO.searchVO.searchType eq 'department'?"selected":"" } data-select2-id="34">부서</option>
+               <option value="name" ${pagingVO.searchVO.searchType eq 'name'?"selected":"" } data-select2-id="35">프로젝트명</option>
+               <option value="employee" ${pagingVO.searchVO.searchType eq '"employee"'?"selected":"" } data-select2-id="36">팀원</option>
+             </select>
+
+            <p class="input-group input-group-sm" style="width: 40%; float:left">
+              <input type="text" class="form-control float-right" name="searchWord" placeholder="Search" value="${pagingVO.searchVO.searchWord }" />
+
+              <div class="input-group-append">
+                <input class="btn btn-default " type="button" value="검색" id="searchBtn">
+              </div>
+            </p>
+        </div>
+     </div>
+<br>
+
+<div id="nav">
+	<a class="btn btn-primary btn-sm" href="#">
+        <i class="fas fa-folder">
+        </i>
+       	 등록
+    </a>
+</div>
+<br>
+<!-- 원그래프 -->
+<div class="col-6 col-md-3 text-center">
+  <div style="display:inline;width:90px;height:90px;">
+  	<input type="image" class="knob" value="40" data-width="90" data-height="90" data-fgcolor="#00c0ef" style="width: 49px; height: 30px; position: absolute; vertical-align: middle; margin-top: 30px; margin-left: -69px; border: 0px; background: none; font: bold 18px Arial; text-align: center;padding: 0px; -webkit-appearance: none;">
+  </div>
+  <div class="knob-label">DA 김우경</div>
+</div>
+<!-- 원그래프 -->
+
+<div id="blockBody">
+
+</div>
+<div id="footer">
+	<nav id="pagingArea" class="d-flex ml-md-auto d-print-none">
+		${pagingVO.pagingHTML }
+	</nav>	
+</div>
+</div>
+
+<form id="searchForm" action="${pageContext.request.contextPath }/project/projectlist/myproject/block">
+	<input type="hidden" name="page" value="${param.page }"/>
+	<input type="hidden" name="searchType" value=""/>
+	<input type="hidden" name="searchWord" value=""/>
+</form>
+
+<script type="text/javascript">
+
+//테이블 만들기
+	var blockBody = $("#blockBody");
+	var searchForm = $("#searchForm").paging({
+		searchUI:"#searchUI",
+		searchBtn:"#searchBtn",
+		pagination:"#pagingArea",
+		pageParam:"page",
+		byAjax:true,
+		success:function(resp){
+			let projectList = resp.dataList;
+			let pagingHTML = resp.pagingHTML;
+			let blocks = [];
+			if(projectList.length>0){
+				$.each(projectList, function(idx, project){
+					let block = $("<div>").append(
+									$("<span>").text(project.project_code)
+									, $("<span>").text(project.dept_code)
+									, $("<span>").html(
+										$("<a>").attr("href", "${pageContext.request.contextPath}/")
+												.text(project.project_name)													
+									)
+									, $("<span>").html("팀원")
+									, $("<span class='project_progress'>").html('<div class="progress progress-sm"><div class="progress-bar bg-green" role="progressbar" aria-volumenow="'+project.project_progress+'" aria-volumemin="0" aria-volumemax="100" style="width: '+project.project_progress+'%"></div></div><small>'+project.project_progress+'% Complete</small>')
+									, $("<span>").text(project.project_important)
+									, $("<span class='project-state'>").text(project.project_stat));
+					blocks.push(block);
+				});
+				$("#pagingArea").html(pagingHTML);
+			}else{
+				blocks.push($("<div>").html($("<span>").text("조건에 맞는 프로젝트가 없음.")));
+				$("#pagingArea").empty();
+			}
+			blockBody.html(blocks);
+			blockBody.data("currentpage", resp.currentPage);
+			searchForm.find("[name='page']").val("");
+		}
+	}).submit();
+
+//전체 선택
+//  	if($("#topChkBox").is(":checked") == true){
+//  		alert("aaa");
+//  	}
+</script>

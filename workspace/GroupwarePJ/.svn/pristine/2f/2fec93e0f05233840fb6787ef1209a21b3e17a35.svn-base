@@ -1,0 +1,39 @@
+package kr.or.ddit.vo;
+
+import java.util.List;
+
+import lombok.Data;
+import lombok.ToString;
+
+
+/**
+ * @author �ۼ��ڸ�
+ * @since 2020. 6. 29
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[�����̷�(Modification Information)]]
+ * ������                          ������               ��������
+ * --------     --------    ----------------------
+ * 2020. 6. 29      �ڼ���       �����ۼ�
+ * Copyright (c) 2020 by DDIT All right reserved
+ * </pre>
+ */
+@Data
+@ToString
+public class AddressVO {//주소록
+	
+	private String add_code; //주소록코드
+	private String emp_code; //사원코드
+	
+	private String add_name; //이름
+	private String add_title; //직책명
+//	private String add_dept; //부서명
+	private String add_add; //주소
+	private String add_hp; //핸드폰번호
+	private String add_mail; //이메일
+	private String add_etc; //비고
+	private String ag_code; //주소록그룹코드
+	
+	List<Address_groupVO> addressGroupList;
+}

@@ -1,0 +1,39 @@
+package kr.or.ddit.vo;
+
+import java.util.List;
+
+import lombok.Data;
+import lombok.ToString;
+
+
+/**
+ * @author 작성자명
+ * @since 2020. 6. 29
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                          수정자               수정내용
+ * --------     --------    ----------------------
+ * 2020. 6. 29      박선정       최초작성
+ * Copyright (c) 2020 by DDIT All right reserved
+ * </pre>
+ */
+@Data
+@ToString
+public class DraftVO {//기안서
+
+	private String draft_code;
+	private String appr_line_code;
+	private String draft_date;
+	private String emp_code;
+	private String preserve_period;
+	private String draft_title;
+	private String draft_content;
+	private String rg_code;
+	private String draft_stat;
+	private String draft_pos;
+	
+	
+	List<Draft_AttatchVO> attatchList;
+}

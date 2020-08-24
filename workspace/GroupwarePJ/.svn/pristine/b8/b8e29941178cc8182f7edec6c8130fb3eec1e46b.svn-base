@@ -1,0 +1,50 @@
+package kr.or.ddit.approval.service;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+
+import kr.or.ddit.approval.dao.IPublicFormBoxDAO;
+import kr.or.ddit.vo.FormVO;
+import kr.or.ddit.vo.Form_CatagVO;
+import kr.or.ddit.vo.PagingVO;
+
+@Service
+public class PublicFormBoxServiceImpl implements IPublicFormBoxService {
+
+	@Inject
+	IPublicFormBoxDAO dao;
+
+	@Override
+	public int selectFormCount(PagingVO<FormVO> pagingVO) {
+		return dao.selectFormCount(pagingVO);
+	}
+
+	@Override
+	public List<FormVO> selectFormList(PagingVO<FormVO> pagingVO) {
+		return dao.selectFormList(pagingVO);
+	}
+
+	@Override
+	public FormVO selectForm(String fc_code) {
+		return dao.selectForm(fc_code);
+	}
+
+	@Override
+	public int insertForm(FormVO form) {
+		return dao.insertForm(form);
+	}
+
+	@Override
+	public int updateForm(FormVO form) {
+		return dao.updateForm(form);
+	}
+
+	@Override
+	public int deleteProject(String form_code) {
+		return dao.deleteProject(form_code);
+	}
+
+}

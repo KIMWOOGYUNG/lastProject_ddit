@@ -1,0 +1,123 @@
+package kr.or.ddit.work.controller;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.SearchVO;
+import kr.or.ddit.vo.WorkLogVO;
+import kr.or.ddit.work.service.IPublicWorkLogService;
+
+@Controller
+public class PublicDiaryReadController {
+	
+	@Inject
+	private IPublicWorkLogService service;
+	
+	// 공용 업무일지
+	
+	@GetMapping(value = "/work/publicwork/{pos}/{team_code}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public PagingVO<WorkLogVO> ajaxForlistday(@RequestParam(name="page", required = false, defaultValue = "1") int currentPage, 
+												@PathVariable(name = "team_code", required = false) String team_code, SearchVO searchVO, Model model, @PathVariable(name = "pos") String pos){
+		daydaiaryList(currentPage,team_code, searchVO, model, pos);
+		return (PagingVO<WorkLogVO>) model.asMap().get("pagingVO");
+	}
+	
+	@GetMapping("/work/publicwork/{pos}/{team_code}")
+	public String daydaiaryList(@RequestParam(name = "page", required = false, defaultValue = "1")int currentPage,
+								@PathVariable(name = "team_code", required = false) String team_code, SearchVO searchVO, Model model, @PathVariable(name = "pos") String pos) {
+		
+		String goPage = null;
+		
+		PagingVO<WorkLogVO> pagingVO = new PagingVO<>();
+		WorkLogVO worklog = new WorkLogVO();
+		
+		System.out.println("============================================================================================" + team_code);
+		
+		if(!team_code.equals("all")) {
+			worklog.setTeam_code(team_code);
+		}
+		
+		if(pos.equals("daydiary")) {
+			worklog.setWl_catag("WLC100");
+			goPage = "publicdaydiaryList.work";
+		}else if(pos.equals("weekdiary")) {
+			worklog.setWl_catag("WLC200");
+			goPage = "publicweekdiaryList.work";
+			
+		}
+		
+		pagingVO.setDetailSearch(worklog);
+		pagingVO.setCurrentPage(currentPage);
+		pagingVO.setSearchVO(searchVO);
+		int totalRecord = service.readWorkLogCountday(pagingVO);
+		pagingVO.setTotalRecord(totalRecord);
+		List<WorkLogVO> worklogListday = service.readWorkLogListday(pagingVO);
+		pagingVO.setDataList(worklogListday);
+		
+//		System.out.println(worklog.toString());
+		
+		model.addAttribute("pagingVO", pagingVO);
+		model.addAttribute("team_code", team_code);
+		
+		return goPage;		
+	}
+	
+//	@GetMapping(value = "/work/publicwork/daydiaryview/{wl_code}")
+//	public String daydaiaryView(@PathVariable(required = true) String wl_code, Model model) {
+//		WorkLogVO worklog = service.readWorkLogday(wl_code);
+//		
+//		model.addAttribute("worklog", worklog);
+//		
+//		return "publicdaydiaryView.work";
+//	}
+	
+	
+//-----------------------------------------------------------------------------------------------------------------------------------------------------	
+	// 주간 공용 업무일지
+	
+//	@GetMapping(value = "/work/publicwork/weekdiary", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+//	@ResponseBody
+//	public PagingVO<WorkLogVO> ajaxForlistweek(@RequestParam(name="page", required = false, defaultValue = "1") int currentPage, SearchVO searchVO, Model model){
+//		weekdaiaryList(currentPage, searchVO, model);
+//		return (PagingVO<WorkLogVO>) model.asMap().get("pagingVO");
+//	}
+//	
+//	@GetMapping("/work/publicwork/weekdiary")
+//	public String weekdaiaryList(@RequestParam(name = "page", required = false, defaultValue = "1")int currentPage, SearchVO searchVO, Model model) {
+//		PagingVO<WorkLogVO> pagingVO = new PagingVO<>();
+//		pagingVO.setSearchVO(searchVO);
+//		pagingVO.setCurrentPage(currentPage);
+//		int totalRecord = service.readWorkLogCountweek(pagingVO);
+//		pagingVO.setTotalRecord(totalRecord);
+//		
+//		List<WorkLogVO> worklogListweek = service.readWorkLogListweek(pagingVO);
+//		pagingVO.setDataList(worklogListweek);
+//		
+//		model.addAttribute("pagingVO", pagingVO);
+//		
+//		return "publicweekdiaryList.work";		
+//	}
+
+//	@GetMapping(value = "/work/publicwork/weekdiaryview/{wl_code}")
+//	public String weekdaiaryView(@PathVariable(required = true) String wl_code, Model model) {
+//		WorkLogVO worklog = service.readWorkLogweek(wl_code);
+//		
+//		model.addAttribute("worklog", worklog);
+//		
+//		return "publicweekdiaryView.work";
+//	}
+
+	
+	
+}

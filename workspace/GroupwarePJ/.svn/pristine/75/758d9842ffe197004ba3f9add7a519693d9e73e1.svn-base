@@ -1,0 +1,26 @@
+package kr.or.ddit.work.controller;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.SearchVO;
+import kr.or.ddit.vo.WorkLogVO;
+import kr.or.ddit.work.service.IMyWorkLogService;
+
+@Controller
+public class MyDiaryModifyController {
+	
+	@Inject
+	private IMyWorkLogService service;
+	
+	
+}

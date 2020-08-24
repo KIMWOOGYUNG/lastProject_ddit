@@ -1,0 +1,13 @@
+package kr.or.ddit.project.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+
+@Controller
+public class MyProjectListController {
+	
+	@GetMapping("/project/projectlist/myproject/list")
+	public String myprojectBlock() {
+		return "myproject_list.project";
+	}
+}

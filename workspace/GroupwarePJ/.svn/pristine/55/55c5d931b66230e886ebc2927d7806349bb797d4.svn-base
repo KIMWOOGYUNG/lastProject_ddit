@@ -1,0 +1,132 @@
+package kr.or.ddit.att_admin.service;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import kr.or.ddit.att_admin.dao.IAdminAttDAO;
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.vo.Com_PolicyVO;
+import kr.or.ddit.vo.Com_WorkStdVO;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.StandardVO;
+import kr.or.ddit.vo.Time_AttendVO;
+
+@Service
+public class AdminAttServiceImpl implements IAdminAttService {
+	@Inject
+	IAdminAttDAO dao;
+	
+	@Override
+	public List<Com_WorkStdVO> getComVacaList() {
+		List<Com_WorkStdVO> list = dao.selectComVacaList();
+		return list;
+	}
+	
+	@Override
+	public List<Time_AttendVO> readAttDetail(Time_AttendVO timeAttVO) {
+		 List<Time_AttendVO> vo = dao.selectAttDetailList(timeAttVO);
+		if(vo==null)
+			throw new exception.DataNotFoundException("등록된 상세 근태현황이 없음");
+		return vo;
+	}
+	@Override //회사 정책 확인 
+	public Com_PolicyVO readComPolicy() {
+		Com_PolicyVO vo = dao.selectCompanyPolicy();
+		if(vo==null)
+			throw new exception.DataNotFoundException("회사정책이 등록되어 있지 않음");
+		return vo;
+	}
+	@Override //회사 근무기준일 확인하기 위함. 
+	public Com_WorkStdVO readComStandard(String cws_code) {
+		Com_WorkStdVO vo = dao.selectCompanyStandard(cws_code);
+		if(vo==null)
+			throw new exception.DataNotFoundException("회사근무기준일 등록되어있지 않음");
+		return vo;
+	}
+	@Override //출근여부를 확인함. 출근했으면 퇴근시간 update, 안했으면 insert
+	public Time_AttendVO readEmpAtt(Time_AttendVO timeAttVO) {
+		Time_AttendVO vo = dao.selectAtt(timeAttVO);
+//		if(timeAttVO==null) {
+//			return null;
+//		}
+		return vo;
+	}
+	@Override //퇴근 업데이트 
+	public ResultState modifyEmpAtt(Time_AttendVO timeAttVO) {
+		int cnt = dao.updateAttendence(timeAttVO);
+		ResultState result = ResultState.FAIL;
+		if(cnt>0) {
+			result = ResultState.OK;
+		}
+		return result;
+	}
+	@Transactional
+	@Override //출근처리 
+	public ResultState createEmpAtt(Time_AttendVO timeAttVO) {
+		int cnt = dao.insertAttendence(timeAttVO);
+		ResultState result = ResultState.FAIL;
+		if(cnt>0) {
+			result = ResultState.OK;
+		}
+		return result;
+	}
+	@Override
+	public EmployeeVO readEmpIp(String emp_code) {
+		EmployeeVO empVO = dao.selectEmpIP(emp_code);
+		if(empVO==null)
+			throw new exception.DataNotFoundException(emp_code+" 회원이없음");
+		return empVO;
+	}
+	//사원IP목록
+	@Override
+	public int readEmpIpCount(PagingVO<EmployeeVO> pagingVO) {
+		return dao.selectEmpIpCount(pagingVO);
+	}
+	@Override
+	public List<EmployeeVO> readEmpIpList(PagingVO<EmployeeVO> pagingVO) {
+		return dao.selectEmpIpList(pagingVO);
+	}
+	//월별근태현황
+	@Override
+	public List<Time_AttendVO> readAttMonthlyList(Time_AttendVO timeAttVO) {
+		return dao.selectAttMonthlyList(timeAttVO);
+	}
+	
+	/**
+	 * 성공하면 ResultState를 Successes로 반환
+	 */
+	@Transactional
+	@Override
+	public ResultState modifyEmpIp(EmployeeVO empVO) {
+		//readEmpIp(empVO.getEmp_code());
+		int cnt = dao.updateEmpIp(empVO);
+		ResultState result = ResultState.FAIL;
+		if(cnt>0) result = ResultState.SUCCESSES;
+		return result;
+	}
+	@Transactional
+	@Override
+	public ResultState AddHoliday(Com_WorkStdVO workStdVO) {
+		int cnt = dao.updateHoliday(workStdVO);
+		ResultState result = ResultState.FAIL;
+		if(cnt>0) {
+			result = ResultState.OK;
+		}
+		return result;
+	}
+	@Transactional
+	@Override
+	public ResultState AddAttendence(Time_AttendVO timeVO) {
+		int cnt = dao.updateAtt(timeVO);
+		ResultState result = ResultState.FAIL;
+		if(cnt>0) {
+			result = ResultState.OK;
+		}
+		return result;
+	}
+}

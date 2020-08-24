@@ -1,0 +1,29 @@
+package kr.or.ddit.schedule.service;
+
+import java.util.List;
+
+import kr.or.ddit.vo.Dept_ScheduleVO;
+import kr.or.ddit.vo.PagingVO;
+
+public interface IDep_ScheduleService {
+	
+	/**
+	 * 부서 일정 테이블 리스트 구하기
+	 * @param pagingVO
+	 * @return
+	 */
+	public List<Dept_ScheduleVO> readdepScheduleList(PagingVO<Dept_ScheduleVO> pagingVO);
+	/**
+	 * 부서 일정 상세보기
+	 * @param ds_code
+	 * @return
+	 */
+	public Dept_ScheduleVO readdepSchedule(String ds_code);
+	/**
+	 * 등록된 부서일정 개수 구하기
+	 * @param pagingVO
+	 * @return
+	 */
+	public int readdepScheduleCount(PagingVO<Dept_ScheduleVO> pagingVO);
+
+}

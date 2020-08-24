@@ -1,0 +1,337 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib uri="http://www.springframework.org/tags" prefix="spring"%>
+
+<!-- Ion Slider -->
+<link rel="stylesheet"
+	href="${pageContext.request.contextPath }/resources/plugins/ion-rangeslider/css/ion.rangeSlider.min.css">
+<!-- bootstrap slider -->
+<link rel="stylesheet"
+	href="${pageContext.request.contextPath }/resourcesplugins/bootstrap-slider/css/bootstrap-slider.min.css">
+
+<style>
+#content {
+	padding: 50px;
+}
+
+.date {
+	margin-right: 600px;
+}
+
+.list-inline-item {
+	display: inline;
+	float: left;
+}
+
+.inline-chart {
+	width: 100px;
+}
+
+.btnAction {
+	float: right;
+	width: 80px;
+	margin-left: 10px;
+}
+
+.teamMember {
+	display: inline-block;
+	float: left;
+}
+
+h4 {
+	width: 700px;
+	display: inline
+}
+</style>
+
+<div id="content">
+	<div class="card card-info">
+		<div class="card-header">
+			<h4>${task.task_name}</h4>
+			<button class="btn btn-block bg-gradient-danger btn-sm btnAction"
+				onclick="deleteAction()">
+				<i class="fas fa-trash"> </i> 삭제
+			</button>
+			<button class="btn btn-block bg-gradient-secondary btn-sm btnAction"
+				id="btnUpdate" style="margin-top: 0px;" onclick="updateAction()">
+				<i class="fas fa-pencil-alt"> </i> 수정
+			</button>
+		</div>
+
+		<!-- form start -->
+		<form class="form-horizontal">
+			<div class="card-body">
+
+				<!-- 일감 코드 -->
+				<input type="hidden" name="task_code" value="${task.task_code }" />
+
+				<!-- 프로젝트 -->
+				<div class="form-group row">
+					<label for="project_dept" class="col-sm-1 col-form-label">프로젝트</label>
+					<div class="col-sm-2">
+						<input type="text" class="form-control" id="dept"
+							placeholder="프로젝트" value="${task.project_name}" readonly
+							style="background: white;">
+					</div>
+				</div>
+
+				<!-- 유형 -->
+				<div class="form-group row">
+					<label for="project_dept" class="col-sm-1 col-form-label">유형</label>
+					<div class="col-sm-2">
+						<input type="text" class="form-control" id="dept" placeholder="유형"
+							value="${task.task_type}" readonly style="background: white;">
+					</div>
+				</div>
+
+				<!-- 내용 -->
+				<div class="form-group row">
+					<label for="project_content" class="col-sm-1 col-form-label">내용</label>
+					<div class="col-sm-10">
+<!-- 						<p class="form-control" id="content" placeholder="일감 내용"readonly style="background: white; padding: 15px;"> -->
+							<div class="form-control">${task.task_content}</div>
+<!-- 						</p> -->
+					</div>
+				</div>
+
+				<!-- 시작일, 종료일 -->
+				<div class="form-group row">
+					<div class="input-group">
+						<label for="project_content" class="col-sm-1 col-form-label">시작일</label>
+						<div class="input-group-prepend" style="margin-left: 8px;">
+							<span class="input-group-text"><i
+								class="far fa-calendar-alt"></i></span>
+						</div>
+						<input type="text" class="form-control date"
+							data-inputmask-alias="datetime"
+							data-inputmask-inputformat="mm/dd/yyyy" data-mask=""
+							im-insert="false" readonly style="background: white;"
+							value="${task.task_start }"> <label for="project_content"
+							class="col-sm-1 col-form-label" style="margin-left: -350px;">종료일</label>
+						<div class="input-group-prepend">
+							<span class="input-group-text"><i
+								class="far fa-calendar-alt"></i></span>
+						</div>
+						<input type="text" class="form-control date"
+							data-inputmask-alias="datetime"
+							data-inputmask-inputformat="mm/dd/yyyy" data-mask=""
+							im-insert="false" readonly style="background: white;"
+							value="${task.task_end }">
+					</div>
+				</div>
+
+				<div class="form-group row">
+					<div class="offset-sm-2 col-sm-10">
+						<div class="form-check"></div>
+					</div>
+				</div>
+
+				<!-- 중요도 -->
+				<div class="form-group row">
+					<label for="project_important" class="col-sm-1 col-form-label">중요도</label>
+					<div class="col-sm-1">
+						<input type="text" class="form-control" placeholder="중요도"
+							value="${task.task_important}" readonly
+							style="background: white;">
+					</div>
+				</div>
+
+				<!-- 상태 -->
+				<div class="form-group row">
+					<label for="project_status" class="col-sm-1 col-form-label">상태</label>
+					<div class="col-sm-1">
+						<input type="text" class="form-control" placeholder="상태"
+							value="${task.task_stat}" readonly style="background: white;">
+					</div>
+				</div>
+
+				<!-- 담당자 -->
+				<div class="form-group row">
+					<label for="project_status" class="col-sm-1 col-form-label">담당자</label>
+					<div class="col-sm-1">
+						<input type="text" class="form-control" placeholder="담당자"
+							value="${task.emp_kor}" readonly style="background: white;">
+					</div>
+				</div>
+
+				<!-- 진행률 -->
+				<div class="form-group row">
+					<label for="project_status" class="col-sm-1 col-form-label">진행률</label>
+					<!-- 					<div class="col-sm-1"> -->
+					<!-- 						<input type="text" class="form-control" placeholder="진행률" -->
+					<%-- 							value="${task.task_progress} %" readonly style="background: white; width:65px"> --%>
+					<!-- 					</div> -->
+					<c:set var="progressBar" value="${task.task_progress + 1}" />
+					<div class="col-sm-6">
+						<span class="irs irs--flat js-irs-2"> <span class="irs">
+								<span class="irs-line" tabindex="0"></span> <span
+								class="irs-min" style="visibility: visible;">0 %</span> <span
+								class="irs-max" style="visibility: visible;">100 %</span> <span
+								class="irs-single" style="left: ${task.task_progress}%;">${task.task_progress}
+									%</span>
+						</span> <span class="irs-bar irs-bar--single"
+							style="left: 0px; width: ${progressBar}%;"></span> <span
+							class="irs-handle single" style="left: ${task.task_progress}%;">
+								<i></i> <i></i> <i></i>
+						</span>
+						</span>
+					</div>
+				</div>
+
+
+				<!-- 첨부파일 -->
+				<div class="form-group">
+					<label>첨부파일</label>
+					<div style="display:inline; margin-left:60px;">
+						<c:forEach items="${task.task_attList }" var="attatch" varStatus="vs">
+							<a href="<c:url value='/task/file/${attatch.task_attcode }' />">${attatch.org_name }</a> ${not vs.last?"&nbsp;":"" }
+						</c:forEach>
+					</div>
+				</div>
+
+				<!-- 최종 수정일 -->
+				<div class="form-group row">
+					<div class="input-group">
+						<label for="project_content" class="col-sm-1 col-form-label">최종
+							수정일</label>
+						<div class="input-group-prepend" style="margin-left: 8px;">
+							<span class="input-group-text"><i
+								class="far fa-calendar-alt"></i></span>
+						</div>
+						<input type="text" class="form-control"
+							data-inputmask-alias="datetime"
+							data-inputmask-inputformat="mm/dd/yyyy" data-mask=""
+							im-insert="false" readonly style="background: white; margin-right:1200px;"
+							value="${task.task_change }" >
+					</div>
+				</div>
+		</form>
+	</div>
+</div>
+
+<!-- jQuery Knob -->
+<!-- ChartJS -->
+<script
+	src="${pageContext.request.contextPath }/resources/plugins/chart.js/Chart.min.js"></script>
+<script
+	src="${pageContext.request.contextPath }/resources/plugins/chart.js/Chartutil.js"></script>
+<script type="text/javascript"
+	src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.min.js"></script>
+<script type="text/javascript"
+	src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
+
+<!-- 일감 삭제 -->
+<script>
+	function deleteAction() {
+
+		if (confirm("일감을 삭제 하시겠습니까?")) {
+			$
+					.ajax({
+						url : '${pageContext.request.contextPath }/project/delTask',
+						type : "POST",
+						datatype : 'json',
+						contentType : "application/x-www-form-urlencoded; charset=UTF-8",
+						data : {
+							task_code : $("[name='task_code']").val(),
+							project_code : "${task.project_code}",
+							emp_code : "${authUser.emp_code}"
+						},
+						success : function(data) {
+							alert(data);
+							alert("삭제가 완료되었습니다.");
+							location.href="${cPath}/project/tasklist/${task.project_code}/${authUser.emp_code}";
+							
+						},
+						    : function(request, status, error) {
+							alert("실패...무슨실패?");
+							
+						}
+					})
+
+		}
+	}
+</script>
+
+
+<!-- 일감 수정 -->
+<script>
+	function updateAction() {
+
+	}
+</script>
+
+
+<!-- 진행률 슬라이더 -->
+<!-- Ion Slider -->
+<script
+	src="${pageContext.request.contextPath }/resources/plugins/ion-rangeslider/js/ion.rangeSlider.min.js"></script>
+<!-- Bootstrap slider -->
+<script
+	src="${pageContext.request.contextPath }/resources/plugins/bootstrap-slider/bootstrap-slider.min.js"></script>
+<script>
+	$(function() {
+		/* BOOTSTRAP SLIDER */
+		$('.slider').bootstrapSlider()
+
+		/* ION SLIDER */
+		$('#range_1').ionRangeSlider({
+			min : 0,
+			max : 5000,
+			from : 1000,
+			to : 4000,
+			type : 'double',
+			step : 1,
+			prefix : '$',
+			prettify : false,
+			hasGrid : true
+		})
+		$('#range_2').ionRangeSlider()
+
+		$('#range_5').ionRangeSlider({
+			min : 0,
+			max : 10,
+			type : 'single',
+			step : 0.1,
+			postfix : ' mm',
+			prettify : false,
+			hasGrid : true
+		})
+		$('#range_6').ionRangeSlider({
+			min : -50,
+			max : 50,
+			from : 0,
+			type : 'single',
+			step : 1,
+			postfix : '°',
+			prettify : false,
+			hasGrid : true
+		})
+
+		$('#range_4').ionRangeSlider({
+			type : 'single',
+			step : 100,
+			postfix : ' light years',
+			from : 55000,
+			hideMinMax : true,
+			hideFromTo : false
+		})
+		$('#range_3').ionRangeSlider({
+			type : 'double',
+			postfix : ' miles',
+			step : 10000,
+			from : 25000000,
+			to : 35000000,
+			onChange : function(obj) {
+				var t = ''
+				for ( var prop in obj) {
+					t += prop + ': ' + obj[prop] + '\r\n'
+				}
+				$('#result').html(t)
+			},
+			onLoad : function(obj) {
+				//
+			}
+		})
+	})
+</script>

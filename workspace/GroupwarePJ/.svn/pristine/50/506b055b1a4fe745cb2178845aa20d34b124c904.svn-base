@@ -1,0 +1,21 @@
+package kr.or.ddit.schedule.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+
+@Controller
+public class Dep_ScheduleController {
+	
+	@GetMapping("/plan/departmentplanbox/departmentplan")
+	public String DepSchedule() {
+		String goPage = "DepSchedule.plan";
+		return goPage;
+	}
+	
+	@GetMapping("/plan/departmentplanbox/departinnermyplan")
+	public String DepMySchedule() {
+		String goPage = "DepMySchedule.plan";
+		return goPage;
+	}
+
+}

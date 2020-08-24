@@ -1,0 +1,913 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.approval.dao.IApprovalDAO">
+
+	<sql id="searchFrag">
+		
+			<if test="detailSearch!=null">
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.emp_code)">
+					AND A.EMP_CODE = #{detailSearch.emp_code}
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.draft_code)">
+					AND A.DRAFT_CODE like '%'||#{detailSearch.draft_code}||'%'
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.draft_title)">
+					AND A.DRAFT_TITLE like '%'||#{detailSearch.draft_title}||'%'
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.draft_pos)">
+					AND A.DRAFT_POS = #{detailSearch.draft_pos}
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.draft_stat)">
+					AND A.DRAFT_STAT IN (SELECT STANDARD_CODE
+									  	FROM STANDARD
+									   WHERE STANDARD_CODE IN (SELECT STANDARD_CODE
+															     FROM STANDARD
+														        WHERE STANDARD_CODE LIKE 'APP%')
+										 AND STANDARD_NAME LIKE '%${detailSearch.draft_stat}%')
+				</if>
+			</if>	
+	
+	</sql>
+	
+	<sql id="searchApprLine">
+	<trim prefix="WHERE" prefixOverrides="AND">
+	<if test="detailSearch!=null">
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.emp_code)">
+					AND EMP_CODE = #{detailSearch.emp_code}
+				</if>
+			</if>
+		<if test="searchVO!=null and @org.apache.commons.lang3.StringUtils@isNotBlank(searchVO.searchWord)" >
+			<if test="'name'.equals(searchVO.searchType)">
+				AND APPR_LINE LIKE '%${searchVO.searchWord}%'
+			</if>
+			<if test="'emp'.equals(searchVO.searchType)">
+				 AND APPR_LINE_CODE IN (SELECT DISTINCT APPR_LINE_CODE
+                                    FROM APPR_ORDER Q INNER JOIN EMPLOYEE W ON(Q.EMP_CODE = W.EMP_CODE)
+                                   WHERE W.EMP_KOR LIKE '%${searchVO.searchWord}%')
+			</if>
+		</if>
+	</trim>
+		
+	</sql>
+	
+	<sql id="searchReviewGroup">
+	<trim prefix="WHERE" prefixOverrides="AND">
+	<if test="detailSearch!=null">
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.emp_code)">
+					AND EMP_CODE = #{detailSearch.emp_code}
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.rg_type)">
+					AND RG_TYPE = #{detailSearch.rg_type}
+				</if>
+			</if>	
+			<if test="searchVO!=null and @org.apache.commons.lang3.StringUtils@isNotBlank(searchVO.searchWord)" >
+			<if test="'name'.equals(searchVO.searchType)">
+				AND RG_NAME LIKE '%${searchVO.searchWord}%'
+			</if>
+			<if test="'emp'.equals(searchVO.searchType)">
+				 AND RG_CODE IN (SELECT DISTINCT RG_CODE
+                                    FROM REVIEWER Q INNER JOIN EMPLOYEE W ON(Q.EMP_CODE = W.EMP_CODE)
+                                   WHERE W.EMP_KOR LIKE '%${searchVO.searchWord}%')
+			</if>
+		</if>
+	</trim>
+		
+			
+	</sql>
+	
+	
+	<select id="selectApproveCount" resultType="int" parameterType="PagingVO">
+		SELECT COUNT(DRAFT_CODE)
+		FROM DRAFT A
+		WHERE DRAFT_POS = #{detailSearch.draft_pos}
+		<include refid="searchFrag" />
+	</select>
+	
+	<select id="selectTempFolder" parameterType="PagingVO" resultType="DraftVO">
+		SELECT C.*
+		FROM (SELECT ROWNUM RNUM, B.*
+				FROM (
+				SELECT DRAFT_CODE,DRAFT_TITLE, STANDARD_NAME DRAFT_STAT,DRAFT_DATE
+				FROM DRAFT A LEFT OUTER JOIN STANDARD ON (A.DRAFT_STAT = STANDARD.STANDARD_CODE)
+				WHERE DRAFT_POS = #{detailSearch.draft_pos}
+				<include refid="searchFrag"/>
+				 ORDER BY DRAFT_DATE DESC
+				)B)C
+		WHERE C.RNUM BETWEEN #{startRow} AND #{endRow}
+	</select>
+	
+	
+
+	<select id="selectApprLineCount" resultType="int" parameterType="PagingVO">
+		SELECT COUNT(APPR_LINE_CODE)
+		FROM APPROVE_LINE
+		<include refid="searchApprLine" />
+	</select>
+	
+	<select id="selectApproveLine" parameterType="PagingVO" resultType="Approve_LineVO">
+		SELECT B.*
+		FROM (SELECT ROWNUM RNUM,A.*
+				FROM (
+					SELECT APPR_LINE_CODE,APPR_LINE, EMP_CODE
+					  FROM APPROVE_LINE
+					 <include refid="searchApprLine"/>
+					 ORDER BY APPR_LINE_CODE DESC
+				) A)B 
+		WHERE B.RNUM BETWEEN #{startRow} AND #{endRow}
+	</select>
+	
+
+	
+	<select id="selectAllDraftList" parameterType="PagingVO" resultType="DraftVO">
+	
+	SELECT X.*
+	FROM (
+	SELECT Z.* ,ROWNUM RNUM
+	FROM (SELECT DISTINCT A.DRAFT_CODE, A.DRAFT_TITLE, STANDARD.STANDARD_NAME DRAFT_STAT
+		, A.DRAFT_DATE, EMP_KOR || '('|| POSITION_NAME || ')' EMP_CODE
+	FROM    DRAFT A INNER JOIN STANDARD ON(A.DRAFT_STAT = STANDARD.STANDARD_CODE)
+			        INNER JOIN EMPLOYEE ON(A.EMP_CODE = EMPLOYEE.EMP_CODE)
+			        INNER JOIN POSITION ON(EMPLOYEE.POSITION_CODE = POSITION.POSITION_CODE) 
+     WHERE  A.DRAFT_STAT = 'APP006' 
+     	<include refid="searchFrag" /> 
+      
+       ORDER BY A.DRAFT_DATE DESC) Z) X
+     WHERE X.RNUM BETWEEN #{startRow} AND #{endRow}  
+       
+       
+       
+	</select>
+	<select id="selectAllDraftCount" parameterType="PagingVO" resultType="int">
+	SELECT COUNT (DISTINCT A.DRAFT_CODE)
+	FROM    DRAFT A INNER JOIN STANDARD ON(A.DRAFT_STAT = STANDARD.STANDARD_CODE)
+			        INNER JOIN EMPLOYEE ON(A.EMP_CODE = EMPLOYEE.EMP_CODE)
+			        INNER JOIN POSITION ON(EMPLOYEE.POSITION_CODE = POSITION.POSITION_CODE)
+     WHERE  A.DRAFT_STAT = 'APP006'
+     <include refid="searchFrag" />
+        
+	</select>
+	<select id="selectProgDraftList" parameterType="PagingVO" resultType="DraftVO">
+	 WITH A AS ( SELECT  DISTINCT A.DRAFT_CODE
+                FROM REVIEWER_STAT A INNER JOIN DRAFT ON (A.DRAFT_CODE = DRAFT.DRAFT_CODE)
+                WHERE A.EMP_CODE = #{detailSearch.emp_code}
+                AND RS_TYPE = '1'
+                 AND DRAFT.DRAFT_STAT IN ('APP006','APP005'))
+            ,C AS( SELECT DISTINCT A.DRAFT_CODE,A.DRAFT_TITLE,STANDARD.STANDARD_NAME DRAFT_STAT,A.DRAFT_DATE,EMP_KOR||'('||POSITION_NAME||')' EMP_CODE
+						FROM DRAFT A INNER JOIN STANDARD ON (A.DRAFT_STAT = STANDARD.STANDARD_CODE)
+						             INNER JOIN EMPLOYEE ON (A.EMP_CODE = EMPLOYEE.EMP_CODE)
+				            		 INNER JOIN POSITION ON (EMPLOYEE.POSITION_CODE = POSITION.POSITION_CODE)
+				            		 )
+			,D AS ( SELECT DISTINCT APPR_STAT.DRAFT_CODE, APPR_STAT_CATAG
+                 FROM APPR_STAT, (SELECT NVL(C.CNT,1)+1 CNT, D.DRAFT_CODE
+                                    FROM (SELECT DRAFT_CODE, COUNT(*) CNT
+                                            FROM APPR_STAT 
+                                          WHERE APPR_STAT_CATAG IS NOT NULL
+                                           AND DRAFT_CODE IN (SELECT DRAFT_CODE FROM APPR_STAT WHERE EMP_CODE = #{detailSearch.emp_code})                                     
+                                         GROUP BY DRAFT_CODE)C RIGHT OUTER JOIN DRAFT D ON (C.DRAFT_CODE = D.DRAFT_CODE) 
+                                         WHERE D.DRAFT_STAT in ( 'APP005','APP006'))B
+             WHERE APPR_STAT.DRAFT_CODE = B.DRAFT_CODE
+               <![CDATA[  AND  APPR_ORDER >= B.CNT]]>
+                  AND EMP_CODE = #{detailSearch.emp_code}
+                   OR  APPR_STAT.DRAFT_CODE IN (SELECT DISTINCT DRAFT.DRAFT_CODE
+                                     FROM INSTEAD_AUTH INNER JOIN APPR_STAT ON (INSTEAD_AUTH.INSTEAD_AUTH = APPR_STAT.EMP_CODE)
+                                                       INNER JOIN DRAFT ON (APPR_STAT.DRAFT_CODE = DRAFT.DRAFT_CODE)
+                                    WHERE TO_CHAR(SYSDATE,'YYYYMMDD') = INSTEAD_DATE
+                                      AND DRAFT.DRAFT_STAT in( 'APP005','APP006')
+                                      AND INSTEAD_AUTH = #{detailSearch.emp_code}))
+			
+          SELECT X.*
+            FROM(select  Z.* , ROWNUM RNUM 
+		            FROM ( SELECT DISTINCT C.*
+					          FROM A,C,D
+					            WHERE C.DRAFT_CODE IN A.DRAFT_CODE
+					            OR C.DRAFT_CODE IN D.DRAFT_CODE
+				            ORDER BY C.DRAFT_DATE DESC) Z inner join draft A on (z.draft_code = A.draft_code)
+				       where 1=1 <include refid="searchFrag" />) X
+			WHERE X.RNUM BETWEEN #{startRow} AND #{endRow}
+            
+	</select>
+	<select id="selectProgDraftCount" parameterType="PagingVO" resultType="int">
+		 WITH A AS ( SELECT  DISTINCT A.DRAFT_CODE
+                FROM REVIEWER_STAT A INNER JOIN DRAFT ON (A.DRAFT_CODE = DRAFT.DRAFT_CODE)
+                WHERE A.EMP_CODE = #{detailSearch.emp_code}
+                AND RS_TYPE = '1'
+                 AND DRAFT.DRAFT_STAT IN ('APP006','APP005'))
+            ,C AS( SELECT DISTINCT A.DRAFT_CODE,A.DRAFT_TITLE,STANDARD.STANDARD_NAME DRAFT_STAT,A.DRAFT_DATE,EMP_KOR||'('||POSITION_NAME||')' EMP_CODE
+						FROM DRAFT A INNER JOIN STANDARD ON (A.DRAFT_STAT = STANDARD.STANDARD_CODE)
+						             INNER JOIN EMPLOYEE ON (A.EMP_CODE = EMPLOYEE.EMP_CODE)
+				            		 INNER JOIN POSITION ON (EMPLOYEE.POSITION_CODE = POSITION.POSITION_CODE))
+			,D AS ( SELECT DISTINCT APPR_STAT.DRAFT_CODE, APPR_STAT_CATAG
+                 FROM APPR_STAT, (SELECT NVL(C.CNT,1)+1 CNT, D.DRAFT_CODE
+                                    FROM (SELECT DRAFT_CODE, COUNT(*) CNT
+                                            FROM APPR_STAT 
+                                          WHERE APPR_STAT_CATAG IS NOT NULL
+                                           AND DRAFT_CODE IN (SELECT DRAFT_CODE FROM APPR_STAT WHERE EMP_CODE = #{detailSearch.emp_code})                                     
+                                         GROUP BY DRAFT_CODE)C RIGHT OUTER JOIN DRAFT D ON (C.DRAFT_CODE = D.DRAFT_CODE) 
+                                         WHERE D.DRAFT_STAT in ( 'APP005','APP006'))B
+             WHERE APPR_STAT.DRAFT_CODE = B.DRAFT_CODE
+               <![CDATA[  AND  APPR_ORDER >= B.CNT]]>
+                  AND EMP_CODE = #{detailSearch.emp_code}
+                   OR  APPR_STAT.DRAFT_CODE IN (SELECT DISTINCT DRAFT.DRAFT_CODE
+                                     FROM INSTEAD_AUTH INNER JOIN APPR_STAT ON (INSTEAD_AUTH.INSTEAD_AUTH = APPR_STAT.EMP_CODE)
+                                                       INNER JOIN DRAFT ON (APPR_STAT.DRAFT_CODE = DRAFT.DRAFT_CODE)
+                                    WHERE TO_CHAR(SYSDATE,'YYYYMMDD') = INSTEAD_DATE
+                                      AND DRAFT.DRAFT_STAT in( 'APP005','APP006')
+                                      AND INSTEAD_AUTH = #{detailSearch.emp_code}))
+			
+			select count(E.draft_code)
+			from (SELECT COUNT (DISTINCT C.DRAFT_CODE) cnt,C.draft_code
+		            FROM A,C,D
+		            WHERE C.DRAFT_CODE IN A.DRAFT_CODE
+		            OR C.DRAFT_CODE IN D.DRAFT_CODE
+		            group by C.draft_code
+		            order by C.draft_code)E inner join draft A on (E.draft_code = A.draft_code)
+            where 1=1<include refid="searchFrag" />
+            
+            
+	</select>
+	<select id="selectAttrDraftList" parameterType="PagingVO" resultType="DraftVO">
+		  WITH A AS ( SELECT  DISTINCT A.DRAFT_CODE
+                FROM REVIEWER_STAT A INNER JOIN DRAFT ON (A.DRAFT_CODE = DRAFT.DRAFT_CODE)
+                WHERE A.EMP_CODE = #{detailSearch.emp_code}
+                AND RS_TYPE = '1'
+                 AND DRAFT.DRAFT_STAT = 'APP002')
+        ,B AS(  SELECT  DISTINCT A.DRAFT_CODE
+                FROM REVIEWER_STAT A INNER JOIN DRAFT ON (A.DRAFT_CODE = DRAFT.DRAFT_CODE)
+                WHERE A.EMP_CODE = #{detailSearch.emp_code}
+                AND RS_TYPE = '2'
+              AND DRAFT.DRAFT_STAT = 'APP002')
+            ,C AS( SELECT DISTINCT A.DRAFT_CODE,A.DRAFT_TITLE,STANDARD.STANDARD_NAME DRAFT_STAT,A.DRAFT_DATE,EMP_KOR||'('||POSITION_NAME||')' EMP_CODE
+						FROM DRAFT A INNER JOIN STANDARD ON (A.DRAFT_STAT = STANDARD.STANDARD_CODE)
+						             INNER JOIN EMPLOYEE ON (A.EMP_CODE = EMPLOYEE.EMP_CODE)
+				            		 INNER JOIN POSITION ON (EMPLOYEE.POSITION_CODE = POSITION.POSITION_CODE))
+			,D AS ( SELECT DISTINCT APPR_STAT.DRAFT_CODE, APPR_STAT_CATAG
+                 FROM APPR_STAT, (SELECT NVL(C.CNT,1)+1 CNT, D.DRAFT_CODE
+                                    FROM (SELECT DRAFT_CODE, COUNT(*) CNT
+                                            FROM APPR_STAT 
+                                          WHERE APPR_STAT_CATAG IS NOT NULL
+                                           AND DRAFT_CODE IN (SELECT DRAFT_CODE FROM APPR_STAT WHERE EMP_CODE = #{detailSearch.emp_code})                                     
+                                         GROUP BY DRAFT_CODE)C RIGHT OUTER JOIN DRAFT D ON (C.DRAFT_CODE = D.DRAFT_CODE) 
+                                         WHERE D.DRAFT_STAT = 'APP002')B
+             WHERE APPR_STAT.DRAFT_CODE = B.DRAFT_CODE
+          <![CDATA[  AND  APPR_ORDER >= B.CNT]]>
+                  AND EMP_CODE = #{detailSearch.emp_code}
+                   OR  APPR_STAT.DRAFT_CODE IN (SELECT DISTINCT DRAFT.DRAFT_CODE
+                                     FROM INSTEAD_AUTH INNER JOIN APPR_STAT ON (INSTEAD_AUTH.INSTEAD_AUTH = APPR_STAT.EMP_CODE)
+                                                       INNER JOIN DRAFT ON (APPR_STAT.DRAFT_CODE = DRAFT.DRAFT_CODE)
+                                    WHERE TO_CHAR(SYSDATE,'YYYYMMDD') = INSTEAD_DATE
+                                      AND DRAFT.DRAFT_STAT = 'APP002'
+                                      AND INSTEAD_AUTH = #{detailSearch.emp_code}))
+		
+                  SELECT X.*
+            FROM(SELECT ROWNUM RNUM , Z.*
+		            FROM ( SELECT DISTINCT C.*
+				            FROM A,B,C,D
+				            WHERE C.DRAFT_CODE IN A.DRAFT_CODE
+				            OR C.DRAFT_CODE IN B.DRAFT_CODE
+				            OR C.DRAFT_CODE IN D.DRAFT_CODE
+				            ORDER BY C.DRAFT_DATE DESC) Z inner join draft A on (z.draft_code = A.draft_code)
+				            where 1=1 <include refid="searchFrag" />) X
+			WHERE X.RNUM BETWEEN #{startRow} AND #{endRow}
+			
+			
+			  
+	</select>
+	<select id="selectAttrDraftCount" parameterType="PagingVO" resultType="int">
+		 WITH A AS ( SELECT  DISTINCT A.DRAFT_CODE
+                FROM REVIEWER_STAT A INNER JOIN DRAFT ON (A.DRAFT_CODE = DRAFT.DRAFT_CODE)
+                WHERE A.EMP_CODE = #{detailSearch.emp_code}
+                AND RS_TYPE = '1'
+                 AND DRAFT.DRAFT_STAT = 'APP002')
+        ,B AS(  SELECT  DISTINCT A.DRAFT_CODE
+                FROM REVIEWER_STAT A INNER JOIN DRAFT ON (A.DRAFT_CODE = DRAFT.DRAFT_CODE)
+                WHERE A.EMP_CODE = #{detailSearch.emp_code}
+                AND RS_TYPE = '2'
+              AND DRAFT.DRAFT_STAT = 'APP002')
+            ,C AS( SELECT DISTINCT A.DRAFT_CODE,A.DRAFT_TITLE,STANDARD.STANDARD_NAME DRAFT_STAT,A.DRAFT_DATE,EMP_KOR||'('||POSITION_NAME||')' EMP_CODE
+						FROM DRAFT A INNER JOIN STANDARD ON (A.DRAFT_STAT = STANDARD.STANDARD_CODE)
+						             INNER JOIN EMPLOYEE ON (A.EMP_CODE = EMPLOYEE.EMP_CODE)
+				            		 INNER JOIN POSITION ON (EMPLOYEE.POSITION_CODE = POSITION.POSITION_CODE))
+			,D AS ( SELECT DISTINCT APPR_STAT.DRAFT_CODE, APPR_STAT_CATAG
+                 FROM APPR_STAT, (SELECT NVL(C.CNT,1)+1 CNT, D.DRAFT_CODE
+                                    FROM (SELECT DRAFT_CODE, COUNT(*) CNT
+                                            FROM APPR_STAT 
+                                          WHERE APPR_STAT_CATAG IS NOT NULL
+                                           AND DRAFT_CODE IN (SELECT DRAFT_CODE FROM APPR_STAT WHERE EMP_CODE = #{detailSearch.emp_code})                                     
+                                         GROUP BY DRAFT_CODE)C RIGHT OUTER JOIN DRAFT D ON (C.DRAFT_CODE = D.DRAFT_CODE) 
+                                         WHERE D.DRAFT_STAT = 'APP002')B
+             WHERE APPR_STAT.DRAFT_CODE = B.DRAFT_CODE
+              <![CDATA[  AND  APPR_ORDER >= B.CNT]]>
+                  AND EMP_CODE = #{detailSearch.emp_code}
+                   OR  APPR_STAT.DRAFT_CODE IN (SELECT DISTINCT DRAFT.DRAFT_CODE
+                                     FROM INSTEAD_AUTH INNER JOIN APPR_STAT ON (INSTEAD_AUTH.INSTEAD_AUTH = APPR_STAT.EMP_CODE)
+                                                       INNER JOIN DRAFT ON (APPR_STAT.DRAFT_CODE = DRAFT.DRAFT_CODE)
+                                    WHERE TO_CHAR(SYSDATE,'YYYYMMDD') = INSTEAD_DATE
+                                      AND DRAFT.DRAFT_STAT = 'APP002'
+                                      AND INSTEAD_AUTH = #{detailSearch.emp_code}))
+			
+        
+            
+            select count(E.draft_code)
+			from (SELECT COUNT (DISTINCT C.DRAFT_CODE) CNT,C.draft_code
+            FROM A,B,C,D
+            WHERE C.DRAFT_CODE IN A.DRAFT_CODE
+            OR C.DRAFT_CODE IN B.DRAFT_CODE
+            OR C.DRAFT_CODE IN D.DRAFT_CODE
+            group by C.draft_code
+            order by C.draft_code)E inner join draft A on (E.draft_code = A.draft_code)
+            where 1=1 <include refid="searchFrag" />
+	</select>
+	<select id="selectCompDraftList" parameterType="PagingVO" resultType="DraftVO">
+		 WITH A AS ( SELECT  DISTINCT A.DRAFT_CODE
+                FROM REVIEWER_STAT A INNER JOIN DRAFT ON (A.DRAFT_CODE = DRAFT.DRAFT_CODE)
+                WHERE A.EMP_CODE = #{detailSearch.emp_code}
+                AND RS_TYPE = '1'
+                 AND DRAFT.DRAFT_STAT = 'APP001')
+        ,B AS(  SELECT  DISTINCT A.DRAFT_CODE
+                FROM REVIEWER_STAT A INNER JOIN DRAFT ON (A.DRAFT_CODE = DRAFT.DRAFT_CODE)
+                WHERE A.EMP_CODE = #{detailSearch.emp_code}
+                AND RS_TYPE = '2'
+              AND DRAFT.DRAFT_STAT = 'APP001')
+            ,C AS( SELECT DISTINCT A.DRAFT_CODE,A.DRAFT_TITLE,STANDARD.STANDARD_NAME DRAFT_STAT,A.DRAFT_DATE,EMP_KOR||'('||POSITION_NAME||')' EMP_CODE
+						FROM DRAFT A INNER JOIN STANDARD ON (A.DRAFT_STAT = STANDARD.STANDARD_CODE)
+						             INNER JOIN EMPLOYEE ON (A.EMP_CODE = EMPLOYEE.EMP_CODE)
+				            		 INNER JOIN POSITION ON (EMPLOYEE.POSITION_CODE = POSITION.POSITION_CODE))
+			,D AS ( SELECT DISTINCT APPR_STAT.DRAFT_CODE, APPR_STAT_CATAG
+                 FROM APPR_STAT, (SELECT NVL(C.CNT,1)+1 CNT, D.DRAFT_CODE
+                                    FROM (SELECT DRAFT_CODE, COUNT(*) CNT
+                                            FROM APPR_STAT 
+                                          WHERE APPR_STAT_CATAG IS NOT NULL
+                                           AND DRAFT_CODE IN (SELECT DRAFT_CODE FROM APPR_STAT WHERE EMP_CODE = #{detailSearch.emp_code})                                     
+                                         GROUP BY DRAFT_CODE)C RIGHT OUTER JOIN DRAFT D ON (C.DRAFT_CODE = D.DRAFT_CODE) 
+                                         WHERE D.DRAFT_STAT = 'APP001')B
+             WHERE APPR_STAT.DRAFT_CODE = B.DRAFT_CODE
+             <![CDATA[  AND  APPR_ORDER >= B.CNT]]>
+               
+                  AND EMP_CODE = #{detailSearch.emp_code}
+                   OR  APPR_STAT.DRAFT_CODE IN (SELECT DISTINCT DRAFT.DRAFT_CODE
+                                     FROM INSTEAD_AUTH INNER JOIN APPR_STAT ON (INSTEAD_AUTH.INSTEAD_AUTH = APPR_STAT.EMP_CODE)
+                                                       INNER JOIN DRAFT ON (APPR_STAT.DRAFT_CODE = DRAFT.DRAFT_CODE)
+                                    WHERE TO_CHAR(SYSDATE,'YYYYMMDD') = INSTEAD_DATE
+                                      AND DRAFT.DRAFT_STAT = 'APP001'
+                                      AND INSTEAD_AUTH = #{detailSearch.emp_code}))
+			
+                SELECT X.*
+            FROM(SELECT ROWNUM RNUM , Z.*
+		            FROM ( SELECT DISTINCT C.*
+				            FROM A,B,C,D
+				             WHERE C.DRAFT_CODE IN A.DRAFT_CODE
+					            OR C.DRAFT_CODE IN B.DRAFT_CODE
+					            OR C.DRAFT_CODE IN D.DRAFT_CODE
+				            ORDER BY C.DRAFT_DATE DESC) Z inner join draft A on (z.draft_code = A.draft_code)
+				            where 1=1 <include refid="searchFrag" /> ) X
+			WHERE X.RNUM BETWEEN #{startRow} AND #{endRow}
+			
+			     
+	</select>
+	<select id="selectCompDraftCount" parameterType="PagingVO" resultType="int">
+		 WITH A AS ( SELECT  DISTINCT A.DRAFT_CODE
+                FROM REVIEWER_STAT A INNER JOIN DRAFT ON (A.DRAFT_CODE = DRAFT.DRAFT_CODE)
+                WHERE A.EMP_CODE = #{detailSearch.emp_code}
+                AND RS_TYPE = '1'
+                 AND DRAFT.DRAFT_STAT = 'APP001')
+        ,B AS(  SELECT  DISTINCT A.DRAFT_CODE
+                FROM REVIEWER_STAT A INNER JOIN DRAFT ON (A.DRAFT_CODE = DRAFT.DRAFT_CODE)
+                WHERE A.EMP_CODE = #{detailSearch.emp_code}
+                AND RS_TYPE = '2'
+              AND DRAFT.DRAFT_STAT = 'APP001')
+            ,C AS( SELECT DISTINCT A.DRAFT_CODE,A.DRAFT_TITLE,STANDARD.STANDARD_NAME DRAFT_STAT,A.DRAFT_DATE,EMP_KOR||'('||POSITION_NAME||')' EMP_CODE
+						FROM DRAFT A INNER JOIN STANDARD ON (A.DRAFT_STAT = STANDARD.STANDARD_CODE)
+						             INNER JOIN EMPLOYEE ON (A.EMP_CODE = EMPLOYEE.EMP_CODE)
+				            		 INNER JOIN POSITION ON (EMPLOYEE.POSITION_CODE = POSITION.POSITION_CODE))
+			,D AS ( SELECT DISTINCT APPR_STAT.DRAFT_CODE, APPR_STAT_CATAG
+                 FROM APPR_STAT, (SELECT NVL(C.CNT,1)+1 CNT, D.DRAFT_CODE
+                                    FROM (SELECT DRAFT_CODE, COUNT(*) CNT
+                                            FROM APPR_STAT 
+                                          WHERE APPR_STAT_CATAG IS NOT NULL
+                                           AND DRAFT_CODE IN (SELECT DRAFT_CODE FROM APPR_STAT WHERE EMP_CODE = #{detailSearch.emp_code})                                     
+                                         GROUP BY DRAFT_CODE)C RIGHT OUTER JOIN DRAFT D ON (C.DRAFT_CODE = D.DRAFT_CODE) 
+                                         WHERE D.DRAFT_STAT = 'APP001')B
+             WHERE APPR_STAT.DRAFT_CODE = B.DRAFT_CODE
+               <![CDATA[  AND  APPR_ORDER >= B.CNT]]>
+                  AND EMP_CODE = #{detailSearch.emp_code}
+                   OR  APPR_STAT.DRAFT_CODE IN (SELECT DISTINCT DRAFT.DRAFT_CODE
+                                     FROM INSTEAD_AUTH INNER JOIN APPR_STAT ON (INSTEAD_AUTH.INSTEAD_AUTH = APPR_STAT.EMP_CODE)
+                                                       INNER JOIN DRAFT ON (APPR_STAT.DRAFT_CODE = DRAFT.DRAFT_CODE)
+                                    WHERE TO_CHAR(SYSDATE,'YYYYMMDD') = INSTEAD_DATE
+                                      AND DRAFT.DRAFT_STAT = 'APP001'
+                                      AND INSTEAD_AUTH = #{detailSearch.emp_code}))
+			
+           
+            
+            	select count(E.draft_code)
+			from (SELECT COUNT (DISTINCT C.DRAFT_CODE) CNT,C.draft_code
+		          	FROM A,B,C,D
+		            WHERE C.DRAFT_CODE IN A.DRAFT_CODE
+		            OR C.DRAFT_CODE IN B.DRAFT_CODE
+		            OR C.DRAFT_CODE IN D.DRAFT_CODE
+		            group by C.draft_code
+		            order by C.draft_code)E inner join draft A on (E.draft_code = A.draft_code)
+            where 1=1 <include refid="searchFrag" />
+	</select>
+	
+	<select id="selectTotalDraftList" parameterType="PagingVO" resultType="DraftVO">
+		 WITH A AS ( SELECT  DISTINCT A.DRAFT_CODE
+                FROM REVIEWER_STAT A INNER JOIN DRAFT ON (A.DRAFT_CODE = DRAFT.DRAFT_CODE)
+                WHERE A.EMP_CODE = #{detailSearch.emp_code}
+                AND RS_TYPE = '1'
+                 AND DRAFT.DRAFT_STAT is not null)
+        ,B AS(  SELECT  DISTINCT A.DRAFT_CODE
+                FROM REVIEWER_STAT A INNER JOIN DRAFT ON (A.DRAFT_CODE = DRAFT.DRAFT_CODE)
+                WHERE A.EMP_CODE = #{detailSearch.emp_code}
+                AND RS_TYPE = '2'
+              AND DRAFT.DRAFT_STAT is not null)
+        ,C AS( SELECT DISTINCT A.DRAFT_CODE,A.DRAFT_TITLE,STANDARD.STANDARD_NAME DRAFT_STAT,A.emp_code code,A.DRAFT_DATE,EMP_KOR||'('||POSITION_NAME||')' EMP_CODE
+						FROM DRAFT A INNER JOIN STANDARD ON (A.DRAFT_STAT = STANDARD.STANDARD_CODE)
+						             INNER JOIN EMPLOYEE ON (A.EMP_CODE = EMPLOYEE.EMP_CODE)
+				            		 INNER JOIN POSITION ON (EMPLOYEE.POSITION_CODE = POSITION.POSITION_CODE))
+        ,D AS ( SELECT DISTINCT APPR_STAT.DRAFT_CODE, APPR_STAT_CATAG
+                 FROM APPR_STAT, (SELECT NVL(C.CNT,1)+1 CNT, D.DRAFT_CODE
+                                    FROM (SELECT DRAFT_CODE, COUNT(*) CNT
+                                            FROM APPR_STAT 
+                                          WHERE APPR_STAT_CATAG IS NOT NULL
+                                           AND DRAFT_CODE IN (SELECT DRAFT_CODE FROM APPR_STAT WHERE EMP_CODE = #{detailSearch.emp_code})                                     
+                                         GROUP BY DRAFT_CODE)C RIGHT OUTER JOIN DRAFT D ON (C.DRAFT_CODE = D.DRAFT_CODE) 
+                                         WHERE D.DRAFT_STAT is not null)B
+             WHERE APPR_STAT.DRAFT_CODE = B.DRAFT_CODE
+              AND  APPR_ORDER >= B.CNT
+                  AND EMP_CODE = #{detailSearch.emp_code}
+                   OR  APPR_STAT.DRAFT_CODE IN (SELECT DISTINCT DRAFT.DRAFT_CODE
+                                     FROM INSTEAD_AUTH INNER JOIN APPR_STAT ON (INSTEAD_AUTH.INSTEAD_AUTH = APPR_STAT.EMP_CODE)
+                                                       INNER JOIN DRAFT ON (APPR_STAT.DRAFT_CODE = DRAFT.DRAFT_CODE)
+                                    WHERE TO_CHAR(SYSDATE,'YYYYMMDD') = INSTEAD_DATE
+                                      AND DRAFT.DRAFT_STAT is not null
+                                      AND INSTEAD_AUTH = #{detailSearch.emp_code}))
+			
+            SELECT X.*
+            FROM(SELECT ROWNUM RNUM , Z.*
+		            FROM ( SELECT DISTINCT C.*
+				            FROM A,B,C,D
+				            WHERE  c.code = #{detailSearch.emp_code}
+				            or C.DRAFT_CODE IN A.DRAFT_CODE
+				            OR C.DRAFT_CODE IN B.DRAFT_CODE
+				            OR C.DRAFT_CODE IN D.DRAFT_CODE
+				            ORDER BY C.DRAFT_DATE DESC) Z inner join draft A on (z.draft_code = A.draft_code)
+				            where 1=1<include refid="searchFrag" />)X
+			WHERE X.RNUM BETWEEN #{startRow} AND #{endRow}
+			
+			
+	</select>
+	
+	<select id="selectTotalDraftCount" parameterType="PagingVO" resultType="int"> 
+		 WITH A AS ( SELECT  DISTINCT A.DRAFT_CODE
+                FROM REVIEWER_STAT A INNER JOIN DRAFT ON (A.DRAFT_CODE = DRAFT.DRAFT_CODE)
+                WHERE A.EMP_CODE = #{detailSearch.emp_code}
+                AND RS_TYPE = '1'
+                 AND DRAFT.DRAFT_STAT is not null)
+        ,B AS(  SELECT  DISTINCT A.DRAFT_CODE
+                FROM REVIEWER_STAT A INNER JOIN DRAFT ON (A.DRAFT_CODE = DRAFT.DRAFT_CODE)
+                WHERE A.EMP_CODE = #{detailSearch.emp_code}
+                AND RS_TYPE = '2'
+              AND DRAFT.DRAFT_STAT is not null)
+        ,C AS( SELECT DISTINCT A.DRAFT_CODE,A.DRAFT_TITLE,STANDARD.STANDARD_NAME DRAFT_STAT,A.emp_code code,A.DRAFT_DATE,EMP_KOR||'('||POSITION_NAME||')' EMP_CODE
+						FROM DRAFT A INNER JOIN STANDARD ON (A.DRAFT_STAT = STANDARD.STANDARD_CODE)
+						             INNER JOIN EMPLOYEE ON (A.EMP_CODE = EMPLOYEE.EMP_CODE)
+				            		 INNER JOIN POSITION ON (EMPLOYEE.POSITION_CODE = POSITION.POSITION_CODE))
+        ,D AS ( SELECT DISTINCT APPR_STAT.DRAFT_CODE, APPR_STAT_CATAG
+                 FROM APPR_STAT, (SELECT NVL(C.CNT,1)+1 CNT, D.DRAFT_CODE
+                                    FROM (SELECT DRAFT_CODE, COUNT(*) CNT
+                                            FROM APPR_STAT 
+                                          WHERE APPR_STAT_CATAG IS NOT NULL
+                                           AND DRAFT_CODE IN (SELECT DRAFT_CODE FROM APPR_STAT WHERE EMP_CODE = #{detailSearch.emp_code})                                     
+                                         GROUP BY DRAFT_CODE)C RIGHT OUTER JOIN DRAFT D ON (C.DRAFT_CODE = D.DRAFT_CODE) 
+                                         WHERE D.DRAFT_STAT is not null)B
+             WHERE APPR_STAT.DRAFT_CODE = B.DRAFT_CODE
+              AND  APPR_ORDER >= B.CNT
+                  AND EMP_CODE = #{detailSearch.emp_code}
+                   OR  APPR_STAT.DRAFT_CODE IN (SELECT DISTINCT DRAFT.DRAFT_CODE
+                                     FROM INSTEAD_AUTH INNER JOIN APPR_STAT ON (INSTEAD_AUTH.INSTEAD_AUTH = APPR_STAT.EMP_CODE)
+                                                       INNER JOIN DRAFT ON (APPR_STAT.DRAFT_CODE = DRAFT.DRAFT_CODE)
+                                    WHERE TO_CHAR(SYSDATE,'YYYYMMDD') = INSTEAD_DATE
+                                      AND DRAFT.DRAFT_STAT is not null
+                                      AND INSTEAD_AUTH = #{detailSearch.emp_code}))
+			
+            select count(E.draft_code)
+			from (SELECT COUNT (DISTINCT C.DRAFT_CODE) CNT,C.draft_code
+          	FROM A,B,C,D
+            WHERE  c.code = #{detailSearch.emp_code}
+            or C.DRAFT_CODE IN A.DRAFT_CODE
+            OR C.DRAFT_CODE IN B.DRAFT_CODE
+            OR C.DRAFT_CODE IN D.DRAFT_CODE
+            group by C.draft_code
+            order by C.draft_code)E inner join draft A on (E.draft_code = A.draft_code)
+            where 1=1<include refid="searchFrag" />
+	</select>
+
+	
+	<select id="selectDraftAttachList" parameterType="string" resultType="string">
+		SELECT DRAFT_ATTCODE
+		FROM DRAFT_ATTATCH
+		WHERE DRAFT_CODE = #{emp_code}
+	</select>
+	
+	<resultMap type="DraftVO" id="draftMap" autoMapping="true">
+		<id property="draft_code" column="DRAFT_CODE"/>
+		<collection property="attatchList" javaType="java.util.List" ofType="Draft_AttatchVO" autoMapping="true"/>
+	</resultMap>
+	
+	<select id="selectDraft" parameterType="DraftVO" resultMap="draftMap">
+		SELECT A.* ,B.DRAFT_ATTCODE,B.ORG_NAME,B.FANCY_SIZE
+		FROM DRAFT A LEFT OUTER JOIN DRAFT_ATTATCH B ON(A.DRAFT_CODE = B.DRAFT_CODE)
+		WHERE A.DRAFT_CODE = #{draft_code}
+		ORDER BY A.DRAFT_CODE DESC
+	</select>
+	
+	<select id="selectDraftAttatch" parameterType="String" resultType="Draft_AttatchVO">
+		SELECT * 
+		FROM DRAFT_ATTATCH
+		WHERE DRAFT_ATTCODE = #{draft_attcode}
+	</select>
+	
+	<select id="selectImageAttatch" parameterType="String" resultType="Image_AttatchVO">
+		SELECT *
+		FROM IMAGE_ATTATCH
+		WHERE EMP_ATTCODE = #{emp_attcode}
+	</select>
+	
+	<resultMap type="Approve_LineVO" id="apprMap" autoMapping="true">
+		<id property="appr_line_code" column="APPR_LINE_CODE"/>
+		<collection property="orderList" javaType="java.util.List" ofType="EmployeeVO" autoMapping="true"/>
+	</resultMap>
+	
+	<resultMap type="ReviewerGroupVO" id="reviewerMap" autoMapping="true">
+		<id property="rg_code" column="RG_CODE"/>
+		<collection property="reviewerList" javaType="java.util.List" ofType="EmployeeVO" autoMapping="true"/>
+	</resultMap>
+	
+	<select id="selectMyApprGroup" parameterType="string" resultMap="apprMap">
+	SELECT B.EMP_CODE, B.EMP_KOR, C.APPR_LINE_CODE , C.APPR_LINE, D.POSITION_NAME
+  FROM (SELECT *
+          FROM APPR_ORDER) A INNER JOIN EMPLOYEE B ON (A.EMP_CODE = B.EMP_CODE)
+                     INNER JOIN POSITION D ON(B.POSITION_CODE = D.POSITION_CODE)
+                  RIGHT OUTER JOIN APPROVE_LINE C  ON (A.APPR_LINE_CODE = C.APPR_LINE_CODE)
+            WHERE C.EMP_CODE = #{emp_code}
+      
+	</select>
+	
+	<select id="selectMyReviewerGroup" parameterType="ReviewerGroupVO" resultMap="reviewerMap">
+		SELECT B.EMP_CODE, B.EMP_KOR, D.RG_CODE, D.RG_NAME,C.POSITION_NAME                 
+		  FROM (SELECT * 
+                  FROM REVIEWER) A INNER JOIN EMPLOYEE B ON (A.EMP_CODE = B.EMP_CODE)
+										      INNER JOIN POSITION C ON (B.POSITION_CODE = C.POSITION_CODE)
+										      RIGHT OUTER JOIN REVIEWER_GROUP D ON (D.RG_CODE = A.RG_CODE)
+										WHERE D.EMP_CODE = #{emp_code}     
+										AND D.RG_TYPE = #{rg_type} 
+	</select>
+	
+	<select id="selectModifyApprLineInfo" parameterType="Approve_LineVO" resultMap="apprMap">
+		  SELECT A.APPR_LINE_CODE, A.APPR_LINE, B.EMP_CODE, C.EMP_KOR , D.POSITION_NAME POSITION_CODE
+			FROM APPROVE_LINE A LEFT OUTER JOIN APPR_ORDER B ON(A.APPR_LINE_CODE = B.APPR_LINE_CODE)
+                    			INNER JOIN EMPLOYEE C ON (B.EMP_CODE = C.EMP_CODE) 
+                    			INNER JOIN POSITION D ON (D.POSITION_CODE = C.POSITION_CODE)
+			WHERE A.APPR_LINE_CODE = #{appr_line_code}
+  			  AND A.EMP_CODE = #{emp_code}
+  			  
+  			  UNION ALL
+  			  
+  			  SELECT APPR_LINE_CODE , APPR_LINE, null EMP_CODE,  null EMP_KOR,  null POSITION_CODE
+  			    FROM APPROVE_LINE
+  			  WHERE APPR_LINE_CODE = #{appr_line_code}
+  			  AND EMP_CODE = #{emp_code}
+	</select>
+	
+	<select id="selectModifyReviewerLineInfo" parameterType="ReviewerGroupVO" resultMap="reviewerMap">
+	  SELECT A.RG_CODE,RG_NAME, B.EMP_CODE, C.EMP_KOR,  D.POSITION_NAME POSITION_CODE
+		FROM REVIEWER_GROUP A LEFT OUTER JOIN REVIEWER B ON(A.RG_CODE = B.RG_CODE )
+		              		  INNER JOIN EMPLOYEE C ON (C.EMP_CODE = B.EMP_CODE)
+		              		  INNER JOIN POSITION D ON (D.POSITION_CODE = C.POSITION_CODE)
+		WHERE A.RG_CODE = #{rg_code}
+		  AND A.EMP_CODE = #{emp_code}
+		  
+		   UNION ALL
+  			  
+		  SELECT RG_CODE , RG_NAME, null EMP_CODE,  null EMP_KOR,  null POSITION_CODE
+		    FROM REVIEWER_GROUP
+		  WHERE RG_CODE = #{rg_code}
+		  AND EMP_CODE = #{emp_code}
+	</select>
+	
+	<select id="selectReviewerGroupCount" resultType="int" parameterType="PagingVO">
+			SELECT COUNT(*)
+		FROM REVIEWER_GROUP
+		<include refid="searchReviewGroup" />
+	</select>
+
+	<select id="selectReviewerGroup" parameterType="PagingVO" resultType="ReviewerGroupVO">
+		SELECT A.*
+		FROM (
+		SELECT ROWNUM RNUM, RG_CODE,RG_NAME, EMP_CODE
+		  FROM REVIEWER_GROUP
+		 <include refid="searchReviewGroup"/>
+		  ORDER BY RG_CODE DESC
+		) A
+		WHERE RNUM BETWEEN #{startRow} AND #{endRow}
+	</select>
+	
+	<select id="selectReviewer" parameterType="String" resultType="ReviewerVO">
+		SELECT EMP_CODE
+		  FROM REVIEWER
+		 WHERE RG_CODE = #{rg_code}   
+	</select>
+
+	<resultMap type="Reviewer_StatVO" id="reviewerStatMap" autoMapping="true" >
+		<id property="rs_code" column="RS_CODE"/>
+		<association property="empVO" javaType="EmployeeVO" autoMapping="true"/>
+	</resultMap>	
+	<select id="selectReviewerStatList" parameterType="Reviewer_StatVO" resultMap="reviewerStatMap">
+		SELECT A.RS_CODE,A.EMP_CODE ,C.POSITION_NAME, B.EMP_KOR,C.POSITION_NAME,D.TEAM_NAME
+		FROM REVIEWER_STAT A INNER JOIN EMPLOYEE B ON (A.EMP_CODE=B.EMP_CODE)
+		                     INNER JOIN POSITION C ON (B.POSITION_CODE = C.POSITION_CODE)
+		                     INNER JOIN TEAM D ON(B.TEAM_CODE=D.TEAM_CODE)
+		WHERE A.DRAFT_CODE = #{draft_code}
+		AND A.RS_TYPE = #{rs_type}
+	</select>
+	
+	<select id="selectEmpSortList" parameterType="String" resultType="EmployeeVO">
+		  SELECT emp_code
+	    FROM EMPLOYEE
+	    WHERE EMP_CODE IN (${emp_codeList})
+	    ORDER BY POSITION_CODE ASC, EMP_STARTDATE DESC
+	</select>
+	
+	
+	<select id="selectApprOrder" parameterType="String" resultType="Appr_OrderVO">
+		SELECT EMP_CODE
+		FROM APPR_ORDER
+		WHERE APPR_LINE_CODE = #{appr_line_code}
+	</select>
+	
+	<resultMap type="Appr_StatVO" id="apprStatMap" autoMapping="true" >
+		<id property="appr_stat_code" column="APPR_STAT_CODE"/>
+		<association property="empVO" javaType="EmployeeVO" autoMapping="true"/>
+	</resultMap>
+	<select id="selectApproveStat" parameterType="String" resultMap="apprStatMap">
+		   WITH ATTATCH AS (
+            SELECT EMP_ATTCODE, EMP_CODE
+                     FROM IMAGE_ATTATCH
+                       WHERE IMG_CATAG ='IMG100'
+				)
+SELECT A.APPR_STAT_CODE,A.APPR_STAT_CATAG, A.EMP_CODE,B.EMP_KOR,C.POSITION_NAME,D.TEAM_NAME,E.STANDARD_NAME APPR_STAT_NAME,EMP_ATTCODE
+FROM APPR_STAT A INNER JOIN EMPLOYEE B ON (A.EMP_CODE = B.EMP_CODE) 
+                INNER JOIN POSITION C ON (B.POSITION_CODE = C.POSITION_CODE)
+                INNER JOIN TEAM D ON(B.TEAM_CODE=D.TEAM_CODE) 
+                LEFT OUTER JOIN STANDARD E ON (A.APPR_STAT_CATAG = E.STANDARD_CODE)
+                LEFT OUTER JOIN ATTATCH ON(A.EMP_CODE = ATTATCH.EMP_CODE) 
+WHERE DRAFT_CODE = #{draft_code}
+  
+	</select>
+	
+	<select id="selectApproveStatInfo" parameterType="String" resultType="Appr_StatVO">
+		SELECT *
+		  FROM APPR_STAT
+		 WHERE APPR_STAT_CODE = #{appr_stat_code}
+	</select>
+	
+	
+	<insert id="insertApproveStat" parameterType="Appr_StatVO">
+		<selectKey keyProperty="appr_stat_code" resultType="string" order="BEFORE">
+			  SELECT 'AS'||LPAD(NVL(MAX(SUBSTR(APPR_STAT_CODE,3)),0)+1,3,'0')
+                FROM APPR_STAT
+		</selectKey>
+	INSERT INTO APPR_STAT(
+    APPR_STAT_CODE,
+    DRAFT_CODE, EMP_CODE,APPR_ORDER
+	)VALUES(
+   	 #{appr_stat_code},  #{draft_code,jdbcType=VARCHAR}
+    ,#{emp_code,jdbcType=VARCHAR},#{appr_order,jdbcType=VARCHAR}
+	)
+	</insert>
+	
+	
+	<insert id="insertApproveLine" parameterType="Approve_LineVO">
+		<selectKey keyProperty="appr_line_code" resultType="string" order="BEFORE">
+			  SELECT 'AL'||LPAD(NVL(MAX(SUBSTR(APPR_LINE_CODE,3)),0)+1,3,'0')
+                FROM APPROVE_LINE
+		</selectKey>
+	INSERT INTO APPROVE_LINE(
+    APPR_LINE_CODE, APPR_LINE, EMP_CODE
+	)VALUES(#{appr_line_code}
+	, #{appr_line,jdbcType=VARCHAR}
+	,#{emp_code,jdbcType=VARCHAR})
+	</insert>
+	
+	<insert id="insertApproveOrder" parameterType="Appr_OrderVO">
+		<selectKey keyProperty="appr_order_code" resultType="string" order="BEFORE">
+			  SELECT 'AO'||LPAD(NVL(MAX(SUBSTR(APPR_ORDER_CODE,3)),0)+1,3,'0')
+                FROM APPR_ORDER
+		</selectKey>
+	INSERT INTO appr_order(
+    appr_order_code, emp_code,
+    appr_line_code
+    )VALUES(
+    #{appr_order_code},
+    #{emp_code,jdbcType=VARCHAR}, #{appr_line_code,jdbcType=VARCHAR})
+	</insert>
+	
+	<insert id="insertReviewerGroup" parameterType="ReviewerGroupVO">
+		<selectKey keyProperty="rg_code" resultType="string" order="BEFORE">
+			  SELECT 'RG'||LPAD(NVL(MAX(SUBSTR(RG_CODE,3)),0)+1,3,'0')
+                FROM REVIEWER_GROUP
+		</selectKey>
+		INSERT INTO REVIEWER_GROUP(RG_CODE,RG_NAME,EMP_CODE,RG_TYPE) 
+			VALUES(#{rg_code,jdbcType=VARCHAR},#{rg_name,jdbcType=VARCHAR},#{emp_code,jdbcType=VARCHAR},#{rg_type,jdbcType=VARCHAR})
+	</insert>
+	
+	<insert id="insertReviewerLine" parameterType="ReviewerVO">
+		<selectKey keyProperty="reviewer_code" resultType="string" order="BEFORE">
+			  SELECT 'RE'||LPAD(NVL(MAX(SUBSTR(REVIEWER_CODE,3)),0)+1,3,'0')
+                FROM REVIEWER
+		</selectKey>
+			INSERT INTO REVIEWER(REVIEWER_CODE,RG_CODE,EMP_CODE) 
+			VALUES(#{reviewer_code,jdbcType=VARCHAR},#{rg_code,jdbcType=VARCHAR},#{emp_code,jdbcType=VARCHAR})
+	</insert>
+	
+	<insert id="insertReviewerStat" parameterType="Reviewer_StatVO">
+		<selectKey keyProperty="rs_code" resultType="string" order="BEFORE">
+			  SELECT 'RS'||LPAD(NVL(MAX(SUBSTR(RS_CODE,3)),0)+1,3,'0')
+                FROM REVIEWER_STAT
+		</selectKey>
+			INSERT INTO REVIEWER_STAT(RS_CODE,DRAFT_CODE,EMP_CODE,RS_TYPE) 
+			VALUES(#{rs_code,jdbcType=VARCHAR},#{draft_code,jdbcType=VARCHAR},#{emp_code,jdbcType=VARCHAR},#{rs_type,jdbcType=VARCHAR})
+	</insert>
+	
+	<insert id="insertDraft" parameterType="DraftVO">
+		<selectKey keyProperty="draft_code" resultType="string" order="BEFORE">
+			  SELECT 'DR'||LPAD(NVL(MAX(SUBSTR(DRAFT_CODE,3)),0)+1,3,'0')
+                FROM DRAFT
+		</selectKey>
+		  INSERT INTO DRAFT(
+			    DRAFT_CODE, DRAFT_DATE, EMP_CODE, DRAFT_TITLE, DRAFT_CONTENT
+			   , DRAFT_POS
+			   ,DRAFT_STAT
+			   , DRAFT_INSTEAD_EMP
+			   ) VALUES(
+			   #{draft_code},SYSDATE,
+			   #{emp_code,jdbcType=VARCHAR},#{draft_title,jdbcType=VARCHAR},
+			    #{draft_content,jdbcType=VARCHAR},#{draft_pos,jdbcType=VARCHAR}
+			   ,#{draft_stat,jdbcType=VARCHAR}
+			   ,#{draft_instead_emp,jdbcType=VARCHAR})
+	</insert>
+	
+	<insert id="insertDraftAttatch" parameterType="Draft_AttatchVO">
+		<selectKey keyProperty="draft_attcode" resultType="string" order="BEFORE">
+			  SELECT 'DT'||LPAD(NVL(MAX(SUBSTR(DRAFT_ATTCODE,3)),0)+1,3,'0')
+                FROM DRAFT_ATTATCH
+		</selectKey>
+			INSERT INTO draft_attatch(
+    		draft_attcode, draft_code, file_path, file_size,
+    		org_name, save_name, fancy_size,mime
+			)VALUES(
+			#{draft_attcode}, #{draft_code,jdbcType=VARCHAR}, #{file_path,jdbcType=VARCHAR},#{file_size,jdbcType=VARCHAR}
+			,#{org_name,jdbcType=VARCHAR},#{save_name,jdbcType=VARCHAR},#{fancy_size,jdbcType=VARCHAR},#{mime,jdbcType=VARCHAR}
+    		)
+	</insert>
+	
+	<update id="updateDraft" parameterType="DraftVO"> 
+		UPDATE DRAFT
+			SET
+	    DRAFT_DATE = sysdate,
+	    <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(draft_title)">
+	    DRAFT_TITLE = #{draft_title,jdbcType=VARCHAR},
+	    </if>
+	    <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(draft_content)">
+	    DRAFT_CONTENT = #{draft_content,jdbcType=VARCHAR},
+	    </if>
+	    <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(draft_pos)">
+	    DRAFT_POS = #{draft_pos,jdbcType=VARCHAR},
+	    </if>
+	     <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(draft_stat)">
+	    DRAFT_STAT =#{draft_stat,jdbcType=VARCHAR}
+	    </if>
+	    <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(draft_instead_emp)">
+	   	, DRAFT_INSTEAD_EMP = #{draft_instead_emp,jdbcType=VARCHAR} 
+	    </if>
+	WHERE
+    	DRAFT_CODE = #{draft_code,jdbcType=VARCHAR}
+	</update>
+	<update id="updateDraftDelete" parameterType="DraftVO">
+	UPDATE DRAFT
+	SET
+		DRAFT_POS = #{draft_pos}
+		,DRAFT_STAT = null
+	WHERE
+    	DRAFT_CODE = #{draft_code}
+	</update>
+	
+	<update id="updateApproveStat" parameterType="Appr_StatVO">
+	UPDATE APPR_STAT
+	SET
+    	APPROVED_TIME = SYSDATE
+    	<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(reject_reason) "> 
+    		,REJECT_REASON = #{reject_reason,jdbcType=VARCHAR}
+    	</if>
+    	,APPR_STAT_CATAG = #{appr_stat_catag,jdbcType=VARCHAR}
+    	<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(cmt_code) ">
+    	,CMT_CODE = #{cmt_code,jdbcType=VARCHAR}
+    	</if>   	
+	WHERE
+    	APPR_STAT_CODE = #{appr_stat_code,jdbcType=VARCHAR}
+	</update>
+	
+	<update id="updateApproveGroup" parameterType="Approve_LineVO">
+	UPDATE APPROVE_LINE
+	SET
+		APPR_LINE = #{appr_line}
+	WHERE APPR_LINE_CODE = #{appr_line_code}
+	  AND EMP_CODE = #{emp_code}
+	</update>
+	
+	<update id="updateReviewerGroup" parameterType="ReviewerGroupVO">
+		UPDATE REVIEWER_GROUP
+		   SET RG_NAME = #{rg_name}
+	   WHERE RG_CODE = #{rg_code}
+	   	 AND EMP_CODE = #{emp_code}
+	</update>
+	
+	
+	<update id="updateReviewerStat" parameterType="Reviewer_StatVO">
+		UPDATE REVIEWER_STAT
+		   SET RS_READ = #{rs_read} 
+		 WHERE RS_CODE = #{rs_code}   
+	</update>
+	
+	
+	
+	<delete id="deleteDraft" parameterType="String">
+		DELETE FROM DRAFT
+		WHERE DRAFT_CODE = #{draft_code,jdbcType=VARCHAR}
+	</delete>
+	
+	<delete id="deleteDraftAttatch" parameterType="String" >
+		  DELETE FROM DRAFT_ATTATCH
+		WHERE DRAFT_ATTCODE = #{draft_attcode,jdbcType=VARCHAR}
+	</delete>
+	<delete id="deleteAllDraftAttatch" parameterType="String">
+		DELETE FROM DRAFT_ATTATCH
+		WHERE DRAFT_CODE = #{draft_code,jdbcType=VARCHAR}
+	</delete>
+	
+	<delete id="deleteAllApproveOrder" parameterType="String">
+		DELETE FROM APPR_ORDER
+			WHERE
+    	APPR_LINE_CODE = #{appr_line_code,jdbcType=VARCHAR}
+	</delete>
+	
+	<delete id="deleteApproveOrder" parameterType="Appr_OrderVO">
+		DELETE FROM APPR_ORDER
+			WHERE APPR_LINE_CODE = #{appr_line_code,jdbcType=VARCHAR}
+    		  AND EMP_CODE = #{emp_code,jdbcType=VARCHAR}
+	</delete>
+	<delete id="deleteApproveStat" parameterType="String">
+	 DELETE FROM APPR_STAT
+	 WHERE DRAFT_CODE = #{draft_code}
+	</delete>
+	<delete id="deleteApproveLine" parameterType="String">
+		DELETE FROM APPROVE_LINE
+			WHERE
+		appr_line_code = #{appr_line_code,jdbcType=VARCHAR}
+	</delete>
+	
+	<delete id="deleteReviewerGroup" parameterType="ReviewerGroupVO">
+		DELETE FROM REVIEWER_GROUP
+		WHERE RG_CODE = #{rg_code} 
+	</delete>
+	
+	<delete id="deleteAllReviewerOrder" parameterType="String">
+		DELETE FROM REVIEWER
+		WHERE RG_CODE = #{rg_code}
+		  
+	</delete>
+	
+	<delete id="deleteRevieweStat" parameterType="String">
+	 DELETE FROM REVIEWER_STAT
+	 WHERE DRAFT_CODE = #{draft_code}
+	</delete>
+	
+	
+	<delete id="deleteReviewerOrder" parameterType="ReviewerVO">
+		DELETE FROM REVIEWER
+		WHERE RG_CODE = #{rg_code}
+		  AND EMP_CODE = #{emp_code}
+	</delete>
+	
+	<select id="selectInsteadList" resultType="String" parameterType="String">
+		SELECT INSTEAD_GIVE
+		 FROM INSTEAD_AUTH
+		WHERE INSTEAD_AUTH = #{emp_code}
+		  AND TO_CHAR(SYSDATE,'YYYYMMDD') = INSTEAD_DATE  
+	</select>
+</mapper>
+
+   
+
+ 

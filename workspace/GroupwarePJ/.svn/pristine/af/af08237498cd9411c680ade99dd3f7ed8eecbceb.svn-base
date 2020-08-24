@@ -1,0 +1,74 @@
+package kr.or.ddit.hr_admin.service;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.hr_admin.dao.IAdminEmployDAO;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.PagingVO;
+
+@Service
+public class AdminEmployServiceImpl implements IAdminEmployService {
+	
+	
+	@Inject
+	IAdminEmployDAO adminemployDAO;
+	
+	@Override
+	public List<EmployeeVO> selectEmpmanageList(PagingVO<EmployeeVO> pagingVO) {
+		return adminemployDAO.selectEmpmanageList(pagingVO);
+	}
+
+	@Override
+	public EmployeeVO selectEmpmanage(String emp_code) {
+		return adminemployDAO.selectEmpmanage(emp_code);
+	}
+
+	@Override
+	public int selectEmpmanageCount(PagingVO<EmployeeVO> pagingVO) {
+		return adminemployDAO.selectEmpmanageCount(pagingVO);
+	}
+	
+	
+	@Override
+	public ResultState insertEmp(EmployeeVO employee) {
+		int cnt = adminemployDAO.insertEmp(employee);
+		ResultState result = ResultState.FAIL;
+		if(cnt > 0) result= ResultState.OK;
+		return result;
+	}
+
+	@Override
+	public int deleteEmp(String emp_code) {
+		return adminemployDAO.deleteEmp(emp_code);
+	}
+	
+	
+	
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

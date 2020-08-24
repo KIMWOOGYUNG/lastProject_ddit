@@ -1,0 +1,81 @@
+package kr.or.ddit.work.controller;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpSession;
+import javax.validation.Valid;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.Errors;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.WorkLogVO;
+import kr.or.ddit.vo.Work_ReportVO;
+import kr.or.ddit.work.dao.IStandardDAO;
+import kr.or.ddit.work.service.IMyReportService;
+import kr.or.ddit.work.service.IMyWorkLogService;
+
+@Controller
+public class MyReportInsertController {
+	
+	@Inject
+	private IStandardDAO stddDao;
+	
+	@Inject
+	private IMyReportService service;
+	
+	@ModelAttribute("currentAction")
+	private void attributeSetting(Model model) {
+		model.addAttribute("typeList", stddDao.selectType());
+		model.addAttribute("deptList", stddDao.selectDept());
+		model.addAttribute("teamList", stddDao.selectTeam());
+		model.addAttribute("employeeList", stddDao.selectEmployee());
+	}
+	
+	@GetMapping("/work/workreport/insertreport")
+	public String form(Model model) {
+		return "myreportForm.work";
+	}
+	
+	@PostMapping(value = "/work/workreport/insertreport" ,produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public String reportinsert(@Valid @ModelAttribute("report") Work_ReportVO report, Errors errors, Model model, HttpSession session) {
+		EmployeeVO employeeVO = (EmployeeVO) session.getAttribute("authUser");
+		
+		String emp_code = employeeVO.getEmp_code();
+		report.setEmp_reporter(emp_code);
+		
+		
+		 
+		String goPage = null;
+		String message = null;
+		if(!errors.hasErrors()) {
+			ResultState result = service.createReport(report);
+			System.out.println(result);
+			switch (result) {
+			case FAIL:
+				goPage = "myreportForm.work";
+				message = "다시 입력하세요";
+				break;
+
+			default:
+				goPage = "myreportList.work";
+				message = "insert성공";
+				break;
+			}
+			
+		}else {
+			System.out.println(errors.toString());
+			goPage = "myreportForm.work";
+		}
+		
+		model.addAttribute("message", message);
+		
+		return goPage;
+	}
+}

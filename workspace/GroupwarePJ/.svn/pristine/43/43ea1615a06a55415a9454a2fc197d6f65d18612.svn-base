@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.message.dao.IMessageDAO">
+<sql id="searchFrag">
+	<trim prefix="where" prefixOverrides="and">
+		<if test="detailSearch!=null">
+			<choose>
+				<when test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.emp_receiver) and @org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.emp_sender)">
+				 AND MSG_CODE IN (SELECT MSG_CODE
+			                    FROM MESSAGE
+			                    WHERE EMP_RECEIVER =  #{detailSearch.emp_receiver}
+			                     AND MSG_RECEIVER_DEL = 'n'
+			                     AND MSG_RECEIVER_IMPORTANT = 'n')
+			    OR MSG_CODE IN (SELECT MSG_CODE
+			                    FROM MESSAGE
+			                    WHERE EMP_SENDER =  #{detailSearch.emp_sender}
+			                     AND MSG_SENDER_DEL = 'n'
+			                     AND MSG_SENDER_IMPORTANT = 'n')
+				</when>
+				<otherwise>
+					<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.emp_receiver)">
+						    AND MSG_CODE IN (SELECT MSG_CODE
+			                    FROM MESSAGE
+			                    WHERE EMP_RECEIVER =  #{detailSearch.emp_receiver}
+			                     AND MSG_RECEIVER_DEL = 'n'
+			                     AND MSG_RECEIVER_IMPORTANT = 'n')
+					</if>
+					<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.emp_sender)">
+							AND MSG_CODE IN (SELECT MSG_CODE
+			                    FROM MESSAGE
+			                    WHERE EMP_SENDER =  #{detailSearch.emp_sender}
+			                     AND MSG_SENDER_DEL = 'n'
+			                     AND MSG_SENDER_IMPORTANT = 'n')
+					</if>
+				</otherwise>
+			</choose>
+		</if>
+	</trim>
+</sql>
+<sql id="searchFrag2">
+	<trim prefix="where" prefixOverrides="and">
+		<if test="detailSearch!=null">
+			<choose>
+				<when test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.emp_receiver) and @org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.emp_sender)">
+				   EMP_RECEIVER = #{detailSearch.emp_receiver} OR EMP_SENDER = #{detailSearch.emp_sender}
+				   AND MSG_SENDER_DEL = 'y' or MSG_RECEIVER_DEL = 'y'
+				</when>
+				<otherwise>
+					<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.emp_receiver)">
+						    AND EMP_RECEIVER = #{detailSearch.emp_receiver}
+						    AND MSG_RECEIVER_DEL = 'y'
+					</if>
+					<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.emp_sender)">
+							AND EMP_SENDER = #{detailSearch.emp_sender}
+							AND MSG_SENDER_DEL = 'y'
+					</if>
+				</otherwise>
+			</choose>
+		</if>
+	</trim>
+</sql>
+
+<!-- 쪽지 리스트 -->
+<select id="MessageList" parameterType="kr.or.ddit.vo.PagingVO" resultType="kr.or.ddit.vo.MessageVO">
+SELECT B.*
+FROM(SELECT ROWNUM RNUM, A.*
+		FROM (SELECT A.MSG_CODE ,B.EMP_KOR EMP_RECEIVER, C.EMP_KOR EMP_SENDER, MSG_CONTENT, TO_CHAR(MSG_DATE,'YYYY-MM-DD') MSG_DATE
+				FROM MESSAGE A LEFT OUTER JOIN EMPLOYEE B ON (A.EMP_RECEIVER = B.EMP_CODE)
+		        	 LEFT OUTER JOIN EMPLOYEE C ON (A.EMP_SENDER = C.EMP_CODE)
+		        	 LEFT OUTER JOIN EMPLOYEE C ON (A.EMP_SENDER = B.EMP_CODE)
+				<include refid="searchFrag"/>
+				ORDER BY MSG_CODE DESC) A) B
+WHERE B.RNUM BETWEEN #{startRow} AND #{endRow}
+</select>
+
+<!-- 쪽지리스트카운트  -->
+<select id="selectMessageCount" resultType="int" parameterType="kr.or.ddit.vo.PagingVO">
+SELECT COUNT(MSG_CODE)
+FROM MESSAGE
+ <include refid="searchFrag"></include>
+</select>
+
+<!-- 중요보관함 -->
+<select id="msgImportantList" parameterType="kr.or.ddit.vo.PagingVO" resultType="MessageVO">
+	SELECT *
+	 FROM MESSAGE
+	WHERE MSG_CODE IN (SELECT MSG_CODE
+	                    FROM MESSAGE
+	                    WHERE EMP_RECEIVER =  #{detailSearch.emp_receiver}
+	                     AND MSG_RECEIVER_DEL = 'n'
+	                     AND MSG_RECEIVER_IMPORTANT = 'y')
+	    OR MSG_CODE IN (SELECT MSG_CODE
+	                    FROM MESSAGE
+	                    WHERE EMP_SENDER =  #{detailSearch.emp_sender}
+	                     AND MSG_SENDER_DEL = 'n'
+	                     AND MSG_SENDER_IMPORTANT = 'y')
+</select>
+<!-- 중요보관함  쪽지 수-->
+<select id="updateImportCount"   parameterType="kr.or.ddit.vo.PagingVO"  resultType="int">
+	SELECT COUNT(*)
+	 FROM MESSAGE
+	WHERE MSG_CODE IN (SELECT MSG_CODE
+	                    FROM MESSAGE
+	                    WHERE EMP_RECEIVER =  #{detailSearch.emp_receiver}
+	                     AND MSG_RECEIVER_DEL = 'n'
+	                     AND MSG_RECEIVER_IMPORTANT = 'y')
+	    OR MSG_CODE IN (SELECT MSG_CODE
+	                    FROM MESSAGE
+	                    WHERE EMP_SENDER =  #{detailSearch.emp_sender}
+	                     AND MSG_SENDER_DEL = 'n'
+	                     AND MSG_SENDER_IMPORTANT = 'y')
+</select>
+
+<!-- 쪽지쓰기 -->
+<insert id="insertMessage" parameterType="kr.or.ddit.vo.MessageVO">
+<selectKey keyProperty="msg_code" resultType="string" order="BEFORE" >
+	 SELECT 'me' || LPAD(NVL(TO_NUMBER(SUBSTR(MAX(MSG_CODE), 3)), 0)+1, 3, '0') 
+		FROM MESSAGE
+</selectKey>
+INSERT INTO message (
+    MSG_CODE,
+    EMP_RECEIVER,
+    EMP_SENDER,
+    MSG_CONTENT,
+    MSG_DATE
+) VALUES (
+ #{msg_code,jdbcType=VARCHAR}, 
+ #{emp_receiver, jdbcType=VARCHAR},
+ #{emp_sender,jdbcType=VARCHAR},
+ #{msg_content,jdbcType=CLOB},
+	SYSDATE
+)
+</insert>
+
+<!-- 모달관련 -->
+<sql id="searchFrag3">
+		FROM EMPLOYEE A INNER JOIN DEPARTMENT B ON (A.DEPT_CODE = B.DEPT_CODE)
+		INNER JOIN TEAM C ON (A.TEAM_CODE = C.TEAM_CODE)
+		INNER JOIN POSITION D ON (A.POSITION_CODE = D.POSITION_CODE)
+		<trim prefix=" WHERE " prefixOverrides=" AND ">
+			<if test="detailSearch!=null">
+			RETIRE_DATE IS NULL
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.dept_code)">
+					AND A.DEPT_CODE = #{detailSearch.dept_code} 
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.team_code)">
+					AND	C.TEAM_CODE = #{detailSearch.team_code}
+				</if>
+			</if>
+		</trim>        
+	</sql>
+<select id="selectEmpList" parameterType="PagingVO" resultType="EmployeeVO">
+SELECT Z.*
+		FROM(
+			SELECT ROWNUM RNUM, A.DEPT_CODE, B.DEPT_NAME, A.TEAM_CODE, C.TEAM_NAME, A.EMP_CODE, A.EMP_KOR, D.POSITION_NAME
+			<include refid="searchFrag3"/>
+		)Z
+		WHERE Z.RNUM BETWEEN #{startRow} AND #{endRow}
+</select>
+<select id="selectEmpCount" parameterType="PagingVO" resultType="int">
+SELECT COUNT(*)
+	    <include refid="searchFrag3"/>
+</select>
+
+<!--쪽지 상세보기  -->
+<select id="selectmsg" parameterType="String" resultType="MessageVO">
+SELECT A.MSG_CODE, B.EMP_KOR EMP_RECEIVER, C.EMP_KOR EMP_SENDER, MSG_CONTENT
+    FROM MESSAGE A LEFT OUTER JOIN EMPLOYEE B ON (A.EMP_RECEIVER = B.EMP_CODE)
+    			   LEFT OUTER JOIN EMPLOYEE C ON (A.EMP_SENDER = C.EMP_CODE)
+WHERE MSG_CODE= #{msg_code}
+</select>
+
+<!--중요보관함 update문  -->
+<update id="updateImportant" parameterType="kr.or.ddit.vo.MessageVO">
+UPDATE MESSAGE
+<trim prefix="SET" prefixOverrides=",">
+	<if test="msg_del!=null and @org.apache.commons.lang3.StringUtils@isNotBlank(msg_receiver_del)">
+		, MSG_RECEIVER_DEL 		=	#{msg_receiver_del,jdbcTyp=VARCHAR}
+	</if>
+	<if test="msg_del!=null and @org.apache.commons.lang3.StringUtils@isNotBlank(msg_receiver_important)">
+		, MSG_RECEIVER_IMPORTANT 		=	#{msg_receiver_important,jdbcTyp=VARCHAR}
+	</if>
+	
+	<if test="msg_del!=null and @org.apache.commons.lang3.StringUtils@isNotBlank(msg_sender_del)">
+		, MSG_SENDER_DEL 		=	#{msg_sender_del,jdbcTyp=VARCHAR}
+	</if>
+	<if test="msg_del!=null and @org.apache.commons.lang3.StringUtils@isNotBlank(msg_sender_important)">
+		, MSG_SENDER_IMPORTANT 		=	#{msg_sender_important,jdbcTyp=VARCHAR}
+	</if>
+</trim>
+WHERE MSG_CODE = #{msg_code,jdbcTyp=VARCHAR}
+	<if test="emp_receiver!=null and @org.apache.commons.lang3.StringUtils@isNotBlank(emp_receiver)">
+		AND EMP_RECEIVER 	=	#{emp_receiver,jdbcTyp=VARCHAR}
+	</if>
+	<if test="emp_receiver!=null and @org.apache.commons.lang3.StringUtils@isNotBlank(emp_sender)">
+		AND EMP_SENDER 	=	#{emp_sender,jdbcTyp=VARCHAR}
+	</if>
+	
+</update>
+
+
+
+
+<!--완전 삭제    -->
+<delete id="deleteMessage" parameterType="string">
+DELETE FROM MESSAGE
+WHERE MSG_CODE=#{msg_code}
+</delete>
+
+</mapper>

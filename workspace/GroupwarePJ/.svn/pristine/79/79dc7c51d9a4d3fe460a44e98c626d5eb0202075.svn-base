@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.hr_admin.dao.IAdminDepartDAO">
+
+
+	<!-- 부서 테이블 리스트 -->
+	<select id="selectDepmanageList" parameterType="kr.or.ddit.vo.PagingVO" resultType="kr.or.ddit.vo.DepartmentVO">
+	SELECT
+	A.DEPT_CODE,
+	A.DEPT_NAME,
+	B.TEAM_CODE,
+	B.TEAM_NAME
+	FROM DEPARTMENT A, TEAM B
+    WHERE A.DEPT_CODE = B.DEPT_CODE
+	</select>
+	
+	<!-- 페이지 카운트 -->
+	<select id="selectDepmanageCount" parameterType="kr.or.ddit.vo.PagingVO" resultType="int">
+	SELECT COUNT(DEPT_CODE)
+	FROM DEPARTMENT
+	</select>
+
+	<!-- 부서 리스트 조회 (페이징x) -->
+	<select id="selectDeptList" resultType="kr.or.ddit.vo.DepartmentVO">
+		SELECT * FROM DEPARTMENT
+	</select>
+
+	<!--부서 등록 -->
+	<insert id="insertdept" parameterType="kr.or.ddit.vo.DepartmentVO">
+		<if test="dept_code!=null">
+			INSERT TEAM (TEAM_CODE, TEAM_NAME, DEPT_CODE)
+			VALUES ((SELECT 'TE' || LPAD(NVL(TO_NUMBER(SUBSTR(MAX(TEAM_CODE), 3)), 0)+1, 3, '0') 
+			FROM TEAM), #{team_name}, #{dept_code})
+		</if>
+		<if test="dept_code==null">
+			INSERT ALL
+		<choose>
+			<when test="dept_name!=null">
+				INTO DEPARTMENT(DEPT_CODE, DEPT_NAME)
+				VALUES((SELECT 'DE' || LPAD(NVL(TO_NUMBER(SUBSTR(MAX(DEPT_CODE), 3)), 0)+1, 3, '0') 
+			FROM DEPARTMENT), #{dept_name})
+			</when>
+			<when test="team_name!=null">
+				INTO TEAM (TEAM_CODE, TEAM_NAME, DEPT_CODE)
+			VALUES ((SELECT 'TE' || LPAD(NVL(TO_NUMBER(SUBSTR(MAX(TEAM_CODE), 3)), 0)+1, 3, '0') 
+			FROM TEAM), #{team_name}, (SELECT 'DE' || LPAD(NVL(TO_NUMBER(SUBSTR(MAX(DEPT_CODE), 3)), 0)+1, 3, '0') 
+			FROM DEPARTMENT))
+			</when>
+		</choose>
+			SELECT * FROM DUAL
+		
+		</if>
+		<selectKey keyProperty="dept_code" resultType="string" order="BEFORE">
+			SELECT 'DE' || LPAD(NVL(TO_NUMBER(SUBSTR(MAX(DEPT_CODE), 3)), 0)+1, 3, '0') 
+			FROM DEPARTMENT
+		</selectKey>
+		INSERT ALL
+	</insert>
+	
+	<!--부서 삭제 -->
+	<delete id="deletedept" parameterType="string">
+	DELETE FROM DEPARTMENT
+	WHERE DEPT_CODE = #{dept_code}
+	</delete>
+	
+	
+	<!--부서 수정 -->
+	<update id="updatedept" parameterType="kr.or.ddit.vo.DepartmentVO">
+	
+	</update>
+
+
+
+
+</mapper>

@@ -1,0 +1,65 @@
+package kr.or.ddit.hr_admin.controller;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import kr.or.ddit.hr_admin.service.IAdminEmployService;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.SearchVO;
+
+@Controller
+public class AdminEmpController {
+	
+	@Inject
+	IAdminEmployService service;
+	
+	@GetMapping(value="/hr/employer/entiremanage", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public PagingVO<EmployeeVO> ajaxForlist(
+		@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+		SearchVO searchVO, Model model
+		){
+		adminemployList(currentPage, searchVO, model);
+		return (PagingVO<EmployeeVO>) model.asMap().get("pagingVO");
+	}
+
+	//전 사원 목록
+	@GetMapping("/hr/employer/entiremanage")
+	public String adminemployList(@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+			SearchVO searchVO, Model model) {
+		PagingVO<EmployeeVO> pagingVO = new PagingVO<>();
+		pagingVO.setSearchVO(searchVO);
+		pagingVO.setCurrentPage(currentPage);
+		int totalRecord = service.selectEmpmanageCount(pagingVO);
+		pagingVO.setTotalRecord(totalRecord);
+		
+		List<EmployeeVO> empList = service.selectEmpmanageList(pagingVO);
+		pagingVO.setDataList(empList);
+		
+		model.addAttribute("pagingVO", pagingVO);
+		
+		return "AdminEmpManage.hr";
+	}
+	
+	
+	
+	
+	
+	
+	@GetMapping("/hr/employer/retiremanage")
+	public String retireempmanage() {
+		String goPage = "AdminRtrManage.hr";
+		return goPage;
+	}
+
+
+}

@@ -1,0 +1,65 @@
+package kr.or.ddit.project.controller;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import kr.or.ddit.project.service.IMyProjectListService;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.ProjectVO;
+import kr.or.ddit.vo.SearchVO;
+
+@Controller
+public class ProjectListController {
+	@Inject
+	IMyProjectListService service;
+	
+	//내 프로젝트 블럭
+	@GetMapping("/project/projectlist/myproject/block")
+	public String myProjectBlock() {
+		return "myProjectBlock.project";
+	}
+	
+	
+	@GetMapping(value="/project/projectlist/myproject/list", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public PagingVO<ProjectVO> ajaxForlist(
+		@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+		SearchVO searchVO, Model model
+		){
+		myProjectList(currentPage, searchVO, model);
+		return (PagingVO<ProjectVO>) model.asMap().get("pagingVO");
+	}
+
+	//내 프로젝트 목록
+	@GetMapping("/project/projectlist/myproject/list")
+	public String myProjectList(@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+			SearchVO searchVO, Model model) {
+		PagingVO<ProjectVO> pagingVO = new PagingVO<>();
+		pagingVO.setSearchVO(searchVO);
+		pagingVO.setCurrentPage(currentPage);
+		int totalRecord = service.selectProjectCount(pagingVO);
+		pagingVO.setTotalRecord(totalRecord);
+		
+		List<ProjectVO> projectList = service.selectProjectList(pagingVO);
+		pagingVO.setDataList(projectList);
+		
+		model.addAttribute("pagingVO", pagingVO);
+		
+		return "myProjectList.project";
+	}
+	
+	@GetMapping("/project/eachproject")
+	public String projectDetail() {
+		return "projectDetail.project";
+	}
+	
+	
+}

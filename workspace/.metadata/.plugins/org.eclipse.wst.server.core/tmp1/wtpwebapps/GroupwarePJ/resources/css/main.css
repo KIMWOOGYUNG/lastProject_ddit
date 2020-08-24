@@ -1,0 +1,13 @@
+@charset "UTF-8";
+main{
+/* 	background-image: url("../images/java_background.png"); */
+	background-size:100%;
+}
+.flag{
+	width: 20px;
+	height: 20px;
+}
+
+.nav-link .active{
+	background-color :#6c757d;
+}

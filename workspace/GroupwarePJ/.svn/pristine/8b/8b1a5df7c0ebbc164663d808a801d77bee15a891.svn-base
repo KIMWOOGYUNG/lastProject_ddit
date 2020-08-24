@@ -1,0 +1,11 @@
+package kr.or.ddit.login_logout.dao;
+
+import org.springframework.stereotype.Repository;
+
+import kr.or.ddit.vo.EmployeeVO;
+
+
+@Repository
+public interface ILoginDAO {
+	public EmployeeVO selectEmployee(String emp_code);
+}

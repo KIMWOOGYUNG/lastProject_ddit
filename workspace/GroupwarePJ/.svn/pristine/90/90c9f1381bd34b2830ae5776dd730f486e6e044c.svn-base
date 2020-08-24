@@ -1,0 +1,405 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.addr.dao.IAddressDAO">
+
+<sql id="searchFrag">
+ FROM ADDRESS
+<where>
+	<if test="searchVO!=null and @org.apache.commons.lang3.StringUtils@isNotBlank(searchVO.searchWord)">
+		<choose>
+			<when test="'department'.equals(searchVO.searchType)">
+			WHERE INSTR(DEPT_NAME, #{searchVO.searchWord}) > 0
+			</when>
+			<when test="'name'.equals(searchVO.searchType)">
+			WHERE INSTR(EMP_KOR, #{searchVO.searchWord}) > 0
+			
+			</when>
+		</choose>
+	</if>
+</where>
+</sql>
+<sql id="searchFlag1">
+	<if test="detailSearch !=null">
+		<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.emp_code)">
+		  and emp_code = #{detailSearch.emp_code}
+		</if>
+	</if>
+	<!-- 검색기능 -->
+	<if test="searchVO!=null and @org.apache.commons.lang3.StringUtils@isNotBlank(searchVO.searchWord)">
+		<choose>
+			<when test="'emp_kor'.equals(searchVO.searchType)">
+			and emp_kor like '%${searchVO.searchWord}%'
+			</when>
+			<when test="'dept_name'.equals(searchVO.searchType)">
+			and dept_name like '%${searchVO.searchWord}%'
+			</when>
+		</choose>
+	</if>
+</sql>
+	
+
+<!-- 사내주소록 left -->
+<select id="leftAddr" resultType="AddressVO">
+SELECT
+   A.DEPT_CODE,
+   B.DEPT_NAME,
+   A.TEAM_CODE,
+   A.TEAM_NAME
+FROM TEAM A INNER JOIN DEPARTMENT B ON (A.DEPT_CODE=B.DEPT_CODE)
+</select>
+<!-- 사내주소록 리스트 출력 -->
+<select id="addrList" parameterType="PagingVO" resultType="EmployeeVO">
+SELECT A.*
+FROM(
+SELECT ROWNUM RNUM, EMP_CODE,EMP_KOR, B.DEPT_NAME, EMP_HP, A.EMP_MAIL,CO_PHONE
+from employee a inner join department b on (a.dept_code=b.dept_code)
+<include refid="searchFlag1"/>
+)A
+WHERE A.RNUM BETWEEN #{startRow} AND #{endRow}
+</select>
+<!-- 주소록 상세주소  내가만듬 -->
+<select id="readAddressList" parameterType="String" resultType="kr.or.ddit.vo.EmployeeVO"  >
+SELECT A.EMP_CODE, EMP_KOR,EMP_HP, CO_PHONE, EMP_MAIL,ADD_ETC,
+	   B.DEPT_NAME AS DEPT_CODE, C.POSITION_NAME AS POSITION_CODE,
+	   D.JOBTITLE_NAME AS JOBTITLE_CODE, E.TEAM_NAME AS TEAM_CODE
+        FROM EMPLOYEE A INNER JOIN DEPARTMENT B ON(A.DEPT_CODE = B.DEPT_CODE)
+                        INNER JOIN TEAM E ON(A.TEAM_CODE = E.TEAM_CODE)
+                        INNER JOIN POSITION C ON(A.POSITION_CODE = C.POSITION_CODE)
+                        LEFT OUTER JOIN JOBTITLE D ON(A.JOBTITLE_CODE = D.JOBTITLE_CODE)
+                        LEFT OUTER JOIN ADDRESS F ON(A.EMP_CODE = F.ADD_ETC)
+        WHERE A.EMP_CODE = #{emp_code}
+</select>
+<!-- 부서 리스트  -->
+<select id="deptAddress" parameterType="PagingVO" resultType="EmployeeVO">
+SELECT A.*              
+FROM                
+    (SELECT ROWNUM RNUM,EMP_CODE, EMP_KOR, B.DEPT_NAME, EMP_MAIL, CO_PHONE
+    FROM EMPLOYEE A INNER JOIN DEPARTMENT B ON(A.DEPT_CODE = B.DEPT_CODE)
+    	<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.dept_code)">
+    WHERE A.DEPT_CODE= #{detailSearch.dept_code}
+    </if>
+    )A
+WHERE A.RNUM BETWEEN #{startRow} AND #{endRow};
+</select>
+<!-- 부서 인원수  -->
+<select id="selectDeptCount" resultType="int">
+SELECT COUNT(*)
+		FROM employee
+		WHERE 1 = 1
+	<include refid="empSearch" />	
+</select>
+<!-- 팀 리스트  -->
+<select id="teamAddress" parameterType="PagingVO" resultType="EmployeeVO">
+SELECT A.*              
+FROM                
+    (SELECT ROWNUM RNUM, EMP_CODE,EMP_KOR, B.DEPT_NAME, C.TEAM_NAME,EMP_HP, EMP_MAIL, CO_PHONE
+    FROM EMPLOYEE A INNER JOIN DEPARTMENT B ON(A.DEPT_CODE = B.DEPT_CODE)
+                    INNER JOIN TEAM C ON (A.TEAM_CODE = C.TEAM_CODE)
+             <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.team_code)">
+    WHERE A.TEAM_CODE= #{detailSearch.team_code}
+             </if>
+    )A
+WHERE A.RNUM BETWEEN #{startRow} AND #{endRow}
+</select>
+<!-- 팀개별 출력 -->
+<select id="teamList" parameterType="PagingVO" resultType="EmployeeVO">
+ SELECT F.EMP_CODE,F.EMP_KOR, F.DEPT_NAME, F.TEAM_NAME, F.EMP_MAIL,F.CO_PHONE, F.POSITION_NAME
+FROM (SELECT ROWNUM RNUM ,E.*
+        FROM (SELECT A.* , B.TEAM_NAME ,C.DEPT_NAME,D.POSITION_NAME
+                FROM EMPLOYEE A INNER JOIN TEAM B ON(A.TEAM_CODE = B.TEAM_CODE)
+                                 INNER JOIN DEPARTMENT C ON (A.DEPT_CODE = C.DEPT_CODE)
+                                 INNER JOIN POSITION D ON (A.POSITION_CODE = D.POSITION_CODE)
+                                WHERE A.TEAM_CODE = #{detailSearch.team_code}
+                                ORDER BY A.POSITION_CODE DESC, EMP_STARTDATE ASC)E)F
+WHERE F.RNUM BETWEEN #{startRow} and #{endRow}
+</select>
+<!--팀 개개별 인원 수 출력  -->
+<select id="teamCount" parameterType="PagingVO" resultType="int">
+SELECT COUNT(A.EMP_CODE)
+ FROM EMPLOYEE A 
+ WHERE A.TEAM_CODE = #{detailSearch.team_code}
+</select>
+<!-- 팀 인원 수  -->
+<select id="selectTeamCount" resultType="int"><!-- 조건에 따른 사원 주소록 수 -->
+	SELECT COUNT(*)
+		FROM employee
+		WHERE 1 = 1
+	<include refid="empSearch" />	
+</select>
+<!-- 내 주소록그룹안의   리스트 -->
+<select id="myaddressList" parameterType="PagingVO" resultType="AjaxdataAddressLineVO">
+SELECT EMP_KOR ADDR_NAME , C.POSITION_NAME ADDR_POSITION , EMP_HP ADDR_PHONE,EMP_MAIL ADDR_EMAIL, B.DEPT_NAME ADDR_DEPT, '자사' agname, null add_code , emp_code
+FROM EMPLOYEE A INNER JOIN DEPARTMENT B ON (A.DEPT_CODE =B.DEPT_CODE)
+               INNER JOIN POSITION C ON (A.POSITION_CODE = C.POSITION_CODE)
+WHERE EMP_CODE IN ( SELECT A.EMP_CODE
+                FROM  FAVORITE_GROUP A INNER JOIN ADDRESS_FAVORITE B ON (A.ADD_FAVO_CODE = B.ADD_FAVO_CODE)
+                WHERE A.ADD_FAVO_CODE = #{detailSearch.add_favo_code}
+                AND B.EMP_CODE = #{detailSearch.emp_code}
+                and A.emp_code is not null)
+UNION
+SELECT  ADD_NAME , ADD_TITLE , ADD_HP , ADD_MAIL , DEPT_NAME , AG_NAME ,add_code , null
+FROM ADDRESS INNER JOIN ADDRESS_GROUP ON (ADDRESS.AG_CODE = ADDRESS_GROUP.AG_CODE)
+WHERE ADD_CODE  IN ( SELECT A.ADD_CODE
+                FROM  FAVORITE_GROUP A INNER JOIN ADDRESS_FAVORITE B ON (A.ADD_FAVO_CODE = B.ADD_FAVO_CODE)
+                WHERE A.ADD_FAVO_CODE = #{detailSearch.add_favo_code}
+                AND B.EMP_CODE = #{detailSearch.emp_code}
+                AND A.ADD_CODE IS NOT NULL)
+
+
+</select>
+<!--내 주소록 카운트  -->
+<select id="selectmyaddCount" resultType="int">
+SELECT COUNT(*)
+ FROM employee
+ WHERE 1=1
+</select>
+<select id="groupCount" resultType="int">
+ SELECT COUNT (A.EMP_CODE)
+ FROM ADDRESS_GROUP A
+ WHERE A.AG_CODE=#{detailSearch.ag_code}
+</select>
+<!-- 내주소록 상세보기  -->
+<select id="myselectAddress" parameterType="String" resultType="AddressVO">
+SELECT  ADD_NAME, AG_NAME, ADD_TITLE, DEPT_NAME, ADD_MAIL, ADD_HP, ADD_ADD, ADD_ETC,ADD_CODE
+FROM ADDRESS A 
+WHERE ADD_CODE = #{add_code}
+</select>
+<!-- 내주소록 거래처 등록 -->
+<insert id="insertEmp" parameterType="AddressVO">
+
+<selectKey keyProperty="add_code" resultType="string" order="BEFORE">
+			  SELECT 'AD'||LPAD(NVL(MAX(SUBSTR(add_code,3)),0)+1,3,'0')
+                FROM address
+		</selectKey>
+INSERT INTO address (
+    ADD_CODE,
+    EMP_CODE,
+    ADD_NAME,
+    ADD_TITLE,
+    ADD_ADD,
+    ADD_HP,
+    ADD_MAIL,
+    ADD_ETC,
+    AG_NAME
+) VALUES (
+    #{add_code,jdbcType=VARCHAR},
+    #{emp_code,jdbcType=VARCHAR},
+    #{add_name,jdbcType=VARCHAR},
+    #{add_title,jdbcType=VARCHAR},
+    #{add_add,jdbcType=VARCHAR},
+    #{add_hp,jdbcType=VARCHAR},
+    #{add_mail,jdbcType=VARCHAR},
+    #{add_etc,jdbcType=VARCHAR},
+    #{ag_name,jdbcType=VARCHAR}
+)
+</insert>
+<!--내 주소록 거래처 수정 -->
+<update id="updatemyaddress" parameterType="AddressVO">
+UPDATE ADDRESS
+<trim prefix="SET" prefixOverrides=",">
+    <if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(emp_code)">
+   , EMP_CODE = #{emp_code,jdbcType=VARCHAR}
+    </if>
+    <if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(add_name)">
+    , ADD_NAME = #{add_name,jdbcType=VARCHAR}
+    </if>
+    <if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(add_title)">
+    , ADD_TITLE = #{add_title,jdbcType=VARCHAR}
+    </if>
+    <if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(add_add)">
+   , ADD_ADD = #{add_add,jdbcType=VARCHAR}
+    </if>
+    <if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(add_hp)">
+   , ADD_HP =  #{add_hp,jdbcType=VARCHAR}
+    </if>
+    <if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(add_mail)">
+  , ADD_MAIL = #{add_mail,jdbcType=VARCHAR}
+    </if>
+    <if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(add_etc)">
+    ,ADD_ETC = #{add_etc,jdbcType=VARCHAR}
+    </if>
+    <if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(ag_code)">
+   , AG_CODE = #{ag_code,jdbcType=VARCHAR}
+    </if>
+    <if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(add_code)">
+    where ADD_CODE = #{add_code,jdbcType=VARCHAR}
+    </if>
+ </trim>   
+</update>    
+<!--내 주소록 삭제  -->
+<delete id="deleteMyaddress" parameterType="string">
+DELETE FROM ADDRESS
+WHERE ADD_CODE =#{add_code}
+</delete>	
+<!--내 주소록 그룹 리스트 left-->
+<select id="myfavoriteList" parameterType="String" resultType="kr.or.ddit.vo.Address_favoriteVO">
+ SELECT  
+    ADD_FAVO_CODE,
+    ADD_FAVO_NAME
+ FROM ADDRESS_FAVORITE
+ WHERE EMP_CODE = #{emp_code}
+ </select>
+ <!--그룹 상세보기   --> 
+ <select id="readGroupList" parameterType="PagingVO" resultType="AjaxdataAddressLineVO">
+ SELECT A.ADD_NAME ADDR_NAME, A.ADD_TITLE addr_position,A.ADD_HP addr_phone,A.ADD_MAIL addr_email,A.ADD_ETC addr_etc,A.DEPT_NAME addr_dept,AG_NAME agname
+   FROM ADDRESS A 
+ 	WHERE ADD_CODE =#{detailSearch.add_code}
+ 
+ </select>
+ <!-- 즐겿자기 수정 -->
+ 
+ <!--즐겨찾기 삭제  -->
+ 
+<!--거래처 리스트  left-->
+<select id="mycustomergroupaddr" parameterType="String" resultType="Address_groupVO">
+SELECT
+    AG_CODE,
+    AG_NAME
+FROM ADDRESS_GROUP
+ WHERE EMP_CODE =#{emp_code} 
+</select>
+
+
+<!-- 거래처 리스트  -->
+<select id="customerList" parameterType="PagingVO" resultType="AddressVO">
+SELECT B.*
+FROM (SELECT ROWNUM RNUM, A.*
+        FROM(SELECT add_code, add_name ,ag_name ,ADD_title ,ADD_HP,ADD_MAIL
+                FROM ADDRESS 
+                WHERE 1=1
+             	<include refid="searchFlag2"/>
+                ORDER BY ADD_NAME DESC)A)B
+WHERE B.RNUM BETWEEN #{startRow} and #{endRow}
+</select>
+
+<select id="customerCount" parameterType="PagingVO" resultType="int">
+	SELECT count(*)
+      FROM ADDRESS 
+      WHERE 1=1
+   	<include refid="searchFlag2"/>
+</select>
+
+<sql id="searchFlag2">
+	<if test="detailSearch !=null">
+		<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.emp_code)">
+		  and emp_code = #{detailSearch.emp_code}
+		</if>
+	</if>
+	
+	<if test="searchVO!=null and @org.apache.commons.lang3.StringUtils@isNotBlank(searchVO.searchWord)">
+		<choose>
+			<when test="'ag_name'.equals(searchVO.searchType)">
+			and ag_name like '%${searchVO.searchWord}%'
+			</when>
+			<when test="'add_name'.equals(searchVO.searchType)">
+			and add_name like '%${searchVO.searchWord}%'
+			</when>
+		</choose>
+	</if>
+</sql>
+
+
+
+
+
+
+
+
+
+
+<!-- 사내 주소록 수  --><!--            건들지 말자                             -->
+	<sql id="empSearch">
+			<if test="detailSearch!=null">	
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.emp_code)">
+					AND EMP_CODE = #{detailSearch.emp_code}
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.dept_code)">
+					AND DEPT_CODE = #{detailSearch.dept_code}
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.team_code)">
+					AND TEAM_CODE = #{detailSearch.team_code}
+				</if>
+			</if>	
+	</sql>
+    
+		
+<select id="selectAddress" parameterType="String" resultType="EmployeeVO"><!-- 사원 상세주소록 -->
+ SELECT  EMP_KOR, EMP_ENG, EMP_MAIL, EMP_HP,
+    EMP_ZIP, EMP_STARTDATE, TEAM_NAME, DEPT_NAME,
+    POSITION_NAME, JOBTITLE_NAME
+	FROM EMPLOYEE A, POSITION B, DEPARTMENT C,JOBTITLE D, TEAM E
+	WHERE EMP_CODE = #{emp_code}  
+	AND A.TEAM_CODE = E.TEAM_CODE
+    AND A.POSITION_CODE = B.POSITION_CODE
+	AND A.DEPT_CODE = C.DEPT_CODE
+	AND A.JOBTITLE_CODE = D.JOBTITLE_CODE;
+</select>
+
+<select id="selectaddrCount" resultType="int"><!-- 조건에 따른 사원 주소록 수 -->
+	SELECT COUNT(*)
+		FROM employee
+		WHERE 1 = 1
+	<include refid="empSearch" />	
+</select>
+
+<select id="selectAddrList" parameterType="PagingVO" resultType="EmployeeVO"><!-- 조건에 따른 사원 주소록 -->
+	SELECT  EMP_CODE ,EMP_KOR, EMP_ENG,
+    EMP_MAIL,EMP_HP,
+    EMP_ZIP, DEPT_NAME,
+    POSITION_NAME POSITION_CODE
+	FROM EMPLOYEE A, POSITION B, DEPARTMENT C
+	WHERE  A.POSITION_CODE = B.POSITION_CODE
+	AND A.DEPT_CODE = C.DEPT_CODE
+	<include refid="empSearch" />
+	ORDER BY A.POSITION_CODE DESC
+</select>
+
+<select id="selectDepartmentList" resultType="DepartmentVO"><!-- 전체 부서코드 -->
+	SELECT B.DEPT_CODE, B.DEPT_NAME, COUNT(A.EMP_CODE) DEPT_CNT
+  	FROM EMPLOYEE A RIGHT OUTER JOIN DEPARTMENT B ON (A.DEPT_CODE = B.DEPT_CODE)
+ 	GROUP BY B.DEPT_CODE, B.DEPT_NAME 
+    ORDER BY 1
+</select>
+
+<select id="selectTeamList" resultType="TeamVO"><!-- 부서코드에 속한 팀코드 -->
+ SELECT B.TEAM_CODE, B.TEAM_NAME, COUNT(A.EMP_CODE) TEAM_CNT
+FROM EMPLOYEE A RIGHT OUTER JOIN TEAM B ON (A.TEAM_CODE = B.TEAM_CODE)
+WHERE B.DEPT_CODE = #{dept_code}
+GROUP BY B.TEAM_CODE, B.TEAM_NAME
+ORDER BY 1
+</select>
+
+<update id="updateCustomAddr" parameterType="AddressVO">
+	 UPDATE ADDRESS
+	 <trim prefix="SET" prefixOverrides="," >
+	  	<if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(add_name)">
+	 	, ADD_NAME = #{add_name}
+	 	</if>
+	 	 <if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(ag_name)">
+		 , AG_NAME = #{ag_name}
+		 </if>
+		  <if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(add_title)">
+		 , ADD_TITLE = #{add_title}
+		 </if>
+		  <if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(dept_name)">
+		 , DEPT_NAME = #{dept_name}
+		 </if>
+		  <if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(add_mail)">
+		 , ADD_MAIL = #{add_mail}
+		 </if>
+		  <if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(add_hp)">
+		 , ADD_HP = #{add_hp}
+		 </if>
+		  <if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(add_add)">
+		 , ADD_ADD = #{add_add}
+		 </if>
+		  <if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(add_etc)">
+		 , ADD_ETC = #{add_etc}
+		 </if>
+	 </trim>
+	 WHERE ADD_CODE = #{add_code}
+</update>
+
+
+
+</mapper>

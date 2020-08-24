@@ -1,0 +1,399 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %> 
+<script src="${cPath }/resources/ckeditor/ckeditor.js"></script>
+
+<h2>${title }</h2>
+<select id="formCatagSelect">
+	<option value=" " selected disabled>카테고리</option>
+	<option value=" ">전체</option>
+	<c:if test="${form_catag ne null }">
+		<c:forEach items="${form_catag }" var="catag">
+			<option value="${catag.fc_code }">${catag.fc_name }</option>
+		</c:forEach>
+	</c:if>
+</select>
+
+<select id="formSelect">
+	<option value=" " selected disabled>양식</option>
+</select>
+
+
+<table class="w-100 table table-bordered" id="apprSettingArea">
+	<tr id="apprSection" <c:if test="${draftVO.apprList eq null }">hidden="hidden" </c:if>>
+		<td style="width:150px"><button class="btn btn-primary btn-sm" data-size="5" data-type="apprLine" data-toggle="modal" data-target="#addrModal" >
+			<i class=" fas fa-save"></i> 결제라인등록 
+			</button></td>
+			<td id="apprLineArea">
+			<c:if test="${draftVO ne null }">
+				<c:if test="${draftVO.apprList ne null }">
+				<c:forEach items="${draftVO.apprList }" var="appr">
+				 	<span class="mx-1 badge bg-warning" name="${appr.empVO.emp_code }">${appr.empVO.emp_kor }(${appr.empVO.position_name }) </span>
+				</c:forEach>
+			</c:if>
+		</c:if>
+	</td>
+</tr>
+<tr id="rg1Section" <c:if test="${draftVO.apprList eq null }">hidden="hidden" </c:if>>
+	<td><button class="btn btn-primary btn-sm" data-type="rg1Line" data-size="5" data-toggle="modal" data-target="#addrModal" >
+		<i class=" fas fa-save"></i> 참조자등록 
+		</button></td>
+		<td  id="rg1LineArea">
+		<c:if test="${draftVO ne null }">
+			<c:if test="${draftVO.rg1List ne null }">
+				<c:forEach items="${draftVO.rg1List }" var="rg1">
+				 	<span class="mx-1 badge bg-warning" name="${rg1.empVO.emp_code }">${rg1.empVO.emp_kor }(${rg1.empVO.position_name }) </span>
+				</c:forEach>
+			</c:if>
+		</c:if>
+	</td>
+</tr>
+<tr id="rg2Section" <c:if test="${draftVO.apprList eq null }">hidden="hidden" </c:if>>
+	<td><button class="btn btn-primary btn-sm" data-type="rg2Line" data-size="5" data-toggle="modal"  data-target="#addrModal">
+		<i class=" fas fa-save"></i> 열람권자등록 
+		</button></td>
+		<td id="rg2LineArea">
+		<c:if test="${draftVO ne null }">
+			<c:if test="${draftVO.rg2List ne null }">
+				<c:forEach items="${draftVO.rg2List }" var="rg2">
+				 	<span class="mx-1 badge bg-warning" name="${rg2.empVO.emp_code }">${rg2.empVO.emp_kor }(${rg2.empVO.position_name }) </span>
+				</c:forEach>
+			</c:if>
+		</c:if>
+	</td>
+</tr>
+<tr id="insteadSection" <c:if test="${draftVO.insteadEmpVO eq null }"> hidden="hidden"</c:if>>
+	<td><button class="btn btn-primary btn-sm" data-type="instead" data-size="1" data-toggle="modal" data-target="#addrModal">
+		<i class=" fas fa-save"></i> 대결권자등록 
+		</button></td>
+	<td id="insteadArea">
+		<c:if test="${draftVO.insteadEmpVO ne null }">
+			<span class="mx-1 badge bg-warning" name="${draftVO.insteadEmpVO.emp_code}">${draftVO.insteadEmpVO.emp_kor }(${draftVO.insteadEmpVO.position_name }) </span>
+		</c:if>
+	</td>
+</tr>
+				 
+			
+
+
+<tr>
+	<td>제목 : </td>
+	<td><input id="draft_title" style="width:80%" type="text" value="${draftVO.draft_title }"></td>
+</tr>
+</table>
+
+<!-- Modal -->
+<div class="modal fade" id="addrModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        
+        <h4 class="modal-title" id="myModalLabel">라인 등록</h4>
+      </div>
+      <div  class="modal-body">
+		 <nav class="mt-2">
+       		<ul id="myModalBody" class="nav nav-pills nav-sidebar flex-column treeview" role="menu" data-accordion="false" data-widget="treeview">
+       			<jsp:include page="setAddList.jsp"/>
+       		</ul>	
+     	 </nav>
+		</div>
+      <div id="myModalFooter"class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">취소</button>
+        <button type="button" class="btn btn-primary" data-dismiss="modal" id="addBtn">등록</button>
+<!--         <button type="button" id="addApprLineBtn" class="btn btn-success" data-dismiss="modal">결재라인 추가</button> -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<textarea class="form-control" name="bo_content" id="bo_content">
+${draftVO.draft_content }
+</textarea>
+
+
+<input id="file"  type="file" id="fileUpload" name="file" style="color: transparent;"/>
+
+<form id="fileForm" action="#" method="post" enctype="multipart/form-data">
+      <table id="fileTable"class="table table-sm">
+      	<c:if test="${draftVO ne null }">
+      		<c:if test="${draftVO.attatchList[0].org_name ne null}">
+      			<c:forEach var="att" items="${draftVO.attatchList }">
+		            	<tr><td><span>${att.org_name }</span><input type="hidden" name="orgfile" value="${att.draft_attcode}"><input type="button" class="mx-2 py-0 btn" value="X"></td></tr>
+		         </c:forEach>
+      		</c:if>
+      	</c:if>
+      </table>
+      <c:if test="${draftVO ne null }">
+      	<input type="hidden" name="draft_code" value="${draftVO.draft_code }">
+      </c:if>
+      
+      <input type="hidden" name="apprLine" value="">
+      <input type="hidden" name="rg1Line" value="">
+      <input type="hidden" name="rg2Line" value="">
+      <input type="hidden" name="insteadEmp" value="">
+      <input type="hidden" name="draft_title" value="">
+      <input type="hidden" name="draft_content" value="">
+</form>
+
+<button class="btn btn-primary btn-sm" id="draftSaveBtn">
+<i class="fas fa-folder">
+</i>
+저장
+</button>
+
+<button class="btn btn-primary btn-sm" id="draftSendBtn">
+<i class="fas fa-download">
+</i>
+상신
+</button>
+
+<script type="text/javascript">
+function clickForm(){
+	let code = $(this).val();
+	$.ajax({
+		url:"${cPath}/approval/publicformbox/form"
+		,data:{
+			form_code:code
+		}
+		,method:"post"
+		,dataType:"json"
+		,success:function(resp){
+			CKEDITOR.instances.bo_content.setData(resp.form_content)
+		}
+	})
+	let value = $("#formCatagSelect").val();
+	if(value == 'FC300'){
+		$("#insteadSection").attr("hidden",false);
+		$("#apprSection").attr("hidden",false);
+		$("#rg1Section").attr("hidden",false);
+		$("#rg2Section").attr("hidden",false);
+	}else{
+		$("#insteadSection").attr("hidden",true);
+		$("#apprSection").attr("hidden",false);
+		$("#rg1Section").attr("hidden",false);
+		$("#rg2Section").attr("hidden",false);
+	}
+	
+	
+	
+	
+}
+$("#formSelect").on("change",clickForm)
+$("#formSelect").on("load",clickForm)
+
+function sendCatag(){
+	let code = $("#formCatagSelect option:selected").val();
+	$.ajax({
+		url : "${cPath}/approval/publicformbox/catag"
+			,method :"get"
+			,dataType:'json'
+			,data : {
+				fc_code : code
+			}
+			,success : function(resp){
+				let tags = [];
+				tags.push($("<option>").val(" ").text("양식").attr({"disabled":true,"selected":true}))
+				
+				$.each(resp,function(idx,form){
+					let code = form.form_code;
+					let title = form.form_name;
+					let tag = $("<option>").val(code).text(title);
+					tags.push(tag);
+				})
+				console.log(tags);
+				$("#formSelect").html(tags);
+			}
+			,error: function(e){
+				console.log(e);
+			}
+		})
+}
+	
+
+$("#formCatagSelect").on("change",function(){
+	sendCatag();
+})
+
+
+$("#file").on("change",function(e){
+	var files = e.target.files;
+	var fileArr = Array.prototype.slice.call(files);
+	var table = $("#fileTable");		
+
+	let tag = $("<tr>").append($("<td>").append($("<span>").text(fileArr[0].name)
+												,$(this).clone().css("display","none")
+												,$("<input>").attr("type","button").val("X").addClass("mx-2 py-0 btn")
+												));
+	table.append(tag);
+	
+	
+	
+});
+
+$("#fileForm").on("click","input[type=button]",function(){
+	$(this).parents("tr").remove();
+})
+
+
+
+
+// $("#apprSettingArea").find("input").attr("readonly",true);
+$("#apprSettingArea").on("click","button",function(){
+	let pos = $(this).attr("data-type");
+	let size = $(this).attr("data-size");
+	$("#addrModal").attr("data-type",pos);
+	$("#addrModal").attr("data-size",size);
+	addApprInfo(this);
+	$.ajax({
+		url:"${cPath}/approval/approvalwrite/"+pos
+		,dataType:'json'
+		,success : function(resp){
+			let basetree = $("#tree1").dynatree("getTree");
+			let basenode = $("#tree1").dynatree("getRoot");
+			if(basetree.selectKey("group") == null ){
+				basenode.addChild({title: "즐겨찾기", key: "group",isFolder:true});
+			}
+			topnode = basetree.selectKey("group");
+			topnode.removeChildren();
+			$.each(resp,function(idx,group){
+				let line_name = group.line_name;
+				let line_code = group.line_code;
+				topnode.addChild({title: line_name, key: line_code,isFolder:true});
+					
+				if(group.empList!=null){
+					let bottomnode = basetree.selectKey(line_code);
+					$.each(group.empList,function(idy,emp){
+						let emp_code = emp.emp_code;
+						let emp_name = emp.emp_kor;
+						let position_name = emp.position_name;
+						bottomnode.addChild({title:emp_name+"("+position_name+")", key: emp_code});
+					})
+				}
+			})
+		basenode.visit(function (childNode) {
+		        childNode.expand(false);
+		    });
+
+		}
+		,error :function(error){
+			console.log(error);
+		}
+	})
+	
+	$("#addrModal").modal();
+})
+
+$("#addBtn").on("click",function(){
+	let node = $("#tree2").dynatree("getTree").getNodeByKey("group");
+	let list = node.childList;
+	
+		spanTags =[]
+		let  pos = $("#addrModal").attr("data-type");
+		$.each(list,function(idx,temp){
+			let trTag = $("<span>").text(temp.data.title).attr("name",temp.data.key).addClass("mx-1 badge bg-warning");
+			spanTags.push(trTag);
+		});	
+		$("#"+pos+"Area").html(spanTags)
+	
+ 
+});
+
+
+$("#draftSendBtn").on("click",function(){
+	var apprData = $("#apprLineArea").find("span") //결재라인 정보
+	var rg1Data = $("#rg1LineArea").find("span")//참조자
+	var rg2Data = $("#rg2LineArea").find("span")//열람권자
+ 	var insreadData = $("#insteadArea").find("span")//대결권자
+ 
+ 	var apprStr = getAttrName(apprData);
+	var rg1Str = getAttrName(rg1Data);
+	var rg2Str = getAttrName(rg2Data);
+	var insteadStr = getAttrName(insreadData);
+
+	$("#fileForm").find("input[name=apprLine]").val(apprStr);
+	$("#fileForm").find("input[name=rg1Line]").val(rg1Str);
+	$("#fileForm").find("input[name=rg2Line]").val(rg2Str);
+	$("#fileForm").find("input[name=insteadEmp]").val(insteadStr);
+	$("#fileForm").find("input[name=draft_title]").val($("#draft_title").val());
+	$("#fileForm").find("input[name=draft_content]").val(CKEDITOR.instances.bo_content.getData());
+	console.log(insteadStr);
+	console.log(rg2Str);
+	console.log(rg1Str);
+	console.log(apprStr);
+	
+	$("#fileForm").attr("action","${cPath}/approval/enroll");
+	$("#fileForm").submit();
+
+});
+
+$("#draftSaveBtn").on("click",function(){
+
+	var apprData = $("#apprLineArea").find("span") //결재라인 정보
+	var rg1Data = $("#rg1LineArea").find("span")//참조자
+	var rg2Data = $("#rg2LineArea").find("span")//열람권자
+ 	var insreadData = $("#insteadArea").find("span")//대결권자
+ 
+ 	var apprStr = getAttrName(apprData);
+	var rg1Str = getAttrName(rg1Data);
+	var rg2Str = getAttrName(rg2Data);
+	var insteadStr = getAttrName(insreadData);
+
+	$("#fileForm").find("input[name=apprLine]").val(apprStr);
+	$("#fileForm").find("input[name=rg1Line]").val(rg1Str);
+	$("#fileForm").find("input[name=rg2Line]").val(rg2Str);
+	$("#fileForm").find("input[name=insteadEmp]").val(insteadStr);
+	$("#fileForm").find("input[name=draft_title]").val($("#draft_title").val());
+	$("#fileForm").find("input[name=draft_content]").val(CKEDITOR.instances.bo_content.getData());
+	
+	
+	$("#fileForm").attr("action","${cPath}/approval/temporary");
+	$("#fileForm").submit();
+});
+
+	function getAttrName(object){
+		let dataList = []
+		$.each(object,function(idx,data){
+	 		temp = {
+	 				emp_code : $(data).attr("name")
+	 		}
+	 		dataList.push(temp);
+	 	})
+	 	return JSON.stringify(dataList);
+	}
+	
+	
+
+	
+function addApprInfo(addLineBtn){
+	var pos = $(addLineBtn).attr("data-type");
+	var dataList = $("#"+pos+"Area").find("span");
+	console.log(dataList.length);
+	var node = $("#tree2").dynatree("getTree").selectKey("group");
+	node.removeChildren();
+	if(dataList.length < 0||dataList == null){
+		return;
+	}else{
+		$.each(dataList,function(idx,data){
+			 let temp_key = $(data).attr("name");
+			 let temp_title = $(data).text();
+			 node.addChild({title:temp_title,key:temp_key});
+			
+		})
+	}	
+	
+}	
+	
+	CKEDITOR.replace('bo_content',{
+		 // Adding drag and drop image upload.
+	      uploadUrl: '${pageContext.request.contextPath}/board/image?command=QuickUpload&type=Files&responseType=json',
+
+	     // Configure your file manager integration. This example uses CKFinder 3 for PHP.
+	      filebrowserImageUploadUrl: '${pageContext.request.contextPath}/board/image?command=QuickUpload&type=Images',
+	});
+	
+// 	CKEDITOR.instances.bo_content.setData("");
+	
+</script>
+
+
+

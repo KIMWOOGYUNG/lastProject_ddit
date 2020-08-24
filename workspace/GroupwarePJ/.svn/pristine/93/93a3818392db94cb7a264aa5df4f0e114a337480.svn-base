@@ -1,0 +1,127 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html>
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>코멘트 작성</title>
+  
+  <!-- Tell the browser to be responsive to screen width -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="${pageContext.request.contextPath }/resources/plugins/fontawesome-free/css/all.min.css">
+  <!-- Ionicons -->
+  <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+   <!-- Theme style -->
+  <link rel="stylesheet" href="${pageContext.request.contextPath }/resources/dist/css/adminlte.min.css">
+   <!-- Google Font: Source Sans Pro -->
+  <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
+  
+  
+  
+  
+  
+  <!-- Tempusdominus Bbootstrap 4 -->
+  <link rel="stylesheet" href="${pageContext.request.contextPath }/resources/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css">
+  <!-- iCheck -->
+  <link rel="stylesheet" href="${pageContext.request.contextPath }/resources/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+  <link rel="stylesheet" href="${pageContext.request.contextPath }/resources/open-iconic-master/font/css/open-iconic-bootstrap.css">
+  <!-- JQVMap -->
+  <!--link rel="stylesheet" href="${pageContext.request.contextPath }/resources/plugins/jqvmap/jqvmap.min.css"--!>
+  <!-- overlayScrollbars -->
+  <link rel="stylesheet" href="${pageContext.request.contextPath }/resources/plugins/overlayScrollbars/css/OverlayScrollbars.min.css">
+  <!-- Daterange picker -->
+  <link rel="stylesheet" href="${pageContext.request.contextPath }/resources/plugins/daterangepicker/daterangepicker.css">
+  <!-- summernote -->
+  <link rel="stylesheet" href="${pageContext.request.contextPath }/resources/plugins/summernote/summernote-bs4.css">
+ 
+  
+  
+  
+<!-- jQuery -->
+<script src="${cPath}/resources/plugins/jquery/jquery.min.js"></script>
+<!-- jQuery UI 1.11.4 -->
+<script src="${cPath}/resources/plugins/jquery-ui/jquery-ui.min.js"></script>
+<!-- Bootstrap 4 -->
+<script src="${pageContext.request.contextPath }/resources/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+<!-- 아이콘 사용 -->
+<script src="https://unpkg.com/ionicons@5.1.2/dist/ionicons.js"></script>
+<script type="text/javascript" src="${pageContext.request.contextPath }/resources/js/paging.js"></script>
+</head>
+<body class="hold-transition layout-fixed">
+<section class="content  mx-0">
+  <form id="commentform">
+      <div class="row mx-0">
+        <div class="col-12">
+          <div class="card card-primary">
+            <div class="card-header">
+              <h3 class="card-title">코멘트 ${title }</h3>
+            </div>
+            <div class="card-body">
+              <div class="form-group">
+                <label for="inputDescription">내용</label>
+              
+                <textarea name="cmt_content" id="inputDescription" class="form-control" rows="4" style="margin-top: 0px; margin-bottom: 0px; height: 166px;">${comment.cmt_content }</textarea>
+                <input type="hidden" name="draft_code" value="${draft_code}">
+                <input type="hidden" name="cmt_code" value="${comment.cmt_code}">
+              </div>
+             
+            </div>
+            <!-- /.card-body -->
+          </div>
+          <!-- /.card -->
+        </div>
+        
+      </div>
+      <div class="row  mx-0">
+        <div class="col-12">
+          <input type="submit" value="Save Changes" class="btn btn-success float-right">
+          <button type="button" onclick="self.close();" class="btn btn-secondary float-right">Cancel</button>
+        </div>
+      </div>
+      </form>
+    </section>
+
+
+
+<!-- overlayScrollbars -->
+<script src="${pageContext.request.contextPath }/resources/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
+<!-- AdminLTE App -->
+<script src="${pageContext.request.contextPath }/resources/dist/js/adminlte.js"></script>
+<!-- AdminLTE for demo purposes -->
+<script src="${pageContext.request.contextPath }/resources/dist/js/demo.js"></script>
+<script type="text/javascript">
+$("#commentform").on("submit",function(event){
+	event.preventDefault();
+
+	let dataList = $(this).serializeArray();
+	let obj = {};
+	$.each(dataList,function(idx,item){
+		obj[this.name] = this.value;
+		
+	});	
+	
+	$.ajax({
+		url : "${cPath}/approval/comment"
+		,method : "${type}"
+		,processData : false
+		,contentType : "application/json"
+		,data : JSON.stringify(obj)
+		,success :function(resp){
+			if(resp == 'ok'){
+				alert("성공적으로 저장하셨습니다.")
+				opener.parent.commentList();
+				self.close();
+			}
+			else alert("오류가 발생하셨습니다.");
+		}
+	})
+	
+// 	self.close();
+})
+
+</script>
+</body>
+</html>

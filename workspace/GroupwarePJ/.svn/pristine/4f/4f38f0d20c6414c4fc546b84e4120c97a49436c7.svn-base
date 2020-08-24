@@ -1,0 +1,14 @@
+package kr.or.ddit.work.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+
+@Controller
+public class TeamDiaryModifyController {
+	
+//	@GetMapping("/work/teamwork/trashbasket")
+//	public String mydiarydelete() {
+//		
+//		return "teamtrashbasket.work";
+//	}
+}

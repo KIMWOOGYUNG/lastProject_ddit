@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.schedule.dao.ICom_ScheduleDAO">
+	<sql id="searchFrag">
+	
+	
+	</sql>
+
+	<!-- 상세정보 -->
+	<select id="selectComSchedule" parameterType="kr.or.ddit.vo.Com_ScheduleVO" resultType="kr.or.ddit.vo.Com_ScheduleVO">
+		  SELECT A.CS_CODE, C.STANDARD_NAME AS CS_CATAG, A.CS_TITLE, A.CS_CONTENT, TO_CHAR(CS_STARTDATE, 'YYYY-MM-DD') CS_STARTDATE,
+        TO_CHAR(CS_ENDDATE, 'YYYY-MM-DD') CS_ENDDATE, EMP_KOR AS EMP_CODE, D.STANDARD_NAME AS CS_IMPORTANT  
+		FROM COM_SCHEDULE A INNER JOIN EMPLOYEE B ON (A.EMP_CODE = B.EMP_CODE)
+		INNER JOIN STANDARD C ON(A.CS_CATAG = C.STANDARD_CODE)
+        INNER JOIN STANDARD D ON(A.CS_IMPORTANT = D.STANDARD_CODE)
+        WHERE CS_CODE = #{cs_code}
+	</select>
+	
+	<!-- 테이블 리스트 -->
+	<select id="selectComScheduleList" parameterType="kr.or.ddit.vo.PagingVO" resultType="kr.or.ddit.vo.Com_ScheduleVO">
+		 SELECT CS_CODE,C.STANDARD_NAME AS CS_CATAG, CS_TITLE, EMP_KOR AS EMP_CODE, TO_CHAR(CS_STARTDATE, 'YYYY-MM-DD') CS_STARTDATE,
+           TO_CHAR(CS_ENDDATE, 'YYYY-MM-DD') CS_ENDDATE, D.STANDARD_NAME AS CS_IMPORTANT
+    FROM COM_SCHEDULE A INNER JOIN EMPLOYEE B ON (A.EMP_CODE = B.EMP_CODE)
+        INNER JOIN STANDARD C ON(A.CS_CATAG = C.STANDARD_CODE)
+        INNER JOIN STANDARD D ON(A.CS_IMPORTANT = D.STANDARD_CODE)
+		
+	</select>
+	
+	<!-- 페이지 카운트 -->
+	<select id="selectCom_scheduleCount" resultType="int" parameterType="kr.or.ddit.vo.PagingVO">
+		SELECT COUNT(CS_CODE)
+		FROM COM_SCHEDULE
+	</select>
+	
+	
+	<!--회사일정 등록 -->
+	<insert id="insertCom" parameterType="kr.or.ddit.vo.Com_ScheduleVO">
+	<selectKey keyProperty="cs_code" resultType="string" order="BEFORE">
+	SELECT 'CS' || LPAD(NVL(TO_NUMBER(SUBSTR(MAX(CS_CODE), 3)), 0)+1, 3, '0') 
+	FROM COM_SCHEDULE
+	</selectKey>
+	INSERT INTO COM_SCHEDULE(
+	CS_CODE, CS_CATAG ,CS_TITLE ,CS_CONTENT,
+    CS_STARTDATE, CS_ENDDATE, EMP_CODE, CS_IMPORTANT
+	) VALUES (
+	#{cs_code,jdbcType=VARCHAR},#{cs_catag,jdbcType=VARCHAR},#{cs_title,jdbcType=VARCHAR},#{cs_content,jdbcType=VARCHAR},
+	TO_DATE(#{cs_startdate,jdbcType=DATE}, 'YYYY-MM-DD'), TO_DATE(#{cs_enddate,jdbcType=DATE}, 'YYYY-MM-DD'), #{emp_code,jdbcType=VARCHAR},
+	#{cs_important,jdbcType=VARCHAR}
+	)
+	</insert>
+	
+	<!--회사일정 삭제 -->
+	<delete id="deleteCom" parameterType="string">
+	DELETE FROM COM_SCHEDULE
+	WHERE CS_CODE = #{cs_code}
+	</delete>
+	
+	<!--회사일정 수정 -->
+	<update id="updateCom" parameterType="kr.or.ddit.vo.Com_ScheduleVO">
+	UPDATE COM_SCHEDULE
+	SET
+	CS_CATAG = #{cs_catag,jdbcType=VARCHAR},
+	CS_TITLE = #{cs_title,jdbcType=VARCHAR},
+	CS_CONTENT = #{cs_content,jdbcType=VARCHAR},
+	CS_STARTDATE = TO_DATE(#{cs_startdate,jdbcType=DATE}, 'YYYY-MM-DD'),
+	CS_ENDDATE = TO_DATE(#{cs_enddate,jdbcType=DATE}, 'YYYY-MM-DD'),
+	CS_IMPORTANT = #{cs_important}
+	where CS_CODE = #{cs_code,jdbcType=VARCHAR}
+	</update>
+	
+
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

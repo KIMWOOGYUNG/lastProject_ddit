@@ -1,0 +1,108 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib uri="http://www.springframework.org/tags" prefix="spring"%>
+
+<div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">업무보고</h3>
+<br><br>
+			   <button class="btn btn-primary btn-sm" href="#">
+			       <i class=" fas fa-save"></i> 등록
+			    </button>
+                <div class="card-tools">
+                  <div class="input-group input-group-sm" id="searchUI" style="width: 150px;">
+                    
+                    <input type="date" name="searchWord" class="form-control float-right" placeholder="Search"
+                    	value="${pagingVO.searchVO.searchWord }"
+						onkeyup="event.keyCode==13?$('#searchBtn').trigger('click'):'';"
+                    >
+					
+                    <div class="input-group-append">
+                      <button class="btn btn-default" id="searchBtn"><i class="fas fa-search"></i></button>
+                    </div>
+                    
+                  </div>
+                </div>
+              </div>
+              <!-- /.card-header -->
+              <div class="card-body table-responsive p-0">
+                <table class="table table-hover text-nowrap">
+                  <thead>
+                    <tr>
+                      <th><input type="checkbox" name="checkAll" id="th_checkAll" onclick="checkAll();"/></th>
+                      <th>순번</th>
+                      <th>보고자</th>
+                      <th>작성일</th>
+                      <th>제목</th>
+                      <th>보고상태</th>
+                      <th>보고대상자</th>
+                    </tr>
+                  </thead>
+                  <tbody id="listBody">
+ 
+                  </tbody>
+					
+                </table>
+                <nav id="pagingArea" class="d-flex ml-md-auto d-print-none">
+					${pagingVO.pagingHTML }
+				</nav>	
+              </div>	
+              <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+          </div>
+          
+<form id="searchForm" action="${pageContext.request.contextPath }/work/workreport/myworkreport/report">
+	<input type="hidden" name="page" value="${param.page }"/>
+	<input type="hidden" name="searchWord" value=""/>
+</form>
+<script type="text/javascript">
+	var listBody = $("#listBody");
+	var searchForm = $("#searchForm").paging({
+		searchUI:"#searchUI",
+		searchBtn:"#searchBtn",
+		pagination:"#pagingArea",
+		pageParam:"page",
+		byAjax:true,
+		success:function(resp){
+			let reportList = resp.dataList;
+			let pagingHTML = resp.pagingHTML;
+			let trTags = [];
+			if(reportList.length > 0){
+				$.each(reportList, function(idx, report){
+					console.log(report);
+					let trTag = $("<tr>").append(
+									 $("<td>").html('<input type="checkbox" name="checkRow" value="${content.IDX}" />')
+									, $("<td>").text(report.rnum)
+									, $("<td>").text(report.emp_reporter)
+									, $("<td>").text(report.report_date)
+									, $("<td>").html($("<a>").attr("href", "${pageContext.request.contextPath }/work/workreport/reportview/" + report.report_code).html(report.report_title))
+									, $("<td>").text(report.report_stat)
+									, $("<td>").text(report.emp_target));
+					trTags.push(trTag);
+				});
+				$("#pagingArea").html(pagingHTML);
+			}else{
+				trTags.push($("<tr>").html($("<td colspan='8'>").text("보고가 없습니다.")));
+				$("#pagingArea").empty();
+			}
+			listBody.html(trTags);
+			listBody.data("currentpage", resp.currentPage);
+			searchForm.find("[name='page']").val("");
+		}
+	}).submit();
+	
+	
+	
+	function checkAll(){
+        if( $("#th_checkAll").is(':checked') ){
+          $("input[name=checkRow]").prop("checked", true);
+        }else{
+          $("input[name=checkRow]").prop("checked", false);
+        }
+  	}
+
+
+</script>

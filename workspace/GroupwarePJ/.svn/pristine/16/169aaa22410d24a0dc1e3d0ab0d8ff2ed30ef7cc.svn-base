@@ -1,0 +1,51 @@
+package kr.or.ddit.schedule.service;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.schedule.dao.IMy_ScheduleDAO;
+import kr.or.ddit.vo.My_ScheduleVO;
+import kr.or.ddit.vo.PagingVO;
+
+@Service
+public class My_ScheduleServiceImpl implements IMy_ScheduleService {
+	
+	@Inject
+	IMy_ScheduleDAO myscheduleDAO;
+	
+	@Override
+	public int insertMyshedule(My_ScheduleVO myschedule) {
+		return 0;
+	}
+
+	@Override
+	public int selectMyscheduleCount(PagingVO<My_ScheduleVO> pagingVO) {
+		return myscheduleDAO.selectMyscheduleCount(pagingVO);
+	}
+
+	@Override
+	public List<My_ScheduleVO> selectMyscheduleList(PagingVO<My_ScheduleVO> pagingVO) {
+		return myscheduleDAO.selectMyscheduleList(pagingVO);
+	}
+
+	@Override
+	public My_ScheduleVO selectMyschedule(int ms_code) {
+		return myscheduleDAO.selectMyschedule(ms_code);
+	}
+
+	@Override
+	public int updateMyschedule(My_ScheduleVO myschedule) {
+		return 0;
+	
+	}
+
+	@Override
+	public int deleteMyschedule(My_ScheduleVO myschedule) {
+		return 0;
+	}
+
+}

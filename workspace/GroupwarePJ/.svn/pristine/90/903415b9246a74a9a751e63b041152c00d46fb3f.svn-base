@@ -1,0 +1,66 @@
+package kr.or.ddit.hr_admin.controller;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpSession;
+import javax.validation.Valid;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.Errors;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.hr_admin.dao.IEmpinfoStandardDAO;
+import kr.or.ddit.hr_admin.service.IAdminDepartService;
+import kr.or.ddit.vo.DepartmentVO;
+
+
+
+@Controller
+public class AdminDepInsertController {
+
+	@Inject
+	private  IAdminDepartService service;
+	
+	
+	
+	
+	@PostMapping(value = "/hr/employer/depenroll" ,produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public String depenroll(@Valid @ModelAttribute("department") DepartmentVO depart, Errors errors, Model model, HttpSession session) {
+		System.out.println(depart.toString());
+		DepartmentVO departVO1 = (DepartmentVO) session.getAttribute("authUser");
+		String dept_code = departVO1.getDept_code();
+		depart.setDept_code(dept_code);
+		 
+		String goPage = null;
+		String message = null;
+		if(!errors.hasErrors()) {
+			ResultState result = service.insertdep(depart);
+			System.out.println(result);
+			switch (result) {
+			case FAIL:
+				goPage = "AdminDepEnroll.hr";
+				message = "다시 입력하세요";
+				break;
+
+			default:
+				goPage = "AdminDepManage.hr";
+				message = "insert성공";
+				break;
+			}
+			
+		}else {
+			System.out.println(errors.toString());
+			goPage = "AdminDepEnroll.hr";
+		}
+		
+		model.addAttribute("message", message);
+		
+		return goPage;
+	}
+	
+	
+	
+}

@@ -1,0 +1,53 @@
+package kr.or.ddit.community.dao;
+
+import java.util.List;
+
+import org.springframework.stereotype.Repository;
+
+import kr.or.ddit.vo.BoardVO;
+import kr.or.ddit.vo.PagingVO;
+
+@Repository
+public interface IBoardDAO {
+	/**
+	 * 게시글 등록
+	 * @param board
+	 * @return
+	 */
+	public int insertBoard(BoardVO board); 
+	/**
+	 * 등록된 게시글 수 조회
+	 * @param pagingVO
+	 * @return
+	 */
+	public int selectBoardCount(PagingVO<BoardVO> pagingVO); 
+	/**
+	 * 게시글 목록을 리스트에 담기
+	 * @param pagingVO
+	 * @return
+	 */
+	public List<BoardVO> selectBoardList(PagingVO<BoardVO> pagingVO); 
+	/**
+	 * 게시글을 선택하여 상세보기
+	 * @param bo_no
+	 * @return
+	 */
+	public BoardVO selectBoard(String board_code); 
+	/**
+	 * 게시글 조회수
+	 * @param bo_no
+	 */
+	public void incrementHit(int board_code); 
+	/**
+	 * 게시글 수정
+	 * @param board
+	 * @return
+	 */
+	public int updateBoard(BoardVO board); 
+	/**
+	 * 게시글 삭제
+	 * @param board
+	 * @return
+	 */
+	public int deleteBoard(String board_code);
+}

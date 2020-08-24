@@ -1,0 +1,76 @@
+package kr.or.ddit.schedule.controller;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import kr.or.ddit.schedule.service.IMy_ScheduleService;
+
+import kr.or.ddit.vo.My_ScheduleVO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.SearchVO;
+
+@Controller
+public class My_ScheduleController {
+	
+	@Inject
+	IMy_ScheduleService service;
+	
+	@GetMapping(value="/plan/myplanbox/myplan" , produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public PagingVO<My_ScheduleVO> ajaxForlist(
+			@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+			SearchVO searchVO, Model model
+			){
+			myplanList(currentPage, searchVO, model);
+			return (PagingVO<My_ScheduleVO>) model.asMap().get("pagingVO");
+		}
+	
+	@GetMapping("/plan/myplanbox/myplan")
+	public String myplanList(@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+			SearchVO searchVO, Model model) {
+		PagingVO<My_ScheduleVO> pagingVO = new PagingVO<>();
+		pagingVO.setSearchVO(searchVO);
+		pagingVO.setCurrentPage(currentPage);
+		int totalRecord = service.selectMyscheduleCount(pagingVO);
+		pagingVO.setTotalRecord(totalRecord);
+		
+		List<My_ScheduleVO> comList = service.selectMyscheduleList(pagingVO);
+		pagingVO.setDataList(comList);
+		
+		model.addAttribute("pagingVO", pagingVO);
+		
+		return "MySchedule.plan";
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	@GetMapping("/plan/myplanbox/importantplan")
+	public String MyImportSchedule() {
+		String goPage = "MyImportSchedule.plan";
+		return goPage;
+	}
+
+}

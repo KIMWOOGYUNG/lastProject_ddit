@@ -1,0 +1,90 @@
+package kr.or.ddit.project.dao;
+
+import java.util.List;
+
+import org.springframework.stereotype.Repository;
+
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.PJ_MemberVO;
+import kr.or.ddit.vo.PJ_RgroupVO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.ProjectVO;
+import kr.or.ddit.vo.Project_roleVO;
+
+@Repository
+public interface IProjectListDAO {
+//프로젝트 추가---------------------------------------------------------------------
+	/**
+	 * 새 프로젝트 추가
+	 * @param project
+	 * @return
+	 */
+	public int insertProject(ProjectVO project);
+	
+	public int insertPJ_Rgroup(PJ_RgroupVO rgroup);
+	
+//팀 멤버 관리----------------------------------------------------------------------
+	public int insertPJ_Member(PJ_MemberVO pjMember);
+	public String selectPJ_MemCode(PJ_MemberVO pj_member);
+	public int deletePJ_Member(String pj_memcode);
+//------------------------------------------------------------------------------
+	/**
+	 * 등록된 프로젝트의 개수 구하기
+	 * @param pagingVO
+	 * @return
+	 */
+	public int selectProjectCount(PagingVO<ProjectVO> pagingVO);
+	/**
+	 * 프로젝트 목록을 리스트에 담기
+	 * @param pagingVO
+	 * @return
+	 */
+	public List<ProjectVO> selectProjectList(PagingVO<ProjectVO> pagingVO);
+	/**
+	 * 프로젝트 하나를 선택해서 상세정보 가져오기
+	 * @param project_code
+	 * @return
+	 */
+	public ProjectVO selectProject(String project_code);
+	/**
+	 * 프로젝트 수정
+	 * @param project
+	 * @return
+	 */
+	public int updateProject(ProjectVO project);
+	/**프로젝트 삭제
+	 * @param project
+	 * @return
+	 */
+	public int deleteProject(String project_code);
+	
+	public List<ProjectVO> selectProjectListForTask(String emp_code);
+	
+	/**프로젝트 등록시 팀원추가에서 조회할 사원들
+	 * @param pagingVO
+	 * @return
+	 */
+	public List<EmployeeVO>selectEmpList(PagingVO<EmployeeVO> pagingVO);
+	
+	/**프로젝트 등록시 팀원추가에서 검색 조건에 맞는 사원 수 
+	 * @param pagingVO
+	 * @return
+	 */
+	public int selectEmpCount(PagingVO<EmployeeVO> pagingVO);
+	
+	/**프로젝트 등록시 역할 선택
+	 * @return
+	 */
+	public List<Project_roleVO>selectRoleList();
+	
+	
+	public int selectPRG_PK();
+	
+	/**프로젝트 구성원 리스트 조회
+	 * @param project_code
+	 * @return
+	 */
+	public List<PJ_RgroupVO>selectPJ_Rgroup(String project_code);
+	
+}

@@ -1,0 +1,50 @@
+package kr.or.ddit.att_admin.controller;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PostMapping;
+
+import kr.or.ddit.att_admin.service.IAdminAttService;
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.Time_AttendVO;
+
+@Controller
+public class AttAddController {
+	
+	@Inject
+	IAdminAttService service;
+
+	 
+	//출근체크 
+	 @PostMapping(value="/attCheck.do" ,produces = "application/text; charset=utf8")
+	 @ResponseBody //이걸 써야 브라우저가 알아먹을 수 있는 데이터로 보내줌, 스트링도 마찬가지
+	 public String rsrchfList(HttpSession session, @RequestParam String cws_code)  {
+		 //세션에서 emp_code빼기 
+		 EmployeeVO employeeVO =(EmployeeVO) session.getAttribute("authUser");
+		 String emp_code = employeeVO.getEmp_code();
+		 String emp_kor = employeeVO.getEmp_kor();
+		 
+		 //에이작스로 받은 cws_code 빼기
+		 Time_AttendVO timeAttVO = new Time_AttendVO();
+		 timeAttVO.setEmp_code(emp_code);
+		 timeAttVO.setCws_code(cws_code);
+		 Time_AttendVO attVO = service.readEmpAtt(timeAttVO);
+		 if(attVO==null) {
+			 service.createEmpAtt(timeAttVO);
+			 return emp_kor +"님 출근처리 되었습니다.";
+		 }else {
+			 ResultState result = service.modifyEmpAtt(timeAttVO);
+			 if(result.equals(ResultState.OK)){
+			return emp_kor +"님 퇴근처리 되었습니다.";
+			 }
+		 }
+		 
+		 return emp_kor+"님 출/퇴근처리 되었습니다.";
+	 }
+
+}

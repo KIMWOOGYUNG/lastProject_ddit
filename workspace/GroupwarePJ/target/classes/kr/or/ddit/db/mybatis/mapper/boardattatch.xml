@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.community.dao.IBoardAttatchDAO">
+	
+	
+	<insert id = "insertAttatchs" parameterType="BoardVO">
+		<selectKey keyProperty="board_attcode" resultType="String" order="BEFORE">
+			SELECT 'BA' || LPAD(NVL(TO_NUMBER(SUBSTR(MAX(BOARD_ATTCODE), 3)), 0)+1, 3, '0')
+			FROM BOARD_ATTATCH
+		</selectKey>
+<!-- 		INSERT ALL -->
+<!-- 		<foreach collection="attatchList" item="att" index="idx"> -->
+			INSERT INTO BOARD_ATTATCH(
+				BOARD_ATTCODE, BOARD_CODE, FILE_PATH, FILE_SIZE, ORG_NAME, SAVE_NAME, FANCY_SIZE, MIME
+			) VALUES(
+				#{board_attcode}, #{board_code, jdbcType=VARCHAR}, 'D:/A_TeachingMaterial/7.LastProject/other/attatch', #{file_size, jdbcType=NUMERIC},
+				#{org_name, jdbcType=VARCHAR}, #{save_name, jdbcType=VARCHAR}, #{fancy_size, jdbcType=VARCHAR}, #{mime, jdbcType=VARCHAR}
+			)
+<!-- 		</foreach> -->
+<!-- 		SELECT * FROM DUAL -->
+	</insert>
+	
+	
+	<delete id="deleteAttatchs" parameterType="BoardVO">
+		DELETE FROM BOARD_ATTATCH
+		WHERE BOARD_ATTCODE
+		<foreach collection="deleteAttatches" item="delNo" open="(" separator="," close=")">
+			#{delNo}
+		</foreach>
+	</delete>
+	<select id="selectAttatch" resultType="Board_AttatchVO" parameterType="String">
+		SELECT BOARD_ATTCODE, BOARD_CODE, FILE_PATH, FILE_SIZE, ORG_NAME, SAVE_NAME, FANCY_SIZE, MIME
+		FROM BOARD_ATTATCH
+		WHERE BOARD_ATTCODE = #{board_attcode}
+	</select>
+</mapper>

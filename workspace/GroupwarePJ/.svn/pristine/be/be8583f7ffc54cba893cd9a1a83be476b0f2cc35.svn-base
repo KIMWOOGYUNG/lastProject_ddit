@@ -1,0 +1,10 @@
+package kr.or.ddit.addr.service;
+
+public interface IaddrService {
+
+
+	
+	
+	
+	
+}

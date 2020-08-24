@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.att_admin.dao.IAdminAttDAO">
+	<!-- IP 설정페이지에 필요한 조건들 -->
+	<sql id="searchFrag1">
+		FROM EMPLOYEE A INNER JOIN DEPARTMENT B ON (A.DEPT_CODE=B.DEPT_CODE)
+		 			  INNER JOIN POSITION C ON (A.POSITION_CODE = C.POSITION_CODE)
+		<trim prefix="WHERE" prefixOverrides="AND">
+				<if test="detailSearch!=null"> 
+					<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.dept_code)">
+						AND A.DEPT_CODE = #{detailSearch.dept_code}
+					</if>
+					<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.emp_kor)">
+						 AND EMP_KOR LIKE '%' || #{detailSearch.emp_kor} || '%'
+					</if>
+				</if>
+		</trim>            
+	</sql>
+	
+	<!-- 전사원 월별 근태현황 조회에 필요한 조건들  -->
+	<sql id="searchFrag3">
+		<if test="detailSearch!=null"> 
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.selectedYear) and @org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.selectedMonth)">
+				 AND cws_code like #{detailSearch.selectedYear}||#{detailSearch.selectedMonth}||'%' 
+			</if>
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.emp_kor)">
+				AND F.DEPT_CODE=#{detailSearch.dept_code}
+			</if>
+		</if>
+	</sql>
+	
+	<!-- 전사원 월별 근태 현황 -->
+	<select id="selectAttMonthlyList" parameterType="Time_AttendVO" resultType="Time_AttendVO">
+  		 WITH TMP_EMP AS (
+		    SELECT A.EMP_CODE, EMP_KOR, A.DEPT_CODE, DEPT_NAME, POSITION_NAME
+		    FROM EMPLOYEE A INNER JOIN DEPARTMENT B ON(A.DEPT_CODE = B.DEPT_CODE) 
+                            INNER JOIN POSITION F ON(A.POSITION_CODE = F.POSITION_CODE)
+		),
+		TMP_ATTEND AS (
+		SELECT * 
+		FROM (
+		     SELECT EMP_CODE, A.TA_CATAG_CODE, CWS_CODE, SUBSTR(CWS_CODE,1,4) YEAR, SUBSTR(CWS_CODE,5,2) MONTH
+		    FROM TA_CATAG A INNER  JOIN TIME_ATTEND B ON (A.TA_CATAG_CODE = B.TA_CATAG_CODE)
+		    WHERE CWS_CODE LIKE #{selectedYear,jdbcType=VARCHAR}||#{selectedMonth,jdbcType=VARCHAR}||'%'
+		)
+		PIVOT(
+		        COUNT(CWS_CODE) FOR TA_CATAG_CODE IN ('TC001', 'TC002', 'TC003', 'TC004', 'TC005', 'TC006', 'TC007')
+		    )
+		)
+		SELECT C.EMP_CODE, EMP_KOR, C.DEPT_CODE, DEPT_NAME, C.POSITION_NAME,D.YEAR,D.MONTH,
+        NVL("'TC001'", 0) NORMAL, 
+		NVL("'TC002'", 0) LATE,
+		NVL("'TC003'", 0) VACA,
+		NVL("'TC004'", 0) HOLIDAY,
+		NVL("'TC005'", 0) ABSENT,
+		NVL("'TC006'", 0) SICK,
+		NVL("'TC007'", 0) OFFICAIL
+		FROM TMP_EMP C INNER JOIN  TMP_ATTEND D ON (C.EMP_CODE = D.EMP_CODE)
+
+	</select>
+	<!-- 상세근태현황(클라이언트사이드 페이징)리스트 -->
+	<select id="selectAttDetailList" resultType="Time_AttendVO" parameterType="Time_AttendVO">
+	SELECT ROWNUM RNUM, A.CWS_CODE, A.EMP_CODE, B.EMP_KOR, C.DEPT_NAME, C.DEPT_CODE, 
+	TO_CHAR(A.TA_START,'HH24:MI') TA_START, TO_CHAR(A.TA_END,'HH24:MI') TA_END, D.TA_CATAG_NAME, D.TA_CATAG_NAME, E.POSITION_NAME 
+	FROM TIME_ATTEND A 
+	INNER JOIN EMPLOYEE B ON (A.EMP_CODE = B.EMP_CODE)
+	INNER JOIN DEPARTMENT C ON (B.DEPT_CODE = C.DEPT_CODE)
+    INNER JOIN TA_CATAG D ON (A.TA_CATAG_CODE = D.TA_CATAG_CODE)
+    INNER JOIN POSITION E ON (B.POSITION_CODE = E.POSITION_CODE)
+    <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(selectedDate1) and @org.apache.commons.lang3.StringUtils@isNotBlank(selectedDate2)" >
+	WHERE TO_DATE(A.CWS_CODE,'YYYYMMDD') BETWEEN #{selectedDate1,jdbcType=VARCHAR} AND #{selectedDate2,jdbcType=VARCHAR}
+    </if>
+	</select>
+	<!-- IP리스트 띄우기  -->
+	<select id="selectEmpIpCount" parameterType="pagingVO" resultType="int">
+		SELECT COUNT(*)
+		<include refid="searchFrag1"/>   
+	</select>
+	
+	<select id="selectEmpIpList" parameterType="pagingVO" resultType="EmployeeVO">
+		SELECT A.*
+		FROM(
+		SELECT  ROWNUM RNUM, EMP_CODE, EMP_KOR, EMP_ENG,EMP_IP, EMP_IP2, A.DEPT_CODE
+		, B.DEPT_NAME
+			    ,POSITION_NAME
+		<include refid="searchFrag1"/>   
+		)A
+		WHERE RNUM BETWEEN #{startRow} AND #{endRow}
+	</select>
+   <!-- 부서명 -->
+   <select id="selectDeptName" resultType="hashMap">
+   	 SELECT DEPT_NAME "dept_name", DEPT_CODE "dept_code"
+	 FROM DEPARTMENT
+   </select>
+   <!-- 근태구분 --> 
+   <select id="selectCatagCode" resultType="hashMap">
+   	SELECT TA_CATAG_CODE "ta_catag_code", TA_CATAG_NAME "ta_catag_name"
+   	FROM TA_CATAG
+   </select>
+   <!-- IP변경 -->
+   <update id="updateEmpIp" parameterType="EmployeeVO">
+	   UPDATE EMPLOYEE
+		SET EMP_IP =  #{emp_ip,jdbcType=VARCHAR},
+		    EMP_IP2 = #{emp_ip2,jdbcType=VARCHAR}
+		WHERE EMP_CODE = #{emp_code} 
+   </update>
+   <!-- 회사휴일기준일 확인 -->
+   <select id="selectCompanyStandard" parameterType="String" resultType="Com_WorkStdVO">
+		SELECT 
+		CWS_CODE,	YEAR,	MONTH,	DAY,	CWS_NAME,	CWS_CATAG,
+		CWS_ETC,	WEEK_TXT,	WEEK_NO
+	    FROM COM_WORKSTD
+		WHERE CWS_CODE =#{cws_code}
+   </select>
+   
+   <!-- 회사휴일캘린더 -->
+   <select id="selectComVacaList" resultType="Com_WorkStdVO">
+	SELECT 
+	CWS_CODE,	YEAR,	MONTH,	DAY,	CWS_NAME,	CWS_CATAG,
+	CWS_ETC,	WEEK_TXT,	WEEK_NO, B.STANDARD_NAME
+	FROM COM_WORKSTD A INNER JOIN STANDARD B ON (A.CWS_CATAG = B.STANDARD_CODE) 
+	WHERE CWS_CATAG = 'CWS300'
+	OR CWS_CATAG = 'CWS400'
+   </select>
+   
+   <!-- 회사 정책 확인 -->
+   <select id="selectCompanyPolicy" resultType="Com_PolicyVO">
+	   SELECT 
+	   COM_NO,COM_NAME,COM_CORP,CORP_NO,COM_CATAG,COM_CEO,COM_ZIP,COM_ADD1,COM_ADD2,
+	   COM_PHONE,COM_FAX,COM_MAIL,FOUNDING_DATE,COME_TIME,LEAVE_TIME,MOR_HALF_START,
+	   MOR_HALF_END,AFT_HALF_START,AFT_HALF_END
+   	   FROM COM_POLICY
+   </select>
+   
+   <!-- 출근여부 확인  -->
+   <select id="selectAtt" parameterType="Time_AttendVO" resultType="Time_AttendVO">
+	   	SELECT EMP_CODE, CWS_CODE, TA_CATAG_CODE, TA_START, TA_END
+		FROM TIME_ATTEND
+		WHERE EMP_CODE = #{emp_code} 
+		AND CWS_CODE =#{cws_code}
+   </select>
+   
+   <!-- 위의 값이 없으면 출근입력 -->
+   <insert id="insertAttendence" parameterType="Time_AttendVO">
+    INSERT INTO time_attend (
+    emp_code,    cws_code,    ta_start, ta_catag_code
+    ) VALUES (
+        #{emp_code} , #{cws_code} , sysdate,  #{ta_catag_code,jdbcType=VARCHAR}
+    )
+   </insert>
+   
+	<!-- 위의 값이 있으면 퇴근입력 -->
+   <update id="updateAttendence" parameterType="Time_AttendVO">
+	   UPDATE TIME_ATTEND
+		SET TA_END = sysdate
+		WHERE EMP_CODE = #{emp_code}
+		AND CWS_CODE=  #{cws_code} 
+   </update>
+   
+	<!-- 정상출근일/휴일/휴무일/대체공휴일 등 이름 가져오기 -->
+	<select id="selectCwsCode" resultType="StandardVO">
+	SELECT STANDARD_NAME, STANDARD_CODE
+	FROM STANDARD
+	WHERE STANDARD_CODE LIKE 'CWS'||'%'
+	</select>
+	
+	<!-- 휴일정보등록(매년/올해 선택되게끔) repeat값 유무로 -->
+	<update id="updateHoliday" parameterType="Com_WorkStdVO">
+	UPDATE com_workstd
+    SET
+        CWS_NAME = #{cws_name,jdbcType=VARCHAR},
+        CWS_CATAG = #{cws_catag,jdbcType=VARCHAR}
+	<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(cws_etc)"><!-- 매년반복설정 -->
+	WHERE SUBSTR(CWS_CODE,5) = #{cws_code,jdbcType=VARCHAR}
+	</if>
+	<if test="@org.apache.commons.lang3.StringUtils@isBlank(cws_etc)"><!-- 반복X -->
+	WHERE CWS_CODE = #{cws_code,jdbcType=VARCHAR}
+	</if>
+	</update>
+	<!-- 근태입력 -->
+	<update id="updateAtt" parameterType="Time_AttendVO">
+	UPDATE time_attend
+    SET
+        TA_CATAG_CODE = #{ta_catag_code,jdbcType=VARCHAR}
+	WHERE EMP_CODE = #{emp_code,jdbcType=VARCHAR} AND CWS_CODE =#{cws_code,jdbcType=VARCHAR}
+	</update>
+	
+	<!-- faceidList 불러오기  -->
+	<select id="selectFaceIdList" resultType="EmployeeVO">
+	 select 
+     CASE WHEN A.PERSISTEDFACEID IS NULL THEN 'x' else 'o' end as FACEID1,
+     CASE WHEN A.SUBFACEID IS NULL THEN 'x' else 'o' end as FACEID2,
+ 		A.EMP_CODE,		A.EMP_KOR,		A.EMP_ENG,		A.EMP_REG1,
+		A.EMP_STARTDATE,		A.TEAM_CODE,
+		A.RETIRE_DATE,		A.VACTION_CNT,		A.DEPT_CODE,		A.POSITION_CODE,
+		A.JOBTITLE_CODE,A.EMP_ARBITRARY, B.DEPT_NAME, C.POSITION_NAME, D.TEAM_NAME
+        from employee A INNER JOIN DEPARTMENT B ON(A.DEPT_CODE = B.DEPT_CODE)
+                      INNER JOIN POSITION C ON(A.POSITION_CODE = C.POSITION_CODE ) 
+                      INNER JOIN TEAM D ON(A.TEAM_CODE = D.TEAM_CODE)
+	</select>
+	
+	
+	
+	<!-- subfaceid 업데이트 -->
+	<update id="updateSubFaceId" parameterType="EmployeeVO">
+	   UPDATE EMPLOYEE
+		SET SUBFACEID = #{subfaceid,jdbcType=VARCHAR}
+		WHERE EMP_CODE = #{emp_code,jdbcType=VARCHAR}
+	</update>
+	
+	
+
+</mapper>

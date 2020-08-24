@@ -1,0 +1,337 @@
+package kr.or.ddit.project.controller;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpSession;
+import javax.validation.Valid;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.Errors;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.hr_admin.service.IAdminEmployService;
+import kr.or.ddit.project.dao.IPJStandardDAO;
+import kr.or.ddit.project.service.IProjectListService;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.PJ_MemberVO;
+import kr.or.ddit.vo.PJ_RgroupVO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.ProjectVO;
+import kr.or.ddit.vo.Project_roleVO;
+
+@Controller
+public class ProjectFormController {
+	
+	@Inject
+	IProjectListService service;
+	@Inject
+	IPJStandardDAO stdDao;
+	@Inject
+	IAdminEmployService empService;
+	
+	private void attibuteSetting(Model model){
+		model.addAttribute("deptList", stdDao.selectDept());
+		model.addAttribute("impList", stdDao.selectImportant());
+		model.addAttribute("sttList", stdDao.selectStatus());
+		model.addAttribute("tskList", stdDao.selectTaskType());
+	}
+	
+	@GetMapping("/project/roleList")
+	@ResponseBody
+	public List<Project_roleVO> selectRoles(){
+		List<Project_roleVO> roleList = service.selectRoleList();
+		return roleList;
+	}
+	
+	//프로젝트 등록 폼
+	@GetMapping("/project/newProject")
+	public String newProject(Model model) {
+		
+		List<Project_roleVO> roleList = service.selectRoleList();
+		
+		attibuteSetting(model);
+		model.addAttribute("roleList", roleList);
+		model.addAttribute("state","insertProject");
+		return "newProject.project";
+	}
+	
+	//프로젝트 등록
+		@PostMapping(value = "/project/insertProject")
+		public String insertProject(@Valid @ModelAttribute("project") ProjectVO projectVO,
+				Errors errors, Model model, HttpSession session, RedirectAttributes redirectAttributes
+				) {
+			
+			EmployeeVO employeeVO = (EmployeeVO) session.getAttribute("authUser");
+			String emp_code = employeeVO.getEmp_code();
+			
+			projectVO.setDept_code(employeeVO.getDept_code());
+			System.out.println(projectVO.toString());
+			
+			String goPage = null;
+			String message = null;
+			if(!errors.hasErrors()) {
+				ResultState result = service.insertProject(projectVO);
+				System.out.println(result);
+				switch (result) {
+				case FAIL:
+					goPage = "newProject.project";
+					message = "다시 입력하세요";
+					model.addAttribute("message", message);
+					break;
+
+				default:
+					goPage = "redirect:/project/projectlist/"+emp_code;
+					message = "insert성공";
+					redirectAttributes.addFlashAttribute("message", message);
+					break;
+				}
+				
+			}else {
+				goPage = "newProject.project";
+				model.addAttribute("message", message);
+			}
+			
+			
+			return goPage;
+		}
+	
+	
+	//프로젝트 수정 폼
+	@GetMapping("/project/updateProject/{project_code}")
+	public String editProject(@PathVariable String project_code, Model model) {
+		attibuteSetting(model);
+		ProjectVO vo = service.selectProject(project_code);
+		List<Project_roleVO> roleList = service.selectRoleList();
+		
+		model.addAttribute("state","updateProject");
+		model.addAttribute("project", vo);
+		model.addAttribute("roleList", roleList);
+		return "newProject.project";
+	}
+	
+	
+	//프로젝트 수정
+	@PostMapping("/project/updateProject")
+	public String update(
+		@Valid @ModelAttribute("project") ProjectVO project, @RequestParam String project_code,
+		BindingResult errors, Model model,
+		RedirectAttributes redirectAttributes
+	){
+		String goPage = null;
+		String message = null;
+		if (!errors.hasErrors()) {
+			ResultState result = service.updateProject(project);
+			switch (result) {
+			case FAIL:
+				message = "잠시 후 다시 시도해주세요.";
+				redirectAttributes.addFlashAttribute("project", project);
+				goPage = "redirect:/project/newProject/"+project_code;
+				break;
+			default: // OK
+				goPage = "redirect:/project/eachproject/"+project_code;
+				break;  
+			}
+		} else {
+			goPage = "redirect:/project/newProject/{project_code}";
+			redirectAttributes.addFlashAttribute("project", project);
+			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.project", errors);
+		}
+
+		model.addAttribute("message", message);
+
+		return goPage;
+		
+	}
+	
+
+	@GetMapping(value="/project/tmManage/{project_code}", produces="application/json;charset=UTF-8")
+	@ResponseBody
+	public PagingVO<EmployeeVO> ajaxList(@PathVariable String project_code, @RequestParam(name="page", required=false, defaultValue="1") int currentPage, EmployeeVO detailSearch, Model model) {
+		memManage(project_code, currentPage, detailSearch, model);
+		PagingVO<EmployeeVO> pagingVO = (PagingVO<EmployeeVO>) model.asMap().get("pagingVO");
+		return pagingVO;
+	}
+	
+	//팀관리 폼
+	@GetMapping("/project/tmManage/{project_code}")
+	public String memManage(@PathVariable String project_code, @RequestParam(name="page", required=false, defaultValue="1") int currentPage, EmployeeVO detailSearch, Model model) {
+		String goPage = "teamMemManage.project";
+		
+		//사원 조회
+		PagingVO<EmployeeVO> pagingVO = new PagingVO<>(5,5);
+		pagingVO.setDetailSearch(detailSearch);
+		pagingVO.setCurrentPage(currentPage);
+		int totalRecord = service.readEmpCount(pagingVO);	
+		pagingVO.setTotalRecord(totalRecord);
+		List<EmployeeVO> empList = service.selectEmpList(pagingVO);
+		pagingVO.setDataList(empList);
+		
+		//구성원 조회
+		List<PJ_RgroupVO> rgroupList = service.selectPJ_Rgroup(project_code);
+		
+		//프로젝트 조회
+		ProjectVO project = service.selectProject(project_code);
+		
+		model.addAttribute("project", project);
+		model.addAttribute("rgroupList", rgroupList);
+		model.addAttribute("pagingVO", pagingVO);
+		return goPage;
+	}
+	
+	//팀 관리 및 수정
+	@PostMapping(value="/project/tmManage/{project_code}", produces="application/json;charset=UTF-8")
+	@ResponseBody	
+	@JsonIgnoreProperties(ignoreUnknown = true)
+	public Map<String, String> memManage(@RequestBody List<PJ_RgroupVO> rgroupList, @PathVariable String project_code, Model model) {
+		
+//		String goPage = null;	//리다이렉션으로 해야하는데 그걸 jsp에서 받아서 location.href로 처리함
+		String message = null;
+		List<PJ_RgroupVO> newList = new ArrayList<>();
+		
+		//프로젝트 코드 담아서 새그룹 생성
+		for(PJ_RgroupVO rgroup : rgroupList) {	//from Jsp + project_code
+			rgroup.setProject_code(project_code);
+			newList.add(rgroup);
+		}
+		List<PJ_RgroupVO> orgList = service.selectPJ_Rgroup(project_code);	//from DB
+		
+		System.out.println("orgList : "+orgList.toString());
+		System.out.println("newList : "+newList.toString());
+		System.out.println("비교 : "+orgList.equals(newList));
+		for(int i = 0; i < orgList.size(); i++) {
+			PJ_RgroupVO org_ = orgList.get(i);
+			PJ_RgroupVO new_ = newList.get(i);
+			if(org_.getPj_memberList().size() == new_.getPj_memberList().size()) {
+				for(int j = 0; j < org_.getPj_memberList().size(); j++) {
+					if(org_.getPj_memberList().get(j).getEmp_code() != null) {
+						if(org_.getPrg_code().equals(new_.getPrg_code()) && org_.getPj_memberList().get(j).getEmp_code().equals(new_.getPj_memberList().get(j).getEmp_code()) && org_.getPr_code().equals(new_.getPr_code())){
+							message = "변경사항이 없습니다.";
+						}
+					}
+				}
+			}
+		}
+		
+//		if(true) {
+//		}else {
+			for(int i = 0; i < orgList.size(); i++) {
+				List<String> org_emps = new ArrayList<>();
+				List<String> new_emps = new ArrayList<>();
+				//1. pr_code 비교하기
+				String org_prCode = orgList.get(i).getPr_code();
+				String new_prCode = newList.get(i).getPr_code();
+				
+				List<PJ_MemberVO> org_memList = new ArrayList<>();
+				List<PJ_MemberVO> new_memList = new ArrayList<>();
+				if(org_prCode.equals(new_prCode)) {		//역할이 같다면
+					org_memList = orgList.get(i).getPj_memberList();
+					new_memList = newList.get(i).getPj_memberList();
+					
+					//사원코드만 담기
+					for(int j = 0; j < org_memList.size(); j++) {
+						org_emps.add(org_memList.get(j).getEmp_code());
+					}
+					for(int j = 0; j < new_memList.size(); j++) {
+						new_emps.add(new_memList.get(j).getEmp_code());
+						new_memList.get(j).setPrg_code(newList.get(i).getPrg_code());
+					}
+					
+					System.out.println("@"+org_prCode + " : "+org_emps.toString());
+					System.out.println("@"+new_prCode + " : "+new_emps.toString());
+					
+				}
+				
+				List<String> addList = new ArrayList<>();
+				List<String> delList = new ArrayList<>();
+				
+				//비교하기
+				if(!org_emps.equals(new_emps)) {	//추가 또는 삭제
+					System.out.println("변경있음");
+//					for(int x = 0; x < org_emps.size(); x++) {
+						//추가
+						for(String new_emp : new_emps) {
+							if(!org_emps.contains(new_emp) && new_emp != null) {
+								System.out.println("추가할멤버 : " + new_emp);
+								addList.add(new_emp);
+							}
+						}
+						
+						//삭제
+						for(String org_emp : org_emps) {
+							if(!new_emps.contains(org_emp) && org_emp != null) {
+								System.out.println("삭제할멤버 : " + org_emp);
+								delList.add(org_emp);
+							}
+						}
+//					}
+				}else {		//동일
+					System.out.println("변경없음");
+				}
+				
+				//추가
+				if(addList.size() > 0) {
+					for(int y = 0; y < new_memList.size(); y++) {
+						for(String add : addList) {
+							if(new_memList.get(y).getEmp_code() != null && !new_memList.get(y).getEmp_code().isEmpty()) {
+								if(add.equals(new_memList.get(y).getEmp_code())) {
+									ResultState result = service.insertPJ_Member(new_memList.get(y));
+									if(result.equals(ResultState.OK)) {
+										message = "수정을 완료하였습니다.";
+									}else {
+										message = "멤버 추가를 실패하였습니다.";
+									}
+								}
+							}
+						}
+					}
+				}
+				
+				//삭제
+				if(delList.size() > 0) {
+					for(int z = 0; z < org_memList.size(); z++) {
+						for(String del : delList) {
+							if(org_memList.get(z).getEmp_code() != null && !org_memList.get(z).getEmp_code().isEmpty()) {
+								if(del.equals(org_memList.get(z).getEmp_code())) {
+									String pj_memcode = service.selectPJ_MemCode(org_memList.get(z));
+									ResultState result = service.deletePJ_Member(pj_memcode);	
+									if(result.equals(ResultState.OK)) {
+										message = "수정을 완료하였습니다.";
+									}else {
+										message = "멤버 삭제를 실패하였습니다.";
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+//		}
+		
+		Map<String, String> returnMap = new HashMap<>();
+		returnMap.put("goPage", "/GroupwarePJ/project/tmManage/"+project_code);
+		returnMap.put("message", message);
+		
+//		goPage = "teamMemManage.project";
+//		goPage = "/project/tmManage/"+project_code;
+//		model.addAttribute("message",message);
+//		model.addAttribute("goPage",goPage);
+		return returnMap;
+	}
+	
+}

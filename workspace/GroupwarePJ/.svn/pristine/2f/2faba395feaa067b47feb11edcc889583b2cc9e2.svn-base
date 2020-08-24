@@ -1,0 +1,99 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>    
+<%@ taglib uri="http://www.springframework.org/tags" prefix="spring" %>    
+  <!-- fullCalendar -->
+  <link rel="stylesheet" href="${cPath }/resources/plugins/fullcalendar/main.min.css">
+  <link rel="stylesheet" href="${cPath }/resources/plugins/fullcalendar-daygrid/main.min.css">
+  <link rel="stylesheet" href="${cPath }/resources/plugins/fullcalendar-timegrid/main.min.css">
+  <link rel="stylesheet" href="${cPath }/resources/plugins/fullcalendar-bootstrap/main.min.css">
+<style>
+#calendar {
+	max-width: auto;
+	margin: 0 auto;
+}
+</style>
+<section class="content-header">
+	<div class="container-fluid">
+		<div class="row mb-2">
+			<div class="col-sm-6">
+				<h1>${title }</h1>
+			</div>
+		</div>
+	</div>
+	<!-- /.container-fluid -->
+</section>
+<section class="content">
+	<div class="container-fluid">
+		<div class="row">
+			<div class="col-md-3">
+				<div class="sticky-top mb-3">
+					<!-- /.card -->
+				</div>
+			</div>
+		</div>
+		<!-- /.col -->
+		<div class="col-md-7">
+			<div class="card card-primary">
+				<div class="card-body p-0">
+					<!-- THE CALENDAR -->
+					<div id="calendar"></div>
+				</div>
+				<!-- /.card-body -->
+			</div>
+			<!-- /.card -->
+		</div>
+		<!-- /.col -->
+	</div>
+	<!-- /.row -->
+</section>
+<!-- fullCalendar 2.2.5 -->
+<script src="${cPath }/resources/plugins/moment/moment.min.js"></script>
+<script src="${cPath }/resources/plugins/fullcalendar/main.min.js"></script>
+<script src="${cPath }/resources/plugins/fullcalendar-daygrid/main.min.js"></script>
+<script src="${cPath }/resources/plugins/fullcalendar-timegrid/main.min.js"></script>
+<script src="${cPath }/resources/plugins/fullcalendar-interaction/main.min.js"></script>
+<script src="${cPath }/resources/plugins/fullcalendar-bootstrap/main.min.js"></script>
+<script type="text/javascript">
+var eventArr = [];
+var getAttList = function(){
+	$.ajax({
+		url:"${cPath}/mypage/${state}"
+	   ,contentType: "application/x-www-form-urlencoded; charset=UTF-8"
+	   ,type:"post"
+	   ,success : function(mp){
+		   //출근시간
+		   let list = mp;
+		   $.each(list, function(idx, item){
+			   let myEvent = new Object();
+			   myEvent.title = item.title;
+			   myEvent.start = item.start;
+			   myEvent.end = item.end;
+			   myEvent.backgroundColor = item.color;
+	           myEvent.borderColor = item.color;
+			   eventArr.push(myEvent);
+		   });
+		   var calendarEl = document.getElementById('calendar');
+		 //캘린더생성
+		var calendar = new FullCalendar.Calendar(calendarEl, {
+		 	plugins : [ 'interaction', 'dayGrid', 'timeGrid', 'list' ],
+		 	header : {
+		 		left : 'prev,next today',
+		 		center : 'title',
+		 		right : 'dayGridMonth,timeGridWeek,timeGridDay,listMonth'
+		 	},
+		 	navLinks : true, // can click day/week names to navigate views
+		 	selectMirror : true,
+		 	eventLimit : true,
+		 	navLinks : true,
+		 	events: eventArr,
+		 	displayEventTime: false,
+		 	editable  : false,
+		 	allDay : false
+		 });
+		 calendar.render();
+	   }
+	});	
+}
+getAttList();
+</script>

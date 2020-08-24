@@ -1,0 +1,95 @@
+package kr.or.ddit.message.controller;
+
+import java.util.List;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import kr.or.ddit.message.service.IMessageService;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.MessageVO;
+import kr.or.ddit.vo.PagingVO;
+
+@Controller
+public class MsgController {
+	@Inject
+	IMessageService service;
+	
+	@GetMapping("/note/noteList")
+	public String mymsg() {
+		return "noteList.note";
+	}
+	
+	@GetMapping(value = "/note/entirenote", produces = MediaType.APPLICATION_JSON_UTF8_VALUE) //��ü����
+	@ResponseBody
+	public PagingVO<MessageVO> ajaxForlist(
+			@RequestParam(name = "page", required = false, defaultValue = "1") int currentPage,
+			HttpSession session, Model model
+			){
+		Entirenote(currentPage, session, model);
+				return (PagingVO<MessageVO>) model.asMap().get("pagingVO");
+		
+}
+	
+
+	@GetMapping("/note/entirenote")
+	public String Entirenote(@RequestParam(name = "page",required =false,defaultValue = "1")int currentPage, 
+			HttpSession session, Model model) {
+		PagingVO<MessageVO> pagingVO = new PagingVO<>();
+		EmployeeVO empVO=(EmployeeVO) session.getAttribute("authUser");
+		MessageVO msgVO= new MessageVO();
+		msgVO.setEmp_receiver(empVO.getEmp_code());
+		pagingVO.setDetailSearch(msgVO);
+		pagingVO.setCurrentPage(currentPage);
+		int totalRecord = service.selectMessageCount(pagingVO);
+//		int totalRecord=service.msgList(pagingVO);
+		pagingVO.setTotalRecord(totalRecord);
+//		List<MessageVO>
+		List<MessageVO> dataList = service.msgList(pagingVO);
+		pagingVO.setDataList(dataList);
+		
+		model.addAttribute("pagingVO",pagingVO);
+		return "Entirenote.note";
+		
+	}
+	
+	@GetMapping("/note/detailnote") //상세페이지
+	
+	
+	
+	public String Detailnote() {
+		String goPage="Detailnote.note";
+		return goPage;
+		
+	}
+	
+	
+	@GetMapping("/note/sendnote") //보낸쪽지
+	public String Sendnote() {
+		String goPage="Sendnote.note";
+		return goPage;
+		
+	}
+	@GetMapping("/note/importantnote") //중요보관함
+	public String Importnote() {
+		String goPage="Importantnote.note";
+		return goPage;
+		
+	}
+	@GetMapping("/note/deletenote") //삭제쪽지
+	public String Deletenote() {
+		String goPage="Deletenote.note";
+		return goPage;
+		
+	}
+	
+	
+	
+}

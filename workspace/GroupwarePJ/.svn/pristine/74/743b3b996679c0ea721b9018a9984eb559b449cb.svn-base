@@ -1,0 +1,29 @@
+package kr.or.ddit.approval.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+@Controller
+@RequestMapping("approval")
+public class TotalDraftManagementController {
+	
+	
+	@GetMapping("entiremanage")
+	public String printentireList(Model model) {
+		String goPage = "totalList.approval";
+//			System.out.println("cate값"+cate);
+//		if(cate.equals("my")) {
+//			model.addAttribute("title", "내가 쓴 기안서");
+//		}else if(cate.equals("temp")){
+//			model.addAttribute("title", "임시보관함");
+//		}else if(cate.equals("delete")){
+//			model.addAttribute("title", "삭제함");
+//		}else {
+//			//아무것도 아닐경우
+//		}
+		return goPage;
+	}
+	
+}

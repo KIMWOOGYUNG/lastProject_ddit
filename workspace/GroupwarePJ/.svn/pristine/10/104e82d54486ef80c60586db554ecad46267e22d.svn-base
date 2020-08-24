@@ -1,0 +1,5 @@
+package kr.or.ddit.hr_admin.controller;
+
+public class AdminEmployController {
+
+}

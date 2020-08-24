@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.schedule.dao.IMy_ScheduleDAO">
+	<sql id="searchFrag">
+		<if test="detailSearch!=null">
+			<choose>
+				<when test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.ms_important)">
+				 	AND a.MS_IMPORTANT = #{detailSearch.ms_important}
+				</when>
+			</choose>
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.emp_code)">
+					AND a.EMP_CODE = #{detailSearch.emp_code}
+			</if>
+		</if>
+		
+			<if test="searchVO!=null and @org.apache.commons.lang3.StringUtils@isNotBlank(searchVO.searchWord)">
+					<choose>
+						<when test="'title'.equals(searchVO.searchType)">
+								AND a.INSTR(MS_TITLE, #{searchVO.searchWord}) > 0
+						</when>
+						<when test="'writer'.equals(searchVO.searchType)">
+								AND a.MS_CODE IN (SELECT MS_CODE
+													FROM MY_SCHEDULE INNER JOIN EMPLOYEE ON (MY_SCHEDULE.EMP_CODE = EMPLOYEE.EMP_CODE)
+													WHERE EMP_KOR LIKE '%${searchVO.searchWord}%')
+						</when>
+						<when test="'import'.equals(searchVO.searchType)">
+								AND a.MS_CODE IN (SELECT MS_CODE
+													FROM MY_SCHEDULE INNER JOIN STANDARD ON (MY_SCHEDULE.MS_IMPORTANT = STANDARD.STANDARD_CODE)
+													WHERE STANDARD_NAME LIKE '%${searchVO.searchWord}%')
+						</when>
+					</choose>
+					
+				</if>	
+	</sql>
+
+
+<!-- 내일정 상세 조회 -->
+<select id="selectMySchedule" parameterType="kr.or.ddit.vo.My_ScheduleVO" resultType="kr.or.ddit.vo.My_ScheduleVO">
+	SELECT   
+    MS_CODE,
+    MS_TITLE,
+    MS_CONTENT,
+    EMP_KOR AS EMP_CODE,
+    TO_CHAR(MS_STARTDATE,'YYYY-MM-DD') MS_STARTDATE,
+    TO_CHAR(MS_ENDDATE,'YYYY-MM-DD') MS_ENDDATE,
+    STANDARD_NAME AS MS_IMPORTANT
+    FROM MY_SCHEDULE A INNER JOIN EMPLOYEE B ON (A.EMP_CODE = B.EMP_CODE)
+    INNER JOIN STANDARD C ON(A.MS_IMPORTANT = C.STANDARD_CODE)
+    WHERE MS_CODE = #{ms_code}
+</select>
+
+<!-- 내 일정 테이블 리스트 -->
+<select id="selectMyScheduleList" parameterType="kr.or.ddit.vo.PagingVO" resultType="kr.or.ddit.vo.My_ScheduleVO">
+	SELECT F.*
+			FROM (
+			SELECT ROWNUM RNUM,E.*
+			FROM(
+	SELECT MS_CODE,MS_TITLE, EMP_KOR AS EMP_CODE,
+	TO_CHAR(MS_STARTDATE,'YYYY-MM-DD') MS_STARTDATE,
+	TO_CHAR(MS_ENDDATE,'YYYY-MM-DD') MS_ENDDATE,
+	STANDARD_NAME AS MS_IMPORTANT
+	FROM MY_SCHEDULE A INNER JOIN EMPLOYEE B ON (A.EMP_CODE = B.EMP_CODE)
+	INNER JOIN STANDARD C ON (A.MS_IMPORTANT = C.STANDARD_CODE)
+	WHERE 1=1
+	<include refid="searchFrag" />
+	ORDER BY MS_STARTDATE ASC
+	 ) E ) F
+			WHERE F.RNUM  BETWEEN #{startRow} AND  #{endRow}
+			
+</select>
+
+<!-- 페이지 카운트 -->
+<select id="selectMyScheduleCount" parameterType="kr.or.ddit.vo.PagingVO" resultType="int">
+	SELECT COUNT(MS_CODE)
+	FROM MY_SCHEDULE
+	WHERE 1=1
+</select>
+
+
+	<!--내 일정 등록 -->
+	<insert id="insertMyschedule" parameterType="kr.or.ddit.vo.My_ScheduleVO">
+	<selectKey keyProperty="ms_code" resultType="string" order="BEFORE">
+	  SELECT 'MS' || LPAD(NVL(TO_NUMBER(SUBSTR(MAX(MS_CODE), 3)), 0)+1, 3, '0') 
+   	  FROM MY_SCHEDULE
+	</selectKey>
+	INSERT INTO MY_SCHEDULE(
+    MS_CODE,MS_TITLE,MS_CONTENT,EMP_CODE,
+    MS_STARTDATE,MS_ENDDATE,MS_IMPORTANT
+    )VALUES(
+    #{ms_code,jdbcType=VARCHAR},#{ms_title,jdbcType=VARCHAR},#{ms_content,jdbcType=VARCHAR},#{emp_code,jdbcType=VARCHAR},
+    TO_DATE(#{ms_startdate,jdbcType=DATE}, 'YYYY-MM-DD'),TO_DATE(#{ms_enddate,jdbcType=DATE}, 'YYYY-MM-DD'),
+    #{ms_important,jdbcType=VARCHAR}
+    )
+	</insert>
+
+
+	<!--내일정 삭제 -->
+	<delete id="deleteMyschedule" parameterType="string">
+	DELETE FROM MY_SCHEDULE
+	WHERE MS_CODE = #{ms_code}
+	</delete>
+
+	<!--내일정 수정 -->
+	<update id="updateMyschedule" parameterType="kr.or.ddit.vo.My_ScheduleVO">
+	UPDATE MY_SCHEDULE
+	SET
+	MS_TITLE = #{ms_title,jdbcType=VARCHAR},
+	MS_CONTENT = #{ms_content,jdbcType=VARCHAR},
+ 	MS_STARTDATE = TO_DATE(#{ms_startdate,jdbcType=DATE}, 'YYYY-MM-DD'),
+	MS_ENDDATE = TO_DATE(#{ms_enddate,jdbcType=DATE}, 'YYYY-MM-DD'),
+	MS_IMPORTANT = #{ms_important,jdbcType=VARCHAR}
+	where MS_CODE = #{ms_code,jdbcType=VARCHAR}
+	</update>
+	
+	<!--캘린더 -->
+	<select id="selectmylist" resultType="My_ScheduleVO">
+	SELECT 
+	MS_CODE,MS_TITLE,
+	MS_CONTENT,A.EMP_CODE,
+	MS_STARTDATE,MS_ENDDATE,
+	MS_IMPORTANT, EMP_KOR
+	from MY_SCHEDULE A INNER JOIN EMPLOYEE B ON (A.EMP_CODE = B.EMP_CODE)
+	WHERE MS_CODE LIKE 'MS%'
+	<include refid="searchFrag"></include>
+	</select>
+	
+	<select id="selectmyimport" parameterType="PagingVO" resultType="My_ScheduleVO">
+	select b.*
+	from (
+	select rownum rnum, a.*
+	from (SELECT MS_CODE,MS_TITLE,
+	MS_CONTENT,A.EMP_CODE,
+	MS_STARTDATE,MS_ENDDATE,
+	MS_IMPORTANT, EMP_KOR
+	from MY_SCHEDULE A INNER JOIN EMPLOYEE B ON (A.EMP_CODE = B.EMP_CODE)
+	WHERE MS_CODE LIKE 'MS%'
+	<include refid="searchFrag"></include>
+	ORDER BY MS_STARTDATE DESC) a ) b
+	where b.rnum between #{startRow} and #{endRow}
+	
+	
+	
+	</select>
+
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

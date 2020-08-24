@@ -1,0 +1,95 @@
+package kr.or.ddit.vo;
+
+
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.nimbusds.oauth2.sdk.util.StringUtils;
+
+import lombok.Data;
+import lombok.ToString;
+
+/**
+ * @author 작성자명
+ * @since 2020. 6. 29
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                          수정자               수정내용
+ * --------     --------    ----------------------
+ * 2020. 6. 29      박선정       최초작성
+ * Copyright (c) 2020 by DDIT All right reserved
+ * </pre>
+ */
+@Data
+@ToString
+public class Time_AttendVO {//사원근태
+	private EmployeeVO employee; //사원정보
+	private int rnum; //번호
+	private String emp_code; //사원번호
+    private String cws_code;
+	private String ta_catag_code;
+	@JsonProperty("start")
+	private String ta_start;
+	@JsonProperty("end")
+	private String ta_end;
+	private String ta_catag_name;
+	
+	List<Time_AttendVO> attlist;
+
+
+	private String emp_kor; //사원명
+	private String dept_code; //부서코드
+	private String dept_name; //부서명
+	private String position_name; //직급명
+	
+	private int normal; //정상출근
+	private int late; //지각
+	private int vaca; //휴가
+	private int holiday; //휴무
+	private int absent; //결근
+	private int sick; //병가
+	private int official; //공가
+	
+	private String selectedDate1;
+	private String selectedDate2;
+	
+	private String selectedYear;
+	private String selectedMonth;
+	
+	public String getId() {
+		return emp_code+cws_code;
+	}
+	
+	//회사정책
+	private String gotime; //퇴근시간
+	private String cometime; //출근시간
+	private String title; // 달력 제목
+	
+	
+	public CalendarVO sendDate() {
+		CalendarVO temp = new CalendarVO();
+		if(StringUtils.isNotBlank(ta_start)) {
+			temp.setTitle("출근 : "+cometime);
+			temp.setStart(ta_start);
+			temp.setEnd(ta_start);
+			temp.setColor("pink");
+		}else{
+			temp.setTitle("퇴근 : "+gotime);
+			temp.setStart(ta_end);
+			temp.setEnd(ta_end);
+			temp.setColor("skyblue");
+		}
+			return 	temp;
+	}
+	//달력
+//	@JsonProperty("title")
+//	public String Getatttime() {
+//		if(cometime.isEmpty()) {
+//			return String.format("퇴근: %s", gotime);
+//		}else {
+//			return String.format("출근: %s", cometime);
+//		}
+//	}
+}

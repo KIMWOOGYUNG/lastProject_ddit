@@ -1,0 +1,22 @@
+package kr.or.ddit.work.service;
+
+import java.util.List;
+
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.WorkLogVO;
+import kr.or.ddit.vo.Work_ReportVO;
+
+public interface IMyReportService {
+	// 보고등록
+	public ResultState createReport(Work_ReportVO reportVO);
+	
+	// 보고상세조회
+	public WorkLogVO readReport(String report_code);
+	
+	// 보고 수 조회
+	public int readReportCount(PagingVO<Work_ReportVO> pagingVO);
+	
+	// 보고목록조회
+	public List<Work_ReportVO> readReportList(PagingVO<Work_ReportVO> pagingVO);
+}

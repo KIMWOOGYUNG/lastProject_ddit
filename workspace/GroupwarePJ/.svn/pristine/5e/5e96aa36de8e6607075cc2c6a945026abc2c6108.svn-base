@@ -1,0 +1,49 @@
+package kr.or.ddit.work.controller;
+
+import java.util.List;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.SearchVO;
+import kr.or.ddit.vo.WorkLogVO;
+import kr.or.ddit.vo.Work_ReportVO;
+import kr.or.ddit.work.service.IMyReportService;
+
+@Controller
+public class MyReportReadController {
+
+	
+	private IMyReportService service;
+	
+	
+	@GetMapping(value = "/work/workreport/myworkreport/weekreport", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public PagingVO<WorkLogVO> ajaxForlistday(@RequestParam(name="page", required = false, defaultValue = "1") int currentPage, SearchVO searchVO, Model model){
+		reportList(currentPage, searchVO, model);
+		return (PagingVO<WorkLogVO>) model.asMap().get("pagingVO");
+	}
+	
+	// 업무보고
+	@GetMapping("/work/workreport/myworkreport/weekreport")
+	public String reportList(@RequestParam(name = "page", required = false, defaultValue = "1")int currentPage, SearchVO searchVO, Model model) {
+		PagingVO<Work_ReportVO> pagingVO = new PagingVO<>();
+		pagingVO.setSearchVO(searchVO);
+		pagingVO.setCurrentPage(currentPage);
+		int totalRecord = service.readReportCount(pagingVO);
+		pagingVO.setTotalRecord(totalRecord);
+		
+		List<Work_ReportVO> worklogListday = service.readReportList(pagingVO);
+		pagingVO.setDataList(worklogListday);
+		
+		model.addAttribute("pagingVO", pagingVO);
+		
+		return "myreportList.work";		
+	}
+
+}

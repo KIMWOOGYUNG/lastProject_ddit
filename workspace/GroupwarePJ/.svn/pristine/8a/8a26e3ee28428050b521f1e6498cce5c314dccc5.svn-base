@@ -1,0 +1,365 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %> 
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
+<style type="text/css">
+      td.style62 {  border-bottom:1px solid black !important; border-top:1px solid black !important; border-left:1px solid black !important; border-right:1px solid black !important; color:black;   font-size:11pt;   }     
+      td.style63 { border-bottom:none black; border-top:none black; border-left:none black; border-right:none black; color:black;   font-size:11pt;   }     
+      td.style64 {  border-bottom:none black; border-top:none black; border-left:none black; border-right:none black; color:black;   font-size:11pt;   }     
+      td.style65 { vertical-align:middle; border-bottom:none black; border-top:none black; border-left:none black; border-right:none black; color:black;   font-size:11pt;   }     
+      td.style66 {  border-bottom:1px solid black !important; border-top:1px solid black !important; border-left:1px solid black !important; border-right:1px solid black !important; color:black;   font-size:11pt;   }     
+      td.style67 {  border-bottom:1px solid black !important; border-top:1px solid black !important; border-left:1px solid black !important; border-right:1px solid black !important; color:black;   font-size:11pt;   }     
+      td.style68 {  border-bottom:1px solid black !important; border-top:1px solid black !important; border-left:1px solid black !important; border-right:1px solid black !important; color:black;   font-size:11pt;   }     
+      td.style69 {  border-bottom:1px solid black !important; border-top:1px solid black !important; border-left:1px solid black !important; border-right:1px solid black !important; color:black;   font-size:11pt;   }     
+      td.style70 {  border-bottom:1px solid black !important; border-top:1px solid black !important; border-left:1px solid black !important; border-right:1px solid black !important; color:black;   font-size:11pt;   }     
+      td.style71 {  border-bottom:1px solid black !important; border-top:1px solid black !important; border-left:1px solid black !important; border-right:1px solid black !important; color:black;   font-size:11pt;   }         
+      td.style73 { vertical-align:middle; border-bottom:1px solid black !important; border-top:1px solid black !important; border-left:1px solid black !important; border-right:1px solid black !important; color:black;   font-size:11pt;   }
+      td.style74 { vertical-align:middle; border-bottom:1px solid black !important; border-top:1px solid black !important; border-left:1px solid black !important; border-right:1px solid black !important; color:black;   font-size:11pt;   }
+      td.style75 { vertical-align:middle; border-bottom:1px solid black !important; border-top:1px solid black !important; border-left:1px solid black !important; border-right:1px solid black !important; color:black;   font-size:11pt;   }      
+      td.style76 { vertical-align:middle; border-bottom:1px solid black !important; border-top:1px solid black !important; border-left:1px solid black !important; border-right:1px solid black !important; font-weight:bold; color:black;   font-size:11pt;   }     
+      td.style77 { vertical-align:middle; border-bottom:1px solid black !important; border-top:1px solid black !important; border-left:1px solid black !important; border-right:1px solid black !important; font-weight:bold; color:black;   font-size:11pt;   }     
+      td.style78 { vertical-align:middle; border-bottom:1px solid black !important; border-top:1px solid black !important; border-left:1px solid black !important; border-right:1px solid black !important; font-weight:bold; color:black;   font-size:11pt;   }     
+      td.style79 { vertical-align:middle; border-bottom:1px solid black !important; border-top:1px solid black !important; border-left:1px solid black !important; border-right:1px solid black !important; font-weight:bold; color:black;   font-size:11pt;   }     
+      td.style80 {  border-bottom:1px solid black !important; border-top:1px solid black !important; border-left:1px solid black !important; border-right:1px solid black !important; color:black;   font-size:11pt;   }     
+      td.style81 {  border-bottom:1px solid black !important; border-top:1px solid black !important; border-left:1px solid black !important; border-right:1px solid black !important; color:black;   font-size:11pt;   }
+     
+      table.sheet0 col.col0 { width:59.64444376pt }
+      table.sheet0 col.col1 { width:50.15555498pt }
+      table.sheet0 col.col2 { width:50.15555498pt }
+      table.sheet0 col.col3 { width:50.15555498pt }
+      table.sheet0 col.col4 { width:50.15555498pt }
+      table.sheet0 col.col5 { width:50.15555498pt }
+      table.sheet0 col.col6 { width:50.15555498pt }
+      table.sheet0 col.col7 { width:50.15555498pt }
+      table.sheet0 col.col8 { width:50.15555498pt }
+      table.sheet0 col.col9 { width:75.15555498pt }
+      table.sheet0 col.col10 { width:100pt }
+      table.sheet0 col.col11 { width:100pt }
+      table.sheet0 col.col12 { width:100pt }
+      table.sheet0 col.col13 { width:100pt }
+        table.sheet0 col.col14 { width:100pt }
+          table.sheet0 col.col15 { width:100pt }
+            table.sheet0 col.col16 { width:100pt }
+              table.sheet0 col.col17 { width:100pt }
+                table.sheet0 col.col18 { width:100pt }
+     table.sheet0 col.col19 { width:90pt }
+                  
+      table.sheet0 tr { height:18pt }
+      table.sheet0 tr.row0 { height:18pt }
+      table.sheet0 tr.row1 { height:18.75pt }
+      table.sheet0 tr.row2 { height:18pt }
+      table.sheet0 tr.row3 { height:18pt }
+      table.sheet0 tr.row4 { height:18pt }
+      table.sheet0 tr.row5 { height:18.75pt }
+      table.sheet0 tr.row6 { height:18pt }
+      table.sheet0 tr.row7 { height:18pt }
+      table.sheet0 tr.row8 { height:18.75pt }
+      table.sheet0 tr.row9 { height:18pt }
+    </style> 
+ 
+  <section class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <h1></h1>
+          </div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+             
+            </ol>
+          </div>
+        </div>
+      </div><!-- /.container-fluid -->
+    </section>
+   
+<section class="content">
+<div class="container-fluid px-3 pt-2">
+
+
+<div id="btnArea">
+
+<c:if test="${draftVO.draft_stat eq 'APP006' or draftVO.draft_stat eq 'APP005' }">
+			
+			<c:if test="${insteadCheck ne null}">
+				<a class="btn btn-info btn-sm" href="${cPath}/approval/sign/insteadComp?appr_stat_code=${appr.appr_stat_code}">
+					<i class="fas fa-pencil-alt"></i>대결 승인
+				</a>
+				<a class="btn btn-info btn-sm" href="${cPath}/approval/sign/insteadAttr?appr_stat_code=${appr.appr_stat_code}">
+					<i class="fas fa-pencil-alt"></i>대결 반려
+				</a>
+			</c:if>
+			
+	<c:forEach items="${draftVO.apprList }" var="appr">
+	
+		<c:if test="${appr.emp_code eq authUser.emp_code}">	
+					<c:if test="${appr.appr_stat_catag eq null and appr.appr_stat_code eq apprInfo}">
+			
+							<a class="btn btn-info btn-sm" href="${cPath}/approval/sign/comp?appr_stat_code=${appr.appr_stat_code}">
+								<i class="fas fa-pencil-alt" ></i>승인
+							</a>
+							<a class="btn btn-info btn-sm"  href="${cPath}/approval/sign/attr?appr_stat_code=${appr.appr_stat_code}">
+								<i class="fas fa-pencil-alt"></i>반려
+							</a>
+						<c:if test="${authUser.emp_arbitrary eq 'y'}">
+							<a class="btn btn-info btn-sm"  href="${cPath}/approval/sign/arbi?appr_stat_code=${appr.appr_stat_code}">
+								<i class="fas fa-pencil-alt"></i>전결 
+							</a>
+						</c:if>
+					
+					</c:if>
+				
+			
+		</c:if>
+	</c:forEach>
+</c:if>
+</div>
+
+
+
+    
+    
+    <c:if test="${draftVO.draft_stat eq null }">
+    <form action="${cPath}/approval/approvalmodify/${draftVO.draft_code}" method="post"> 
+	 	<button id="draftModfiyBtn">수정</button>
+    </form>
+    </c:if>
+  
+    
+<div class="bg-white m-auto">
+    <table  id="sheet0"  class="sheet0 m-auto">
+        <col class="col0">
+        <col class="col1">
+        <col class="col2">
+        <col class="col3">
+        <col class="col4">
+        <col class="col5">
+        <col class="col6">
+        <col class="col7">
+        <col class="col8">
+        <col class="col9">
+        <col class="col10">
+        <col class="col11">
+        <col class="col12">
+        <col class="col13">
+       <tbody>
+          
+          <tr class="row1">
+            <td class="column0"></td>
+            <td class="column1 style79">제목</td>
+            <td class="column2 style81" colspan="6">${draftVO.draft_title}</td>
+            <td colspan="6"></td>
+          </tr>
+          <tr class="row2"> 
+            <td colspan="10"></td>
+           
+             <c:forEach items="${draftVO.apprList }" var="appr">
+            	<td class="column10 style66" rowspan="3">
+            	<span>${appr.appr_stat_name }</span>
+            		<c:if test="${appr.emp_attcode  ne null and appr.appr_stat_catag ne null}">
+            	 <img class="img-fluid img-thumbnail" src="${cPath}/approval/download/emp/${appr.emp_attcode }">
+            	  </c:if>
+            	</td>
+            </c:forEach>
+    
+          </tr>
+          <tr class="row3">
+            <td class="column0"></td>
+            <td class="column1 style76">기안자</td>
+            <td class="column2 style70" colspan="3">${draftVO.empVO.emp_kor}</td>
+		  </tr>
+          <tr class="row4">
+            <td class="column0"></td>
+            <td class="column1 style77 s">소속</td>
+            <td class="column2 style62 style68" colspan="3">${draftVO.empVO.team_name}</td>
+         </tr>
+          <tr class="row5">
+            <td class="column0"></td>
+            <td class="column1 style78 s">기안일</td>
+            <td class="column2 style69 style70" colspan="3">${fn:split(draftVO.draft_date,' ')[0] }</td>
+            <td class="column5 style65" colspan="5"></td>
+            <c:forEach items="${draftVO.apprList }" var="appr" >
+            	<td class="column10 style74" rowspan="1">(${appr.empVO.position_name })${ appr.empVO.emp_kor}  </td>
+            </c:forEach>
+          </tr>
+          <tr class="row6">
+            <td class="column0"></td>
+            <td class="column3 style63 null"></td>
+            <td class="column4 style63 null"></td>
+            <td class="column5 style63 null"></td>
+            <td class="column6 style63 null"></td>
+            <td class="column7 style63 null"></td>
+            <td class="column8 style63 null"></td>
+            <td class="column9 style63 null"></td>
+            <td class="column10 style63 null"></td>
+            <td class="column11 style63 null"></td>
+          </tr>
+         
+         <c:if test="${draftVO.rg1List ne null }">
+          <tr class="row7">
+            <td class="column0"></td>
+            <td class="column1 style76 s">참조자</td>
+            <td class="column2 style70 null style67" colspan="8">
+	            <c:forEach var="rg1" items="${draftVO.rg1List }">
+	            	<span>(${rg1.empVO.position_name})${rg1.empVO.emp_kor}</span>
+	            </c:forEach>
+            </td>
+          
+          </tr>
+         </c:if>
+             <c:if test="${draftVO.rg2List ne null }">
+          <tr class="row8">
+            <td class="column0"></td>
+            <td class="column1 style78 s">열람권자</td>
+            <td class="column2 style69 null style70" colspan="8">
+            	<c:forEach var="rg2" items="${draftVO.rg2List }">
+	            	<span>(${rg2.empVO.position_name})${rg2.empVO.emp_kor}</span>
+	            </c:forEach>
+            </td>
+            <td class="column10 style63" colspan="4"></td>
+           </tr>
+           </c:if>
+               <c:if test="${draftVO.insteadEmpVO ne null }">
+          <tr class="row8">
+            <td class="column0"></td>
+            <td class="column1 style78 s">대결권자</td>
+            <td class="column2 style69 null style70" colspan="8">
+	            	<span>(${draftVO.insteadEmpVO.position_name})${draftVO.insteadEmpVO.emp_kor}</span>
+            </td>
+            <td class="column10 style63" colspan="4"></td>
+           </tr>
+           </c:if>
+           
+           <tr></tr>
+        
+   
+           <tr></tr>
+           <tr>
+           <td></td>
+           <td colspan="20" class="border border-dark">
+           	${draftVO.draft_content}
+           </td>
+           </tr>
+        </tbody>
+    </table>
+  </div>
+	<c:if test="${draftVO.attatchList[0].org_name ne null}">	
+	    <div class="mx-5 col-5 card-body" id="attatahBox" >
+	    	<table class="table table-sm">
+	    			<c:forEach var="att" items="${draftVO.attatchList }">
+		            	<tr data-code="${att.draft_attcode}"><td>${att.org_name} (${att.fancy_size})</td></tr>
+		            </c:forEach>
+	    	</table>
+	    </div>
+	    
+	    <form action="" id="sendDownloadsign">
+	    </form>
+	 </c:if>   
+ </div>
+ 
+   <div class="container-fluid px-3 pt-2"> 
+       <div class="card card-default">
+            <div class="card-header">
+                <h3 class="card-title">
+                  <i class="fas fa-bullhorn"></i>
+                 	Comment 
+                </h3>
+                <div class="card-tools">
+                	<button type="button" class="btn btn-tool" data-card-widget="collapse" data-toggle="tooltip" title="Collapse"><i class="fas fa-minus"></i></button>
+                   <button class="btn btn-sm" id="addComent"><i class="fas fa-edit"></i></button>
+              	</div>
+              <!-- /.card-header -->
+              
+            </div>
+            <div class="card-body" id="comment-body"> 
+            </div>
+              <!-- /.card-body -->
+            <!-- /.card -->
+         </div>
+         
+       </div>
+    </section>
+    <script type="text/javascript">
+    	
+		function commentList(){  $.ajax({
+		    	url:"${cPath}/approval/comment/list"
+		    	,method:"get"
+		    	,dataType:"json"
+		    	,data:{
+		    		draft_code : "${draftVO.draft_code}"
+		    	}
+		    	,success:function(resp){
+		    		let tags = [];
+		    		$.each(resp,function(idx,comment){
+		    			let tooltag = [];
+		    			console.log(comment.emp_code);
+		    			if(comment.emp_code == '${authUser.emp_code}'){
+		    				tooltag.push($("<butto>").addClass("btn btn-sm modifyBtn").attr("data-code",comment.cmt_code )
+							.append($("<i>").addClass("fas fa-edit")));
+						    tooltag.push($("<butto>").addClass("btn btn-sm removeBtn").attr({"data-code":comment.cmt_code,"data-code":comment.cmt_code}).append(
+	    							$("<i>").addClass("fas fa-trash")));
+		    				
+		    			}
+		    			
+		    			let tag = $("<div>").addClass("callout callout-info").append(
+		    					$("<h5>").text(comment.emp_kor+" - "+comment.cmt_date.substring(0,16)).append(tooltag)
+							,$("<div>").html(comment.cmt_content)				    							
+		    			);
+		    			tags.push(tag);
+		    		});
+		    		$("#comment-body").html(tags);
+		    		
+		    		console.log(resp);
+		    	},error:function(r){
+		    		alert("오류");
+		    	}
+		    })}
+	
+		commentList();
+		
+    	$("#comment-body").on("click",".removeBtn",function(){
+    		if(confirm("해당 코멘트를 삭제하시겠습니끼?")){
+    			let code = $(this).attr("data-code")
+    			$.ajax({
+    				url:"${cPath}/approval/comment/"+code
+    				,method : "delete"
+    				,dataType:"text"
+    				,success : function(resp){
+    					if(resp = "ok") {
+    						alert("성공적으로 삭제하셨습니다.");
+    						commentList();
+    					}
+    					else alert("삭제를 실패하셨습니다.");
+    				}
+    				,error :function(e){
+    					console.log(e);
+    				}
+    				
+    			})
+    		}
+    		
+    		 
+    		return;
+    	})
+    	
+    	$("#comment-body").on("click",".modifyBtn",function(){
+    		let code = $(this).attr("data-code");
+    		window.open('${cPath}/approval/comment/modify/'+code,'코멘트 수정','width=800, height=360, location=no,toolbar=no, menubar=no, scrollbars=no');
+    	})
+    	
+    	$("#addComent").on("click",function(){
+    		window.open('${cPath}/approval/comment/${draftVO.draft_code}','코멘트 추가','width=800, height=360, location=no,toolbar=no, menubar=no, scrollbars=no');
+    	})
+    
+    	$("#attatahBox").find("tr").css("cursor","pointer").on("mouseenter",function(){
+    		$(this).addClass("bg-info")
+    	}).on("mouseleave",function(){
+    		$(this).removeClass("bg-info")
+    	}).on("click",function(){
+    		let code = $(this).attr("data-code");
+    		
+    		$("#sendDownloadsign").attr("action","${cPath}/approval/download/att/"+code).submit();
+    	
+    	})
+    </script>
+    
+    
+    

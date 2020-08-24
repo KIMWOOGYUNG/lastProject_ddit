@@ -1,0 +1,48 @@
+package kr.or.ddit.work.service;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.WorkLogVO;
+import kr.or.ddit.vo.Work_ReportVO;
+import kr.or.ddit.work.dao.IMyReportDAO;
+
+@Service
+public class MyReportServiceImpl implements IMyReportService {
+	
+	@Inject
+	private IMyReportDAO dao;
+	
+	@Override
+	public ResultState createReport(Work_ReportVO reportVO) {
+		ResultState result = null;
+		int cnt = dao.insertReport(reportVO);
+		if(cnt > 0) {
+			result = ResultState.SUCCESSES;
+		}else {
+			result = ResultState.FAIL;
+		}
+		return null;
+	}
+
+	@Override
+	public Work_ReportVO readReport(String report_code) {
+		return dao.selectReport(report_code);
+	}
+
+	@Override
+	public int readReportCount(PagingVO<Work_ReportVO> pagingVO) {
+		return dao.selectReportCount(pagingVO);
+	}
+
+	@Override
+	public List<Work_ReportVO> readReportList(PagingVO<Work_ReportVO> pagingVO) {
+		return dao.selectReportList(pagingVO);
+	}
+
+}

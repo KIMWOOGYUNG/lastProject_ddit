@@ -1,0 +1,24 @@
+package kr.or.ddit.message.dao;
+
+import java.util.List;
+
+import org.springframework.stereotype.Repository;
+
+import kr.or.ddit.vo.MessageVO;
+import kr.or.ddit.vo.PagingVO;
+@Repository
+public interface ReceiveMessageDAO {
+
+	
+	public int insertMsg(MessageVO msg);
+	
+	
+	public MessageVO selectMsg(String emp_receive);
+	
+	
+	public int selectMsgCounts(PagingVO<MessageVO>pagingVO);
+	
+	public List<MessageVO> selectMsgList(PagingVO<MessageVO> pagingVO);
+	
+	public int deleteMsg(String msg_code);
+}

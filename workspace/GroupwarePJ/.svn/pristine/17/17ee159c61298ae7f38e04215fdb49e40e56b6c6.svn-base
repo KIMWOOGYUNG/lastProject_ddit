@@ -1,0 +1,16 @@
+package kr.or.ddit.schedule.service;
+
+import java.util.List;
+
+import kr.or.ddit.vo.Dept_ScheduleVO;
+import kr.or.ddit.vo.PagingVO;
+
+public interface IDep_ScheduleService {
+	
+public List<Dept_ScheduleVO> readdepScheduleList(PagingVO<Dept_ScheduleVO> pagingVO);
+	
+	public Dept_ScheduleVO readdepSchedule(String ds_code);
+	
+	public int readdepScheduleCount(PagingVO<Dept_ScheduleVO> pagingVO);
+
+}

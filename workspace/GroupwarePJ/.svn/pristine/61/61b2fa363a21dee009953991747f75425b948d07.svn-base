@@ -1,0 +1,48 @@
+package kr.or.ddit.project.dao;
+
+import java.util.List;
+
+import org.springframework.stereotype.Repository;
+
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.ProjectVO;
+
+@Repository
+public interface IMyProjectListDAO {
+	/**
+	 * 새 프로젝트 추가
+	 * @param project
+	 * @return
+	 */
+	public int insertProject(ProjectVO project);
+	/**
+	 * 등록된 프로젝트의 개수 구하기
+	 * @param pagingVO
+	 * @return
+	 */
+	public int selectProjectCount(PagingVO<ProjectVO> pagingVO);
+	/**
+	 * 프로젝트 목록을 리스트에 담기
+	 * @param pagingVO
+	 * @return
+	 */
+	public List<ProjectVO> selectProjectList(PagingVO<ProjectVO> pagingVO);
+	/**
+	 * 프로젝트 하나를 선택해서 상세정보 가져오기
+	 * @param project_code
+	 * @return
+	 */
+	public ProjectVO selectProject(int project_code);
+	/**
+	 * 프로젝트 수정
+	 * @param project
+	 * @return
+	 */
+	public int updateProject(ProjectVO project);
+	/**프로젝트 삭제
+	 * @param project
+	 * @return
+	 */
+	public int deleteProject(ProjectVO project);
+	
+}

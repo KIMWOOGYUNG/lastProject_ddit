@@ -1,0 +1,26 @@
+package kr.or.ddit.mail.dao;
+
+public interface IMailDAO {
+ 
+	/**
+	 * 메일 쓰기
+	 */
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+}

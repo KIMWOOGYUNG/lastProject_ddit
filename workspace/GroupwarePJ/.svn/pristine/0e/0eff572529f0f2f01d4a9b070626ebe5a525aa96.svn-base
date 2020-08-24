@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.hr_admin.dao.IAdminEmployDAO">
+	<!-- 상세정보 -->
+	<select id="selectEmpmanage" parameterType="kr.or.ddit.vo.EmployeeVO" resultType="kr.or.ddit.vo.EmployeeVO">
+		SELECT
+	EMP_CODE,	<!-- 사원코드 -->
+	EMP_PW,	  <!-- 비밀번호 -->	
+	EMP_KOR,  <!-- 사원명 -->
+	EMP_ENG,  <!-- 사원명(영어) -->
+	EMP_REG1, <!-- 주민 앞 -->
+	EMP_REG2, <!-- 주민 뒤 -->
+	EMP_MAIL, <!-- 이메일 -->
+	EMP_HP,   <!-- 폰번호 -->
+	CO_PHONE, <!-- 내선전화 -->
+	EMP_ZIP,  <!-- 우편번호 -->
+	EMP_ADD1, <!-- 주소 -->
+	EMP_ADD2, <!-- 상세주소 -->
+	EMP_STARTDATE, <!-- 입사일 -->
+	TEAM_CODE, <!-- 팀코드 -->
+	EMP_IP,    <!-- IP -->
+	EMP_IP2,   <!-- 로그인허용IP -->
+	EMP_SAL,   <!-- 연봉 -->
+	LONG_VACATION, <!-- 휴직여부 -->
+	RETIRE_DATE,   <!-- 퇴사일 -->
+	VACTION_CNT,   <!-- 휴가일수 -->
+	DEPT_CODE,     <!-- 부서코드 -->
+	POSITION_CODE, <!-- 직책코드 -->
+	JOBTITLE_CODE, <!-- 직급코드 -->
+	EMP_ARBITRARY  <!-- 전결권한 -->
+	FROM EMPLOYEE
+	
+	</select>
+
+	<!-- 테이블 리스트 -->
+	<select id="selectEmpmanageList" parameterType="kr.or.ddit.vo.PagingVO" resultType="kr.or.ddit.vo.EmployeeVO">
+		SELECT A.EMP_CODE ,A.EMP_KOR , B.DEPT_NAME AS DEPT_CODE, TEAM_NAME AS TEAM_CODE,C.POSITION_NAME AS POSITION_CODE, A.EMP_MAIL, A.CO_PHONE
+		FROM EMPLOYEE A, DEPARTMENT B, POSITION C, TEAM D
+		WHERE A.DEPT_CODE = B.DEPT_CODE 
+		AND A.POSITION_CODE = C.POSITION_CODE
+		AND A.TEAM_CODE = D.TEAM_CODE
+	</select>
+	
+	
+	<!-- 페이지 카운트 -->
+	<select id="selectEmpmanageCount" parameterType="kr.or.ddit.vo.PagingVO" resultType="int">
+	SELECT COUNT(EMP_CODE)
+	FROM EMPLOYEE
+	</select>
+
+
+
+</mapper>

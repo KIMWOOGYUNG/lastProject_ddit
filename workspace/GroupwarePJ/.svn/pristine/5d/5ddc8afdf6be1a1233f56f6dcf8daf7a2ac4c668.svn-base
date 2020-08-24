@@ -1,0 +1,216 @@
+package kr.or.ddit.addr.controller;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import kr.or.ddit.addr.service.IaddrService;
+import kr.or.ddit.vo.AddressVO;
+import kr.or.ddit.vo.DepartmentVO;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.SearchVO;
+import kr.or.ddit.vo.TeamVO;
+
+@Controller
+@RequestMapping("address")
+public class AddrController {
+	@Inject
+	IaddrService service;
+
+	@GetMapping(value = "/addressList", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public PagingVO<AddressVO> ajaxForlist(
+			@RequestParam(name = "page", required = false,defaultValue = "1")
+			int currentPage, SearchVO searchVO, Model model,HttpSession session
+			){
+		addressList(currentPage,searchVO,model,session);
+				return (PagingVO<AddressVO>) model.asMap().get("pagingVO");
+	}
+	@GetMapping("/addressList")
+	public String addressList(
+			@RequestParam(name ="page",required = false, defaultValue = "1")   
+		int currentPage, SearchVO searchVO, Model model, HttpSession session) {
+		EmployeeVO employeeVO= (EmployeeVO) session.getAttribute("authUser");
+		PagingVO<EmployeeVO> pagingVO = new PagingVO<>();
+		pagingVO.setSearchVO(searchVO);
+		pagingVO.setCurrentPage(currentPage);
+		int totalRecord = service.selectaddrCount(pagingVO);
+		pagingVO.setTotalRecord(totalRecord);
+		List<EmployeeVO> addList = service.readAddrList(pagingVO);
+		pagingVO.setDataList(addList);
+		model.addAttribute("pagingVO", pagingVO);
+	return "addressList.address";
+	}
+	// 부서 ajax
+	@GetMapping(value = "/deptList", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public PagingVO<AddressVO> ajaxFordeptlist(
+			@RequestParam(name = "page", required = false,defaultValue = "1")
+			int currentPage, SearchVO searchVO, Model model,HttpSession session,
+			@RequestParam String dept_code
+			){
+		deptList(currentPage,searchVO,model,session, dept_code);
+		return (PagingVO<AddressVO>) model.asMap().get("pagingVO");
+	}
+	///부서 리스트 조회 
+	@GetMapping("/deptList")
+	public String deptList(@RequestParam(name = "page", required = false, defaultValue = "1")
+			int currentPage, SearchVO searchVO, Model model, HttpSession session
+			,@RequestParam(name = "dept_code") String dept_code
+			){
+		EmployeeVO empVO = (EmployeeVO) session.getAttribute("authUser");
+		PagingVO<EmployeeVO> pagingVO = new PagingVO<>();
+		pagingVO.setSearchVO(searchVO);
+		pagingVO.setCurrentPage(currentPage);
+		EmployeeVO detailSearch = new EmployeeVO();
+		detailSearch.setDept_code(dept_code);
+		pagingVO.setDetailSearch(detailSearch);
+		int totalRecord = service.selectDeptCount(pagingVO);
+		pagingVO.setTotalRecord(totalRecord);
+		List<EmployeeVO> deptList=service.deptList(pagingVO);
+		pagingVO.setDataList(deptList);
+		model.addAttribute("pagingVO", pagingVO);
+		model.addAttribute("dept_code", dept_code);
+		return "deptList.address";
+	}
+	///팀 조회 ajax부르는거
+	@GetMapping(value = "/teamList", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public PagingVO<AddressVO> ajaxForteamlist(
+			@RequestParam(name = "page", required = false,defaultValue = "1")
+			int currentPage, SearchVO searchVO, Model model,HttpSession session,
+			@RequestParam String team_code
+			){
+		TeamList(currentPage,searchVO,model,session, team_code);
+		return (PagingVO<AddressVO>) model.asMap().get("pagingVO");
+	}
+///팀 리스트 조회 
+	@GetMapping("/teamList")
+	public String TeamList(@RequestParam(name = "page", required = false, defaultValue = "1")
+			int currentPage, SearchVO searchVO, Model model, HttpSession session
+			,@RequestParam(name="team_code") String team_code
+			 ){
+		EmployeeVO empVO = (EmployeeVO) session.getAttribute("authUser");
+		PagingVO<EmployeeVO> pagingVO = new PagingVO<>();
+		pagingVO.setSearchVO(searchVO);
+		pagingVO.setCurrentPage(currentPage);
+		EmployeeVO detailSearch = new EmployeeVO();
+		detailSearch.setTeam_code(team_code);
+		pagingVO.setDetailSearch(detailSearch);
+		int totalRecord = service.selectTeamCount(pagingVO);
+		pagingVO.setTotalRecord(totalRecord);
+		List<EmployeeVO> teamList = service.teamList(pagingVO);
+		pagingVO.setDataList(teamList);
+		model.addAttribute("pagingVO", pagingVO);
+		model.addAttribute("team_code", team_code);
+	
+		return "teamList.address";
+		
+	}
+	//상세페이지
+	@GetMapping("/detailAddress/{emp_code}") 
+	public String Detailaddress(@PathVariable(name = "emp_code")String emp_code,Model model) {
+		EmployeeVO empVO = service.selectAddress(emp_code);
+		model.addAttribute("address", empVO);
+		return "detailAddress.address";
+	}
+	
+	
+	
+	
+	
+	
+	
+
+
+/////////////////////////////////////////////////////////////////////////
+	@GetMapping(value = "dept", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public List<DepartmentVO> getdeptList() {
+		sendAddressMap();
+
+		return service.readDepartmentList();
+	}
+
+//	@GetMapping(value = "team", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+//	@ResponseBody
+//	public List<TeamVO> getteamList(String dept_code) {
+//		return service.readTeamList(dept_code);
+//	}
+
+
+	
+//	@GetMapping(value = "emp", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+//	@ResponseBody
+//	public List<EmployeeVO> getEmpList(String team_code) {
+//		EmployeeVO employeeVO = new EmployeeVO();
+//		employeeVO.setTeam_code(team_code);
+//		PagingVO<EmployeeVO> pagingVO = new PagingVO<EmployeeVO>();
+//		pagingVO.setDetailSearch(employeeVO);
+//		return service.readAddrList(pagingVO);
+//	}
+	
+	@GetMapping(value = "emp", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public List<Map<String, Object>> sendAddressMap() {
+		List<Map<String, Object>> sendList = new ArrayList<Map<String, Object>>();
+
+		List<DepartmentVO> deptList = service.readDepartmentList();
+
+		for (DepartmentVO tempDept : deptList) {
+			HashMap<String, Object> deptMap = new HashMap<String, Object>();
+			deptMap.put("title", tempDept.getDept_name());
+			deptMap.put("key", tempDept.getDept_code());
+
+			List<TeamVO> teamList = service.readTeamList(tempDept.getDept_code());
+			deptMap.put("isFolder", true);
+
+			if (!teamList.isEmpty()) {
+				List<HashMap<String, Object>> teamChildrenList =new  ArrayList<HashMap<String, Object>>();
+				for (TeamVO tempTeam : teamList) {
+					HashMap<String, Object> teamMap = new HashMap<String, Object>();
+
+					teamMap.put("title", tempTeam.getTeam_name());
+					teamMap.put("key", tempTeam.getTeam_code());
+
+					EmployeeVO employeeVO = new EmployeeVO();
+					employeeVO.setTeam_code(tempTeam.getTeam_code());
+					PagingVO<EmployeeVO> pagingVO = new PagingVO<EmployeeVO>();
+					pagingVO.setDetailSearch(employeeVO);
+					List<EmployeeVO> empList = service.addrList(pagingVO);
+
+					
+					List<HashMap<String, Object>> empChildrenList =new  ArrayList<HashMap<String, Object>>();
+					teamMap.put("isFolder", true);
+					if (!empList.isEmpty()) {
+						for (EmployeeVO tempEmp : empList) {
+							HashMap<String, Object> empMap = new HashMap<String, Object>();
+							empMap.put("title", tempEmp.getEmp_kor() + "(" + tempEmp.getPosition_code() + ")");
+							empMap.put("key", tempEmp.getEmp_code());
+							empChildrenList.add(empMap);
+						}
+						teamMap.put("children", empChildrenList);
+					}
+					teamChildrenList.add(teamMap);
+				}
+				deptMap.put("children", teamChildrenList);
+			}
+			sendList.add(deptMap);
+		}
+		return sendList;
+	}
+}

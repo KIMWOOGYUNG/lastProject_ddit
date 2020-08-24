@@ -1,0 +1,312 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>    
+<%@ taglib uri="http://www.springframework.org/tags" prefix="spring" %>    
+<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form" %>
+
+	
+  <!-- fullCalendar -->
+  <link rel="stylesheet" href="${cPath }/resources/plugins/fullcalendar/main.min.css">
+  <link rel="stylesheet" href="${cPath }/resources/plugins/fullcalendar-daygrid/main.min.css">
+  <link rel="stylesheet" href="${cPath }/resources/plugins/fullcalendar-timegrid/main.min.css">
+  <link rel="stylesheet" href="${cPath }/resources/plugins/fullcalendar-bootstrap/main.min.css">
+  
+  
+  
+  
+<style>
+  #calendar {
+    max-width: auto;
+    margin: 0 auto;
+  } 
+</style>
+   <section class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <h1>부서 일정 등록</h1>
+          </div>
+        </div>
+        
+        <input type="button" value="일정 등록" class="btn btn-info btn-sm" onclick="window.open('${cPath}/plan/dsediter', '부서 일정 등록', 'width=#, height=#')">
+        
+<!--         <button class="btn btn-info btn-sm" href="#" id="addBtn"> -->
+<!-- 		<i class="fas fa-pencil-alt"></i>일정 등록</button> -->
+        
+      </div><!-- /.container-fluid -->
+      
+      
+	
+      
+    </section>
+
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+		&nbsp&nbsp&nbsp&nbsp<button class="button showBtn" id="blockBtn" data-target="#blockBody">
+			<span class="oi oi-calendar"></span>
+		</button>
+		<button class="button showBtn" id="tableBtn"  data-target="#addressTable" onclick = "location.href = '${cPath}/plan/departmentplanbox/departmentplan' ">
+			<span class="oi oi-list icon"></span>
+		</button>	
+          <div class="col-md-3">
+            <div class="sticky-top mb-3">
+              <!-- /.card -->
+              </div>
+            </div>
+          </div>
+          <!-- /.col -->
+          <div class="col-md-7">
+            <div class="card card-primary">
+              <div class="card-body p-0">
+                <!-- THE CALENDAR -->
+                <div id="calendar"></div>
+              </div>
+              <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+          </div>
+          <!-- /.col -->
+        </div>
+        <!-- /.row -->
+    </section>
+<!-- 모달 -->
+<div id="calendarModal" class="modal fade">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h4 id="modalTitle" class="modal-title"></h4>
+				<button type="button" class="close" data-dismiss="modal">
+					<span aria-hidden="true">×</span> <span class="sr-only">close</span>
+				</button>
+			</div>
+			<div class="modal-body">
+				<table class="table table-bordered" id="modal">
+					<tr>
+						<th>시작일</th>
+						<td><input type="date" class="modalStartDate"></td>
+					</tr>
+					<tr>
+						<th>종료일</th>
+						<td><input type="date" class="modalEndDate"></td>
+					</tr>
+					<tr>
+						<th>일정명</th>
+						<td><input type="text" class="modalTitleName"></td>
+					</tr>
+					<tr>
+						<th>작성자</th>
+						<td><input type="text" class="modalWriter"  name="emp_code" ></td>
+					</tr>
+					<tr>
+						<th>담당자</th>
+						<td><input type="text" class="modalManager"></td>
+					</tr>
+					<tr>
+						<th>중요도</th>
+						<td>
+						<select class="modalImport">
+						<c:if test="${not empty depimportantnm}">
+							<c:forEach items="${depimportantnm}" var="map">
+								<option value="${map.standard_code }">${map.standard_name }</option>
+							</c:forEach>
+						</c:if>	
+						</select>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div class="modal-footer">
+				<button type="button" id="okBtn" class="btn btn-primary mr-2">수정</button>
+				<button type="button" class="btn btn-secondary" data-dismiss="modal">취소</button>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- fullCalendar 2.2.5 -->
+	<script src="${cPath }/resources/plugins/moment/moment.min.js"></script>
+	<script src="${cPath }/resources/plugins/fullcalendar/main.min.js"></script>
+	<script src="${cPath }/resources/plugins/fullcalendar-daygrid/main.min.js"></script>
+	<script src="${cPath }/resources/plugins/fullcalendar-timegrid/main.min.js"></script>
+	<script src="${cPath }/resources/plugins/fullcalendar-interaction/main.min.js"></script>
+	<script src="${cPath }/resources/plugins/fullcalendar-bootstrap/main.min.js"></script>
+	
+	
+	
+<script> 
+	
+	
+	
+	
+ 	//모달창 수정 가능/불가능
+     var modalStartDate= $(".modalStartDate");
+     var modalEndDate= $(".modalEndDate");
+     var modalTitleName= $(".modalTitleName");
+     var modalWriter=  $(".modalWriter");
+     var modalManager=  $(".modalManager");
+     var modalImport=  $(".modalImport");
+  
+ 	var diseditable = function(){ //숨기고 수정못하게 
+ 		modalStartDate.attr('disabled',true);
+ 		modalEndDate.attr('disabled',true);
+ 		modalTitleName.attr('disabled',true);
+ 		modalWriter.attr('disabled',true);
+ 		modalManager.attr('disabled',true);
+ 		$("#modalImport").attr('hidden',true);
+ 	}
+ 	var editable = function(){ //보여주고 수정하게
+ 		modalStartDate.attr('disabled',false);
+ 		modalEndDate.attr('disabled',false);
+ 		modalTitleName.attr('disabled',false);
+ 		modalWriter.attr('disabled',false);
+ 		modalManager.attr('disabled',false);
+ 		$("#modalImport").attr('hidden',false);
+ 	}
+	
+ 	$("#addBtn").on("click",function(){
+ 		modalStartDate.val('');
+ 		modalEndDate.val('');
+ 		modalTitleName.val('');
+ 		modalWriter.val('');
+ 		modalManager.val('');
+ 		modalImport.val('');
+ 		editable();
+ 		$("#modalTitle").text('부서 일정 등록');
+ 		$("#okBtn").text('등록');
+ 		$('#calendarModal').modal();
+ 	});
+	
+ 	//수정 또는 등록
+ 	$("#okBtn").on("click",function(){
+ 		var del = '';
+ 		var ds_start =  modalStartDate.val();//(yyyy-mm-dd)
+ 		var ds_end =  modalEndDate.val();//(yyyy-mm-dd)
+ 		var ds_title = modalEndDate.val();
+ 		var standard_code = modalTitleName.val();
+ 		var emp_code = modalWriter.val();
+ 		var emp_code = modalManager.val();
+ 		var ds_important = $('input[name="modalImport"]:checked').val();
+ 		if($("#okBtn").text()=='삭제'){
+ 			$("#okBtn").on("click",function(){
+ 			if(confirm("정말 삭제하시겠습니까?")==true){
+ 				var del = 'y'; //controller에서 null return
+ 				$.ajax({
+ 					type : "POST",
+ 					url : "${cPath}/plan/depplancalendar",  //삭제 url
+ 					data : {
+ 						ds_important: modalImport,
+ 						del : del
+ 					},
+ 					success : function(resp) {
+ 						alert($("#okBtn").text()+'되었습니다');
+ 						$('#calendarModal').modal("hide");
+ 					}
+ 				})//ajax
+ 			}				
+ 			});
+ 		}
+ 		if($("#okBtn").text()=='등록'){
+ 		$.ajax({
+ 			type : "POST",
+ 			url : "${cPath}/plan/depplancalendar", //업데이트 url
+ 			data : {
+ 				ds_important: modalImport,
+ 				del : del
+ 			},
+ 			success : function(resp) {
+ 				alert($("#okBtn").text()+'되었습니다');
+ 				$('#calendarModal').modal("hide");
+ 			}
+ 		})//ajax
+ 		}
+ 	});
+	
+	
+ 	var eventArr = [];
+ 	var getAttList = function(){
+ 		$.ajax({
+ 			url:"${cPath}/plan/depplancalendar"
+ 		   ,contentType: "application/x-www-form-urlencoded; charset=UTF-8"
+ 		   ,type:"post"
+ 		   ,success : function(mp){
+ 			  console.log(mp);
+ 			   //출근시간
+ 			   var calendarEl = document.getElementById('calendar');
+ 			    var calendar = new FullCalendar.Calendar(calendarEl, {
+ 			      plugins: [ 'interaction', 'dayGrid', 'timeGrid', 'list','interactionPlugin' ],
+ 			      header: {
+ 			        left: 'prev,next today',
+ 			        center: 'title',
+ 			        right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth'
+ 			      },
+ 			      navLinks: true, // can click day/week names to navigate views
+ 			      businessHours: true, // display business hours
+ 			      selectable: true,
+ 			      selectMirror: true,
+ 			      eventLimit: true,
+ 			      navLinks: true,
+ 			      displayEventTime: false,
+ 			      allDay : false,
+ 			      events: mp,      //아무것도 없는 날짜 클릭 했을 때 ->등록모달
+ 			      select:  function(selectionInfo) {
+//  				    	 editable();
+//  				    	modalTitleName.val('');
+//  				    	modalImport.val('');
+//  						 $("#modalTitle").text('부서 일정 등록');
+//  						 $("#okBtn").text('등록');
+//  						modalStartDate.val(selectionInfo.startStr);
+//  						modalEndDate.val(selectionInfo.startStr);
+//  				         $('#calendarModal').modal();
+ 			    	 window.open("${cPath}/plan/dsediter","",'top=0, left=0, width=800, height=556, directories=no, location=no, menubar=no, resizable=no, status=yes, toolbar=no')  ;
+ 			      },
+ 			      //이미 있는 이벤트를 클릭했을 때 ->수정모달
+ 			      eventClick: function(info) {
+ 			    	  let startdate = info.event.start;
+ 			    	  let enddate = info.event.end;
+ 			    	  let emp_kor = info.event.id;
+ 			    	  startdate = moment(startdate).format('YYYY-MM-DD');
+ 			    	  enddate = moment(enddate).format('YYYY-MM-DD');
+ 			    	  diseditable();
+ 			    	  $("#modalTitle").text('부서 일정 수정');
+ 			    	  $("#okBtn").text('삭제');
+ 			    	 $(".modalWriter").val(emp_kor);
+ 			    	  $(".modalStartDate").val(startdate);
+ 			    	  $(".modalEndDate").val(enddate);
+ 			    	  $(".modalTitleName").val(info.event.title);
+ 			    	  $(".modalImport").find("option").each(function(index){
+ 				    		 if($(this).text()==emp_kor){
+ 				    			 $(".modalImport").val($(this).val());
+ 				    		 }
+ 				    	  });
+ 			    	  $('#calendarModal').modal();
+ 			    	  }
+ 			    });
+ 			    calendar.render();
+ 		   }
+ 		});	
+ 	}
+ 	getAttList();
+	
+	
+
+	
+	
+ </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

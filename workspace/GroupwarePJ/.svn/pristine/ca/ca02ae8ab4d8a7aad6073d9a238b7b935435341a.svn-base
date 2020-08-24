@@ -1,0 +1,53 @@
+package kr.or.ddit.community.service;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+
+import kr.or.ddit.community.dao.INoticeDAO;
+import kr.or.ddit.vo.BoardVO;
+import kr.or.ddit.vo.PagingVO;
+
+@Service
+public class NoticeServiceImpl implements INoticeService {
+	
+	@Inject
+	INoticeDAO dao;
+
+	@Override
+	public int insertBoard(BoardVO board) {
+		return dao.insertBoard(board);
+	}
+
+	@Override
+	public int selectBoardCount(PagingVO<BoardVO> pagingVO) {
+		return dao.selectBoardCount(pagingVO);
+	}
+
+	@Override
+	public List<BoardVO> selectBoardList(PagingVO<BoardVO> pagingVO) {
+		return dao.selectBoardList(pagingVO);
+	}
+
+	@Override
+	public BoardVO selectBoard(int bo_no) {
+		return dao.selectBoard(bo_no);
+	}
+
+	@Override
+	public void incrementHit(int bo_no) {
+	}
+
+	@Override
+	public int updateBoard(BoardVO board) {
+		return dao.updateBoard(board);
+	}
+
+	@Override
+	public int deleteBoard(BoardVO board) {
+		return dao.deleteBoard(board);
+	}
+
+}

@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.schedule.dao.IDep_ScheduleDAO">
+	<sql id="searchFrag">
+		<if test="detailSearch!=null">
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.manager)">
+			AND A.MANAGER = #{detailSearch.manager}
+			</if>
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.writer)">
+			AND A.WRITER = #{detailSearch.writer}
+			</if>
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.dept_code)">
+			AND B.DEPT_CODE = #{detailSearch.dept_code}
+			</if>
+			
+		</if>
+	
+			<if test="searchVO!=null and @org.apache.commons.lang3.StringUtils@isNotBlank(searchVO.searchWord)">
+					<choose>
+						<when test="'title'.equals(searchVO.searchType)">
+								AND A.INSTR(DS_TITLE, #{searchVO.searchWord}) > 0
+						</when>
+						<when test="'writer'.equals(searchVO.searchType)">
+								AND A.DS_CODE IN (SELECT DS_CODE
+													FROM DEPT_SCHEDULE INNER JOIN EMPLOYEE ON (DEPT_SCHEDULE.WRITER = EMPLOYEE.EMP_CODE)
+													WHERE EMP_KOR LIKE '%${searchVO.searchWord}%')
+						</when>
+						<when test="'manager'.equals(searchVO.searchType)">
+								AND A.DS_CODE IN (SELECT DS_CODE
+													FROM DEPT_SCHEDULE INNER JOIN EMPLOYEE ON (DEPT_SCHEDULE.MANAGER = EMPLOYEE.EMP_CODE)
+													WHERE EMP_KOR LIKE '%${searchVO.searchWord}%')
+						</when>
+						<when test="'import'.equals(searchVO.searchType)">
+								AND A.DS_CODE IN (SELECT DS_CODE
+													FROM DEPT_SCHEDULE INNER JOIN STANDARD ON (DEPT_SCHEDULE.DS_IMPORTANT = STANDARD.STANDARD_CODE)
+													WHERE STANDARD_NAME LIKE '%${searchVO.searchWord}%')
+						</when>
+					</choose>
+					
+				</if>	
+	</sql>
+
+	<!--부서일정 상세 조회 -->
+	<select id="selectDeptSchedule" parameterType="kr.or.ddit.vo.Dept_ScheduleVO" resultType="kr.or.ddit.vo.Dept_ScheduleVO">
+	SELECT
+	A.DS_CODE,
+	A.DS_TITLE,
+	A.DS_CONTENT,
+	B.EMP_KOR AS WRITER_NAME,
+	D.EMP_KOR AS MANAGER_NAME,
+	TO_CHAR(DS_START, 'YYYY-MM-DD') DS_START,
+	TO_CHAR(DS_END, 'YYYY-MM-DD') DS_END,
+	STANDARD_NAME AS DS_IMPORTANT
+	from DEPT_SCHEDULE A INNER JOIN EMPLOYEE B ON (A.WRITER = B.EMP_CODE)
+	INNER JOIN STANDARD C ON(A.DS_IMPORTANT = C.STANDARD_CODE)
+    LEFT OUTER JOIN EMPLOYEE D ON (A.MANAGER = D.EMP_CODE)
+	WHERE DS_CODE = #{ds_code}
+	
+	</select>
+	
+	<!--부서 일정 테이블 리스트 -->
+	<select id="selectDeptScheduleList" parameterType="kr.or.ddit.vo.PagingVO" resultType="kr.or.ddit.vo.Dept_ScheduleVO">
+	SELECT A.*
+	FROM(
+	SELECT ROWNUM RNUM,B.*
+	FROM(SELECT DS_CODE,DS_TITLE, WRITER,MANAGER,
+       TO_CHAR(DS_START, 'YYYY-MM-DD') DS_START,TO_CHAR(DS_END, 'YYYY-MM-DD') DS_END,
+       STANDARD_NAME AS DS_IMPORTANT, B.EMP_KOR AS WRITER_NAME, D.EMP_KOR AS MANAGER_NAME
+  	   FROM DEPT_SCHEDULE A INNER JOIN EMPLOYEE B ON (A.WRITER = B.EMP_CODE)
+                       INNER JOIN STANDARD C ON(A.DS_IMPORTANT = C.STANDARD_CODE)
+                       LEFT OUTER JOIN EMPLOYEE D ON (A.MANAGER = D.EMP_CODE)
+                       WHERE 1=1
+                       <include refid="searchFrag" />
+                       ORDER BY DS_START ASC
+                       )B ) A
+        WHERE A.RNUM BETWEEN #{startRow} AND #{endRow}               
+	</select>
+	
+	<!--페이지 카운트 -->
+	<select id="selectDept_scheduleCount" parameterType="kr.or.ddit.vo.PagingVO" resultType="int">
+		SELECT COUNT(DS_CODE)
+		FROM DEPT_SCHEDULE  A INNER JOIN EMPLOYEE B ON (A.WRITER = B.EMP_CODE)
+		WHERE 1=1
+		<include refid="searchFrag" />	
+	</select>
+	
+	
+	
+	
+     <!--부서일정 등록 -->
+	<insert id="insertDeptschedule" parameterType="kr.or.ddit.vo.Dept_ScheduleVO">
+	<selectKey keyProperty="ds_code" resultType="string" order="BEFORE">
+	SELECT 'DS' || LPAD(NVL(TO_NUMBER(SUBSTR(MAX(DS_CODE), 3)), 0)+1, 3, '0') 
+    FROM DEPT_SCHEDULE
+	</selectKey>
+	INSERT INTO DEPT_SCHEDULE(
+	DS_CODE,DS_TITLE,DS_CONTENT,WRITER,MANAGER,
+    DS_START,DS_END,DS_IMPORTANT
+    )VALUES (
+   #{ds_code,jdbcType=VARCHAR},#{ds_title,jdbcType=VARCHAR},#{ds_content,jdbcType=VARCHAR},#{writer,jdbcType=VARCHAR},#{manager,jdbcType=VARCHAR},
+	TO_DATE(#{ds_start,jdbcType=DATE}, 'YYYY-MM-DD'), TO_DATE(#{ds_end,jdbcType=DATE}, 'YYYY-MM-DD'), 
+	#{ds_important,jdbcType=VARCHAR}
+    )
+	</insert>
+	
+	<!--부서일정 삭제 -->
+	<delete id="deleteDeptschedule" parameterType="string">
+	DELETE FROM DEPT_SCHEDULE
+	WHERE DS_CODE = #{ds_code}
+	</delete>
+	
+	
+	<!--부서일정 수정 -->
+	<update id="updateDeptschedule" parameterType="kr.or.ddit.vo.Dept_ScheduleVO">
+	UPDATE DEPT_SCHEDULE
+	SET
+	DS_TITLE = #{ds_title,jdbcType=VARCHAR},
+	DS_CONTENT = #{ds_content,jdbcType=VARCHAR},
+	WRITER = #{writer,jdbcType=VARCHAR},
+	MANAGER = #{manager,jdbcType=VARCHAR},
+	DS_START = TO_DATE(#{ds_start,jdbcType=DATE}, 'YYYY-MM-DD'),
+	DS_END = TO_DATE(#{ds_end,jdbcType=DATE}, 'YYYY-MM-DD'),
+	DS_IMPORTANT = #{ds_important,jdbcType=VARCHAR}
+	where DS_CODE = #{ds_code,jdbcType=VARCHAR}
+	</update>
+	
+	
+<!-- 모달관련 -->
+<sql id="searchFrag3">
+		FROM EMPLOYEE A INNER JOIN DEPARTMENT B ON (A.DEPT_CODE = B.DEPT_CODE)
+		INNER JOIN TEAM C ON (A.TEAM_CODE = C.TEAM_CODE)
+		INNER JOIN POSITION D ON (A.POSITION_CODE = D.POSITION_CODE)
+		<trim prefix=" WHERE " prefixOverrides=" AND ">
+			<if test="detailSearch!=null">
+			RETIRE_DATE IS NULL
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.dept_code)">
+					AND A.DEPT_CODE = #{detailSearch.dept_code} 
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.team_code)">
+					AND	C.TEAM_CODE = #{detailSearch.team_code}
+				</if>
+			</if>
+		</trim>        
+	</sql>
+<select id="selectEmpList" parameterType="PagingVO" resultType="EmployeeVO">
+SELECT Z.*
+		FROM(
+			SELECT ROWNUM RNUM, A.DEPT_CODE, B.DEPT_NAME, A.TEAM_CODE, C.TEAM_NAME, A.EMP_CODE, A.EMP_KOR, D.POSITION_NAME
+			<include refid="searchFrag3"/>
+		)Z
+		WHERE Z.RNUM BETWEEN #{startRow} AND #{endRow}
+</select>
+<select id="selectEmpCount" parameterType="PagingVO" resultType="int">
+SELECT COUNT(*)
+	    <include refid="searchFrag3"/>
+</select>
+
+
+<!--캘린더 -->
+<select id="selectdeplist" parameterType="String" resultType="Dept_ScheduleVO">
+	SELECT 
+	DS_CODE,DS_TITLE,DS_CONTENT,
+	A.WRITER,MANAGER,DS_START,
+	DS_END,DS_IMPORTANT, EMP_KOR
+	FROM DEPT_SCHEDULE A INNER JOIN EMPLOYEE B ON (A.WRITER = B.EMP_CODE)
+	WHERE DS_CODE LIKE 'DS%'
+	and b.dept_code = #{dept_code}
+</select>
+
+<select id="selectMyDept" parameterType="String" resultType="Dept_ScheduleVO">
+	SELECT 
+	DS_CODE,DS_TITLE,DS_CONTENT,
+	A.WRITER,MANAGER,DS_START,
+	DS_END,DS_IMPORTANT, EMP_KOR
+	FROM DEPT_SCHEDULE A INNER JOIN EMPLOYEE B ON (A.WRITER = B.EMP_CODE)
+	WHERE DS_CODE LIKE 'DS%'
+	AND MANAGER = #{emp_code}
+</select>
+	
+	
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+

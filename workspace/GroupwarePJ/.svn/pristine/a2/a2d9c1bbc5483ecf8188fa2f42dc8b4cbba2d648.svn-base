@@ -1,0 +1,14 @@
+package kr.or.ddit.event.dao;
+
+import java.util.List;
+
+import org.springframework.stereotype.Repository;
+
+import kr.or.ddit.vo.PushMessageVO;
+
+@Repository
+public interface IPushMessageDAO {
+	int insertPushMessage(PushMessageVO messageVO);
+	List<PushMessageVO> selectPsuhMessage(String emp_code);
+	
+}

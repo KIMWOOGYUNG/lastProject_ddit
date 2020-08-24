@@ -1,0 +1,90 @@
+package kr.or.ddit.att_admin.service;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import kr.or.ddit.att_admin.dao.IAdminAttDAO;
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.Time_AttendVO;
+
+@Service
+public class AdminAttServiceImpl implements IAdminAttService {
+	@Inject
+	IAdminAttDAO dao;
+	
+	@Override //출근여부를 확인함. 출근했으면 퇴근시간 update, 안했으면 insert
+	public Time_AttendVO readEmpAtt(Time_AttendVO timeAttVO) {
+		Time_AttendVO vo = dao.selectAtt(timeAttVO);
+//		if(timeAttVO==null) {
+//			return null;
+//		}
+		return vo;
+	}
+
+
+
+	@Override //퇴근 업데이트 
+	public ResultState modifyEmpAtt(Time_AttendVO timeAttVO) {
+		int cnt = dao.updateAttendence(timeAttVO);
+		ResultState result = ResultState.FAIL;
+		if(cnt>0) {
+			result = ResultState.OK;
+		}
+		return result;
+	}
+	
+	
+	@Transactional
+	@Override //출근처리 
+	public ResultState createEmpAtt(Time_AttendVO timeAttVO) {
+		int cnt = dao.insertAttendence(timeAttVO);
+		ResultState result = ResultState.FAIL;
+		if(cnt>0) {
+			result = ResultState.OK;
+		}
+		return result;
+	}
+	
+	@Override
+	public EmployeeVO readEmpIp(String emp_code) {
+		EmployeeVO empVO = dao.selectEmpIP(emp_code);
+		if(empVO==null)
+			throw new exception.DataNotFoundException(emp_code+" 회원이없음");
+		return empVO;
+	}
+
+	@Override
+	public int readEmpIpCount(PagingVO<EmployeeVO> pagingVO) {
+		return dao.selectEmpIpCount(pagingVO);
+	}
+
+	@Override
+	public List<EmployeeVO> readEmpIpList(PagingVO<EmployeeVO> pagingVO) {
+		return dao.selectEmpIpList(pagingVO);
+	}
+	
+	
+	/**
+	 * 성공하면 ResultState를 Successes로 반환
+	 */
+	
+	@Transactional
+	@Override
+	public ResultState modifyEmpIp(EmployeeVO empVO) {
+		//readEmpIp(empVO.getEmp_code());
+		int cnt = dao.updateEmpIp(empVO);
+		ResultState result = ResultState.FAIL;
+		if(cnt>0) result = ResultState.SUCCESSES;
+		return result;
+	}
+
+
+
+
+}

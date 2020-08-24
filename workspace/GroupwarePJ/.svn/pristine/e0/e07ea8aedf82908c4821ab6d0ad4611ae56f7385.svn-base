@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.login_logout.dao.ILoginDAO">
+
+	<!-- 강현철 / 박혜진: faceId상세페이지-->
+	<select id="selectEmployee" parameterType="kr.or.ddit.vo.EmployeeVO" resultType="kr.or.ddit.vo.EmployeeVO">
+  SELECT A.EMP_CODE, A.EMP_KOR, A.EMP_ENG, A.EMP_REG1, A.EMP_MAIL, A.EMP_HP, A.CO_PHONE, A.EMP_ZIP, 
+A.EMP_ADD1, A.EMP_ADD2, A.EMP_STARTDATE, A.TEAM_CODE, A.EMP_IP, A.EMP_IP2, A.EMP_SAL, A.LONG_VACATION, 
+A.RETIRE_DATE, A.VACTION_CNT, A.DEPT_CODE, A.POSITION_CODE, A.JOBTITLE_CODE, A.PERSISTEDFACEID, A.PERSONID, 
+A.SUBFACEID, A.EMP_ARBITRARY, B.DEPT_NAME, C.POSITION_NAME, D.TEAM_NAME, J.EMP_ATTCODE from 
+employee A 
+INNER JOIN DEPARTMENT B ON(A.DEPT_CODE = B.DEPT_CODE) 
+INNER JOIN POSITION C ON(A.POSITION_CODE = C.POSITION_CODE ) 
+INNER JOIN TEAM D ON(A.TEAM_CODE = D.TEAM_CODE) 
+LEFT OUTER JOIN (SELECT EMP_ATTCODE, EMP_CODE FROM IMAGE_ATTATCH WHERE IMG_CATAG='IMG300') J ON (A.EMP_CODE = J.EMP_CODE) 
+       WHERE A.EMP_CODE = #{emp_code}
+   </select>
+   
+	<!-- 로그인체크  -->
+	<select id="selectEmpLoginCheck" parameterType="kr.or.ddit.vo.EmployeeVO" resultType="kr.or.ddit.vo.EmployeeVO">
+			select 
+		A.EMP_CODE,
+		A.EMP_KOR,
+		A.EMP_ENG,
+		A.EMP_REG1,
+		A.EMP_MAIL,
+		A.EMP_HP,
+		A.CO_PHONE,
+		A.EMP_ZIP,
+		A.EMP_ADD1,
+		A.EMP_ADD2,
+		A.EMP_STARTDATE,
+		A.TEAM_CODE,
+		A.EMP_IP,
+		A.EMP_IP2,
+		A.EMP_SAL,
+		A.LONG_VACATION,
+		A.RETIRE_DATE,
+		A.VACTION_CNT,
+		A.DEPT_CODE,
+		A.POSITION_CODE,
+		A.JOBTITLE_CODE,
+		A.EMP_ARBITRARY,
+ 		B.DEPT_NAME, C.POSITION_NAME, D.TEAM_NAME, E.EMP_ATTCODE
+		  from employee A INNER JOIN DEPARTMENT B ON(A.DEPT_CODE = B.DEPT_CODE)
+		  				  INNER JOIN POSITION C ON(A.POSITION_CODE = C.POSITION_CODE ) 
+		  				  INNER JOIN TEAM D ON(A.TEAM_CODE = D.TEAM_CODE)
+		  				  LEFT OUTER JOIN IMAGE_ATTATCH E ON(A.EMP_CODE = E.EMP_CODE)
+		where A.emp_code = #{emp_code} AND A.emp_pw = #{emp_pw}
+		AND E.IMG_CATAG = 'IMG300'
+	</select>
+	
+	<select id="selectEmpMail" parameterType="String" resultType="kr.or.ddit.vo.EmployeeVO">
+		select emp_mail
+		from employee
+		where emp_code = #{emp_code}
+	</select>
+	
+	<update id="updateEmpPassword" parameterType="EmployeeVO">
+		update employee
+		set emp_pw = #{emp_pw}
+		where emp_code = #{emp_code}
+	</update>
+	<select id="selectEmpLoginInfo" parameterType="EmployeeVO" resultType="kr.or.ddit.vo.EmployeeVO">
+		SELECT EMP_CODE,EMP_PW,EMP_KOR
+		FROM EMPLOYEE
+		WHERE PERSONID=#{personid,jdbcType=VARCHAR}
+	</select>
+	
+</mapper>

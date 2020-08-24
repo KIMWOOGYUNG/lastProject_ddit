@@ -1,0 +1,22 @@
+package kr.or.ddit.vo;
+
+import java.io.Serializable;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+
+@Data
+@EqualsAndHashCode(of = "faceId") 
+@ToString
+public class FaceIdentifyResult implements Serializable{
+	@Data
+	@EqualsAndHashCode(of = "personId")
+	public static class Candidate implements Serializable{
+		private String personId;
+		private Double confidence;
+	}
+		
+	private String faceId;
+	private Candidate[] candidates;
+}

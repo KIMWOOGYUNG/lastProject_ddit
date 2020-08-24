@@ -1,0 +1,31 @@
+package kr.or.ddit.hr_admin.dao;
+
+import java.util.List;
+
+import org.springframework.stereotype.Repository;
+
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.Image_AttatchVO;
+import kr.or.ddit.vo.PagingVO;
+
+@Repository
+public interface IAdminEmployDAO {
+	public List<EmployeeVO> selectEmpmanageList(PagingVO<EmployeeVO>pagingVO);
+	
+	public EmployeeVO selectEmpmanage(String emp_code);
+	
+	public int selectEmpmanageCount(PagingVO<EmployeeVO> pagingVO);
+	
+	public int insertEmp(EmployeeVO employee);
+	public int insertEmpImage(Image_AttatchVO image_AttatchVO);
+	public int updateEmpImage(Image_AttatchVO image_AttatchVO);
+	public int deleteEmpImage(String emp_attcode);
+	public Image_AttatchVO selectImage(String emp_attcode);
+//	public int deleteEmp(String emp_code);
+	
+	public int updateEmp(EmployeeVO employee);
+	
+	public String selectCode();
+	
+	public List<Image_AttatchVO> selectEmpImg (String emp_code);
+}

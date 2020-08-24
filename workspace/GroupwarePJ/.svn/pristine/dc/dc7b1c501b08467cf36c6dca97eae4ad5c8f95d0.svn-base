@@ -1,0 +1,22 @@
+package kr.or.ddit.hr_admin.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+
+@Controller
+public class AdminEmpController {
+	
+	@GetMapping("/hr/employer/entiremanage")
+	public String entireempmanage() {
+		String goPage = "AdminEmpManage.hr";
+		return goPage;
+	}
+	
+	@GetMapping("/hr/employer/retiremanage")
+	public String retireempmanage() {
+		String goPage = "AdminRtrManage.hr";
+		return goPage;
+	}
+
+
+}

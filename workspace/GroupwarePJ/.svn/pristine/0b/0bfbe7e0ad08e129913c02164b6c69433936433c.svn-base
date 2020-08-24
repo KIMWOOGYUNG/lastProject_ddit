@@ -1,0 +1,10 @@
+package kr.or.ddit.mypage.service;
+
+import java.util.List;
+
+import kr.or.ddit.vo.Time_AttendVO;
+
+public interface IMypageService {
+
+	public List<Time_AttendVO> getMyAttendance(String emp_code);
+}

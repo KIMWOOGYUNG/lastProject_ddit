@@ -1,0 +1,139 @@
+package kr.or.ddit.work.controller;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpSession;
+import javax.validation.Valid;
+
+import org.apache.commons.io.FileUtils;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.Errors;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+
+
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.PJ_RgroupVO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.ProjectVO;
+import kr.or.ddit.vo.Report_AttVO;
+import kr.or.ddit.vo.WorkLogVO;
+import kr.or.ddit.vo.WorkLog_AttatchVO;
+import kr.or.ddit.vo.Work_ReportVO;
+import kr.or.ddit.work.dao.IMyReportDAO;
+import kr.or.ddit.work.dao.IStandardDAO;
+import kr.or.ddit.work.service.IMyReportService;
+import kr.or.ddit.work.service.IMyWorkLogService;
+
+@Controller
+public class MyReportInsertController {
+	
+	@Inject
+	private IStandardDAO stddDao;
+	
+	@Inject
+	private IMyReportService service;
+	
+	@Inject
+	private IMyReportDAO dao;
+	
+	
+	@ModelAttribute("currentAction")
+	private void attributeSetting(Model model) {
+		model.addAttribute("typeList", stddDao.selectType());
+		model.addAttribute("deptList", stddDao.selectDept());
+		model.addAttribute("teamList", stddDao.selectTeam());
+		model.addAttribute("employeeList", stddDao.selectEmployee());
+	}
+	
+	@GetMapping("/work/workreport/insertreport")
+	public String form(Model model, @RequestParam(name="page", required=false, defaultValue="1") int currentPage) {
+		
+		PagingVO<WorkLogVO> pagingVO = new PagingVO<>(5,5);
+		pagingVO.setCurrentPage(currentPage);
+		int totalRecord = dao.selectWorkLogCount(pagingVO);
+		pagingVO.setTotalRecord(totalRecord);
+		List<WorkLogVO> worklogList = dao.selectWorkLogList(pagingVO);
+		pagingVO.setDataList(worklogList);
+		
+		model.addAttribute("pagingVO", pagingVO);
+		
+		return "myreportForm.work";
+	}
+	
+	@GetMapping(value="/work/workreport/insertreport", produces="application/json;charset=UTF-8")
+	@ResponseBody
+	public PagingVO<WorkLogVO> ajaxList(Model model,@RequestParam(name="page", required=false, defaultValue="1") int currentPage) {
+		form(model, currentPage);
+		PagingVO<WorkLogVO> pagingVO = (PagingVO<WorkLogVO>) model.asMap().get("pagingVO");
+		
+		return pagingVO;
+	}
+	
+	
+	@PostMapping(value = "/work/workreport/insertreport" ,produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public String reportinsert(@RequestParam(name="page", required=false, defaultValue="1") int currentPage, Model model, @Valid @ModelAttribute("report") Work_ReportVO report, 
+								Errors errors,  HttpSession session, @RequestParam(required = false) String[] wl_attcode) {
+		EmployeeVO employeeVO = (EmployeeVO) session.getAttribute("authUser");
+		
+		String emp_code = employeeVO.getEmp_code();
+		report.setEmp_reporter(emp_code);
+		
+		// 일지첨부파일 
+		List<WorkLog_AttatchVO> wlattList = null; 
+		if(wl_attcode != null) {
+			wlattList = new ArrayList<>();
+			for(String code : wl_attcode) {
+				wlattList.add(dao.selectWlAtt(code));
+			}
+			report.setWlattList(wlattList);
+		}
+	
+		String goPage = null;
+		String message = null;
+		if(!errors.hasErrors()) {
+			ResultState result = service.createReport(report);
+			switch (result) {
+			case FAIL:
+				goPage = "myreportForm.work";
+				message = "다시 입력하세요";
+				break;
+
+			default:
+				goPage = "myreportList.work";
+				message = "insert성공";
+				break;
+			}
+			
+		}else {
+			System.out.println(errors.toString());
+			goPage = "myreportForm.work";
+		}
+		
+		model.addAttribute("message", message);
+		
+		return goPage;
+	}
+	
+	@PostMapping(value = "/work/workreport",produces = MediaType.APPLICATION_JSON_UTF8_VALUE )
+	@ResponseBody
+	public WorkLogVO sendData(@RequestParam String wl_code) {
+		return	dao.selectWorkLog(wl_code);
+	}
+	
+}

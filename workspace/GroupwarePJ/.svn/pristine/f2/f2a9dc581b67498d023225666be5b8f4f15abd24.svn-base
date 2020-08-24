@@ -1,0 +1,176 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib uri="http://www.springframework.org/tags" prefix="spring"%>
+<h1>사내주소록</h1>
+
+<div class="content">
+<!-- <div class="col-md-6"> -->
+<!--  <form class="form-horizontal"> -->
+            <!-- Horizontal Form -->
+            <div class="card card-info">
+              <div class="card-header">
+                <h3 class="card-title">사내 주소록</h3>
+              </div>
+              <!-- 사진 -->
+               <div class="card-footer" align="center">
+              <img src="https://via.placeholder.com/300/000000?text=2" class="img-fluid mb-2" 
+              alt="black sample" style="height: 200px;width:180px;">
+                </div>
+              
+              <!-- /.card-header -->
+              <!-- form start -->
+              <form class="form-horizontal">
+                <div class="card-body">
+                  <div class="form-group row">
+                    <label for="inputEmail3" class="col-sm-2 col-form-label">사원번호</label>
+                    <div class="col-sm-10">
+                      <input type="text" class="form-control" id="inputEmail3" style="height: 35px; width: 200px;" value="${address.emp_code}">
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="inputEmail3" class="col-sm-2 col-form-label">이름</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="inputEmail3" style="height: 35px; width: 200px;" value="${address.emp_kor}">
+                    </div>
+                  </div>
+                  
+                   <div class="form-group row">
+				<label for="inputStatus" class="col-sm-2 col-form-label">직책</label>
+				<div class="col-sm-10">
+						<input type="text" class="form-control" id="inputEmail3" value="${address.jobtitle_code}" style="height: 35px; width: 200px;" >	
+				</div>
+			</div>
+			 
+			 <div class="form-group row">
+				<label for="inputStatus" class="col-sm-2 col-form-label">직위</label>
+				<div class="col-sm-10">
+						<input type="text" class="form-control" id="inputEmail3" value="${address.position_code}" style="height: 35px; width: 200px;" >	
+				</div>
+			</div>
+			
+                  <div class="form-group row">
+                    <label for="inputPassword3" class="col-sm-2 col-form-label">부서명</label>
+                    <div class="col-sm-10">
+                       <input type="text" class="form-control" id="inputEmail3" style="height: 35px; width: 200px;" readonly="readonly" value="${address.dept_code}">
+                    </div>
+                  </div>
+                  
+                   <div class="form-group row">
+                    <label for="inputPassword" class="col-sm-2 col-form-label">팀명</label>
+                    <div class="col-sm-10">
+                       <input type="text" class="form-control" id="inputEmail3" style="height: 35px; width: 200px;" value="${address.team_code}">
+                    </div>
+                  </div>
+                  
+                   
+                   <div class="form-group row">
+				<label for="inputStatus" class="col-sm-2 col-form-label">이메일</label>
+				<div class="col-sm-10">
+					<input type="text" class="form-control" id="inputEmail3" value="${address.emp_mail}" style="height: 35px; width: 200px;" >	
+				 <a href="{cPath"></a>
+				</div>
+			</div> 
+			
+			
+			
+					
+					   <div class="form-group row">
+				<label for="inputStatus" class="col-sm-2 col-form-label">HP</label>
+				<div class="col-sm-10">
+					<input type="text" class="form-control" id="inputEmail3" value="${address.emp_hp}" style="height: 35px; width: 200px;" >		
+				</div>
+			</div> 
+			
+			
+			   <div class="form-group row">
+				<label for="inputStatus" class="col-sm-2 col-form-label">내선번호</label>
+				<div class="col-sm-10">
+						<input type="text" class="form-control" id="inputEmail3" value="${address.co_phone}" style="height: 35px; width: 200px;" >	
+				</div>
+			</div> 
+			</form>
+			</div>
+			</div>
+			
+			
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">메일 발송</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+      
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="updateBtn" class="btn btn-primary mr-2">발송</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">닫기</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- 모달 눌렀을때  -->	
+<script type="text/javascript">
+var exampleModal = $("#exampleModal").modal({
+	show:false
+}).on("hidden.bs.modal", function(){
+	exampleModal.find(".modal-body").empty();
+	exampleModal.data("emp_mail", "");
+});
+
+function loadaddView(emp_mail){
+	$.ajax({
+		url : "<c:url value='/address/'/>"+emp_mail,
+		dataType : "html", // Accept:application/json, Content-Type:application/json
+		success : function(resp) {
+			exampleModal.find(".modal-body").html(resp);
+			exampleModal.data("emp_mail", emp_mail);
+			exampleModal.modal("show");
+		},
+		error : function(errorResp) {
+			console.log(errorResp.status + ":" + errorResp.responseText);
+		}
+	});
+}
+<c:if test="${not empty lastUpdateaddress}">
+	loadaddView("${lastUpdateaddress.emp_mail}");
+</c:if>
+
+var listBody = $("#listBody").on("click", "tr", function(){
+	let emp_mail = $(this).data("emp_mail");
+	loadaddView(emp_mail);
+}).css({
+	cursor:"pointer"
+});
+
+$("#updateBtn").on("click", function(){
+	let emp_mail = exampleModal.data("emp_mail");
+	let currentPage = listBody.data("currentpage");
+	location.href="${pageContext.request.contextPath }/address/"+emp_mail+"/form?currentPage="+currentPage;
+});
+$("#insertBtn").on("click", function(){
+	location.href="${pageContext.request.contextPath }/address/form";
+});
+
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

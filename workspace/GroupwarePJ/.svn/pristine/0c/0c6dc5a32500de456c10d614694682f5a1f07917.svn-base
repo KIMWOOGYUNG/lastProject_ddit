@@ -1,0 +1,15 @@
+package kr.or.ddit.mypage.dao;
+
+import java.util.List;
+
+import org.springframework.stereotype.Repository;
+
+import kr.or.ddit.vo.Time_AttendVO;
+
+
+@Repository
+public interface IMypageDAO {
+	public List<Time_AttendVO> selectEmpAttendance(String emp_code); //넘겨줄것
+
+
+}

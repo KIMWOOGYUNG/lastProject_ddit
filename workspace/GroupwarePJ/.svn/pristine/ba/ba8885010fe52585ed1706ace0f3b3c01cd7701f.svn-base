@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.work.dao.IAttatchDAO">
+	
+	<insert id="insertAttatchs" parameterType="WorkLog_AttatchVO">
+		<selectKey keyProperty="wl_attcode" resultType="String" order="BEFORE">
+			SELECT SUBSTR(NVL(MAX(WL_ATTCODE), 'WA001'), 3)
+			FROM WORKLOG_ATTATCH
+		</selectKey>
+			INSERT INTO worklog_attatch (
+			    WL_ATTCODE, WL_CODE, FILE_PATH, FILE_SIZE, ORG_NAME, SAVE_NAME, MIME, FANCY_SIZE
+			) VALUES (
+				#{wl_attcode}, #{wl_code}, 'D:\A_TeachingMaterial\7.LastProject\other\attatch', #{file_size, jdbcType=NUMERIC}
+				, #{org_name,jdbcType=VARCHAR}, #{save_name, jdbcType=VARCHAR}, #{mime, jdbcType=VARCHAR}
+				, #{fancy_size, jdbcType=VARCHAR}
+			)
+	
+			
+	</insert>	
+	
+	<delete id="deleteAttatchs" parameterType="WorkLogVO">
+		DELETE FORM WORKLOG_ATTATCH
+		WHERE WL_ATTCODE IN
+		<foreach collection="deleteAttatches" item="delNo" open="(" separator="," close=")">
+			#{delNo}
+		</foreach>
+	</delete>
+	
+	<select id="selectAttatch" resultType="WorkLog_AttatchVO" parameterType="String">
+		
+		SELECT WL_ATTCODE, WL_CODE, FILE_PATH, FILE_SIZE, ORG_NAME, SAVE_NAME, MIME, FANCY_SIZE
+		  FROM WORKLOG_ATTATCH
+		 WHERE WL_ATTCODE = #{wl_attcode}
+	</select>
+
+</mapper>

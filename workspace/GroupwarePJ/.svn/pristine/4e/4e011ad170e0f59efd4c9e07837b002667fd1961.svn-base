@@ -1,0 +1,38 @@
+package kr.or.ddit.work.controller;
+
+import java.util.List;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.SearchVO;
+import kr.or.ddit.vo.WorkLogVO;
+
+@Controller
+public class MyReportReadController {
+
+	
+	@GetMapping("/work/workreport/myworkreport/dayreport")
+	public String dayrepotList() {
+
+		
+		return "mydayreportList.work";		
+	}
+	
+//-----------------------------------------------------------------------------------------------------------------------------------------------------	
+	// 주간업무일지
+	
+
+	@GetMapping("/work/workreport/myworkreport/weekreport")
+	public String weekreportList() {
+		
+		
+		return "myweekreportList.work";		
+	}
+
+}

@@ -1,0 +1,117 @@
+package kr.or.ddit.login_logout.controller;
+
+import java.util.Properties;
+
+import javax.inject.Inject;
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+import javax.servlet.http.HttpSession;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import kr.or.ddit.login_logout.service.LoginServiceImpl;
+import kr.or.ddit.vo.EmployeeVO;
+
+@Controller
+@RequestMapping("/main/findpassword")
+public class FindPasswordController {
+
+	@Inject
+	LoginServiceImpl service;
+	
+	@GetMapping //화면이동
+    public String findPassword() {
+    	return "main/findPassword";  
+	}
+	
+	@PostMapping
+	public String emailCheck(RedirectAttributes redirectAttributes,
+			@RequestParam(required = false) String emp_code, 
+			@RequestParam(required = false) String emp_mail,
+			EmployeeVO employee) {
+		String goPage= null;
+		String message= null;
+		
+		if(StringUtils.isBlank(emp_code) || StringUtils.isBlank(emp_mail) ) {
+			message = "사원번호,이메일 공란없이 모두 입력해주세요.";
+			goPage = "redirect:findpassword"; //redirect로 붙으면 URL을 써준다
+		}else {
+			employee = service.checkEmpMail(emp_code);
+			String dbMail = employee.getEmp_mail();
+			if(emp_mail.equals(dbMail)) {
+				mailSender();
+				redirectAttributes.addFlashAttribute("tempPassword", "tempPassword");//세션에 임시비밀번호 상황 저장 , jsp에서 꺼내쓸것
+				redirectAttributes.addFlashAttribute("message", message); //바로 삭제되도록
+				goPage="redirect:/";// MailSender Controller로 가도록! 가면 메일 보내주니깐...!
+			}else {
+				message = "입력하신 이메일과 등록된 이메일이 일치하지 않습니다.";
+				goPage = "redirect:findpassword"; //새로고침 
+			}
+			//두개가 같은 경우 해당 email로 인증번호 전송되도록처리하기!
+		}
+			return goPage;
+	}
+	
+	public void mailSender() {
+		// 네이버일 경우 smtp.naver.com 을 입력합니다. 
+				// Google일 경우 smtp.gmail.com 을 입력합니다.
+				String host = "smtp.naver.com"; 
+				final String username = "jinniyah04"; //네이버 아이디를 입력해주세요. @nave.com은 입력하지 마시구요. 
+				final String password = "학원이름123"; //네이버 이메일 비밀번호를 입력해주세요.
+				int port=465; //포트번호
+			
+				//메일 내용
+				String reciever = "mustnlike@naver.com"; //받는 사람 메일 주소 
+				String subject = "메일테스트"; //메일 제목
+				String body = "매일 내용 "; //메일 내용 입력 
+				
+				Properties props = System.getProperties(); //정보를 담기 위한 객체 생성 
+				
+				//SMTP 서버 정보 설정 
+				props.put("mail.smtp.host", host); 
+				props.put("mail.smtp.port", port); 
+				props.put("mail.smtp.auth", "true"); 
+				props.put("mail.smtp.ssl.enable", "true"); 
+				props.put("mail.smtp.ssl.trust", host);
+
+				//Session 생성 (왜?)
+				Session session = Session.getDefaultInstance(props, new javax.mail.Authenticator() {
+					String un = username;
+					String pw = password;
+					protected javax.mail.PasswordAuthentication getPasswordAuthentication(){
+						return new javax.mail.PasswordAuthentication(un, pw);
+					}
+				});
+				session.setDebug(true); //for debug (왜...?ㅠㅠ)
+				
+				Message mimeMessage = new MimeMessage(session); 
+				try {
+					mimeMessage.setFrom(new InternetAddress("jinniyah04@naver.com"));
+					//발신자 셋팅 , 보내는 사람의 이메일주소를 한번 더 입력합니다. 이때는 이메일 풀 주소를 다 작성해주세요.
+					mimeMessage.setRecipient(Message.RecipientType.TO, new InternetAddress(reciever));
+					//수신자셋팅 //.TO 외에 .CC(참조) .BCC(숨은참조) 도 있음
+					
+					mimeMessage.setSubject(subject); //제목셋팅 
+					mimeMessage.setText(body); //내용셋팅 
+					Transport.send(mimeMessage); //javax.mail.Transport.send() 이용
+				
+				} catch (AddressException e) {
+					e.printStackTrace();
+				} catch (MessagingException e) {
+					e.printStackTrace();
+				}
+				//잘 보내지면 예외가 null 이다! 
+				//SMTP가 유효성 검사를 해서 예외에 안된다고 메시지를 보내준다.(badrequest response를 보내준다?!)
+	}
+}

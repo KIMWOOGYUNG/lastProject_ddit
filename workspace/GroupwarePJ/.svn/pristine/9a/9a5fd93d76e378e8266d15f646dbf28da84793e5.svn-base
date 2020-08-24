@@ -1,0 +1,36 @@
+package kr.or.ddit.schedule.service;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+
+import kr.or.ddit.schedule.dao.IDep_ScheduleDAO;
+import kr.or.ddit.vo.Dept_ScheduleVO;
+import kr.or.ddit.vo.PagingVO;
+
+@Service
+public class Dep_ScheduleServiceImpl implements IDep_ScheduleService {
+	
+	@Inject
+	IDep_ScheduleDAO depscheduleDAO;
+
+	@Override
+	public List<Dept_ScheduleVO> readdepScheduleList(PagingVO<Dept_ScheduleVO> pagingVO) {
+			return depscheduleDAO.selectDeptScheduleList(pagingVO);
+	}
+
+	@Override
+	public Dept_ScheduleVO readdepSchedule(String ds_code) {
+		return depscheduleDAO.selectDeptSchedule(ds_code);
+	}
+
+	@Override
+	public int readdepScheduleCount(PagingVO<Dept_ScheduleVO> pagingVO) {
+		return depscheduleDAO.selectDept_scheduleCount(pagingVO);
+	}
+	
+	
+
+}

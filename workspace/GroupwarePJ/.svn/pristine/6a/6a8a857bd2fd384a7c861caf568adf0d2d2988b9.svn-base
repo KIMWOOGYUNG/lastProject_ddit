@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	<mapper namespace="kr.or.ddit.work.dao.IMyWorkLogDAO">
+	<sql id="searchFrag">
+			<trim prefix="WHERE" prefixOverrides="AND">
+			<if test="searchVO!=null and @org.apache.commons.lang3.StringUtils@isNotBlank(searchVO.searchWord)">
+			AND WL_DATE = TO_DATE(#{searchVO.searchWord}, 'YYYY-MM-DD')
+			</if>
+			<if test="detailSearch != null and @org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.emp_code)">
+			AND A.EMP_CODE = #{detailSearch.emp_code}
+			</if>
+			<choose>
+				<when test="detailSearch != null and @org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.wl_del)">
+					AND WL_DEL = #{detailSearch.wl_del}
+				</when>
+				<otherwise>
+					AND WL_DEL IS NULL
+				</otherwise>
+			</choose>
+			<if test="detailSearch != null and @org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.wl_share)">
+			AND WL_SHARE = #{detailSearch.wl_share}
+			</if>
+			<if test="detailSearch != null and @org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.wl_report)">
+			AND WL_REPORT = #{detailSearch.wl_report}
+			</if>
+			<if test="detailSearch != null and @org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.wl_catag)">
+			AND WL_CATAG = #{detailSearch.wl_catag}
+			</if>	
+				
+			</trim>
+	</sql>
+
+<!-- 	내 일일업무일지 수 -->
+	<select id="selectWorkLogCountday" resultType="int" parameterType="PagingVO">
+		SELECT COUNT(*)
+		FROM (SELECT *
+			FROM WORKLOG A
+			<include refid="searchFrag" />
+			AND WL_TEAM IS NULL
+	       )A
+	</select>
+<!-- 팀 업무일지 수 -->
+	<select id="selectWorkLogCountteam" resultType="int" parameterType="PagingVO">
+		SELECT COUNT(*)
+		FROM (SELECT *
+			FROM WORKLOG A
+			<include refid="searchFrag" />
+			AND WL_TEAM = 'Y'
+	       )A
+	</select>
+
+	
+<!-- 	내 일일업무일지 목록 -->
+	<select id="selectWorkLogListday" resultType="WorkLogVO" parameterType="PagingVO">
+		SELECT D.*
+		FROM (SELECT ROWNUM RNUM, C.*
+				FROM (SELECT A.WL_CODE, A.WL_CATAG, B.EMP_KOR EMP_CODE, C.TEAM_NAME TEAM_CODE, A.WL_TITLE, TO_CHAR(WL_DATE, 'YYYY-MM-DD') WL_DATE,
+	   		   		 		 A.WL_CONTENT, DECODE(WL_SHARE,NULL, '미공유','공유') WL_SHARE, A.WL_DEL, A.WL_REPORT, A.WL_TEAM
+			     		FROM WORKLOG A INNER JOIN EMPLOYEE B ON (A. EMP_CODE = B.EMP_CODE)
+			     					   INNER JOIN TEAM C ON(A.TEAM_CODE = C.TEAM_CODE)
+			 	<include refid="searchFrag" />
+			 	AND WL_TEAM IS NULL
+			 	ORDER BY A.WL_DATE DESC ) C ) D
+		  WHERE D.RNUM BETWEEN #{startRow} AND #{endRow}
+	</select>
+<!-- 팀 업무일지 목록 -->
+	<select id="selectWorkLogListteam" resultType="WorkLogVO" parameterType="PagingVO">
+		SELECT D.*
+		FROM (SELECT ROWNUM RNUM, C.*
+				FROM (SELECT A.WL_CODE, A.WL_CATAG, B.EMP_KOR EMP_CODE, C.TEAM_NAME TEAM_CODE, A.WL_TITLE, TO_CHAR(WL_DATE, 'YYYY-MM-DD') WL_DATE,
+	   		   		 		 A.WL_CONTENT, DECODE(WL_SHARE,NULL, '미공유','공유') WL_SHARE, A.WL_DEL, A.WL_REPORT, A.WL_TEAM
+			     		FROM WORKLOG A INNER JOIN EMPLOYEE B ON (A. EMP_CODE = B.EMP_CODE)
+			     					   INNER JOIN TEAM C ON(A.TEAM_CODE = C.TEAM_CODE)
+			 <include refid="searchFrag" />
+			 	AND A.WL_TEAM = 'Y'
+			 	ORDER BY A.WL_DATE DESC
+				) C ) D
+		  WHERE D.RNUM BETWEEN #{startRow} AND #{endRow}
+<!-- 		  ORDER BY D.RNUM DESC -->
+	</select>
+	
+	
+<!-- 	일일업무일지 상세보기 -->
+	<resultMap type="WorkLogVO" id="worklogMap" autoMapping="true">
+		<id property="wl_code" column="WL_CODE"/>
+		<collection property="attatchList" javaType="java.util.List" ofType="WorkLog_AttatchVO" autoMapping="true" />
+	</resultMap>
+	<select id="selectWorkLogday" parameterType="WorkLogVO" resultMap="worklogMap">
+<!-- 		SELECT  -->
+<!-- 	        A.WL_CODE WL_CODE, WL_CATAG, C.EMP_KOR EMP_CODE, E.TEAM_NAME TEAM_CODE, A.WL_TITLE, TO_CHAR(A.WL_DATE, 'YYYY-MM-DD') WL_DATE, A.WL_CONTENT, NVL(A.WL_SHARE, '미공유') WL_SHARE, -->
+<!-- 			    A.WL_DEL, A.WL_REPORT, A.WL_TEAM -->
+<!-- 			   , B.WL_ATTCODE, B.FILE_PATH, B.FILE_SIZE, B.ORG_NAME, B.SAVE_NAME -->
+<!-- 			   , F.DEPT_NAME AS DEPT_CODE -->
+<!-- 	    FROM WORKLOG A LEFT OUTER JOIN WORKLOG_ATTATCH B ON(A.WL_CODE = B.WL_CODE) -->
+<!-- 	                        INNER JOIN EMPLOYEE C ON(A.EMP_CODE = C.EMP_CODE) -->
+<!-- 	                        INNER JOIN STANDARD D ON(A.WL_CATAG = D.STANDARD_CODE) -->
+<!-- 	                        INNER JOIN TEAM E ON(A.TEAM_CODE = E.TEAM_CODE) -->
+<!-- 	                        INNER JOIN DEPARTMENT F ON(E.DEPT_CODE = F.DEPT_CODE) -->
+<!-- 	    WHERE A.WL_CODE = #{wl_code} -->
+<!-- 	    AND A.WL_CATAG = 'WLC100' -->
+	    
+	    
+	    WITH WORK_ATT AS (  
+		  SELECT WL_ATTCODE, F.WL_CODE, FILE_PATH, FILE_SIZE, ORG_NAME, SAVE_NAME
+		    FROM WORKLOG_ATTATCH F RIGHT OUTER JOIN WORKLOG G ON (F.WL_CODE = G.WL_CODE)  
+		),
+		WORK AS(
+		    SELECT A.WL_CODE, A.WL_CATAG, B.EMP_KOR, D.TEAM_NAME TEAM_CODE, A.WL_TITLE, A.EMP_CODE,
+		           TO_CHAR(A.WL_DATE, 'YYYY-MM-DD') WL_DATE, A.WL_CONTENT, A.WL_SHARE, A.WL_DEL,  A.WL_REPORT, A.WL_TEAM
+		      FROM WORKLOG A INNER JOIN EMPLOYEE B ON(A.EMP_CODE = B.EMP_CODE) 
+		                     INNER JOIN STANDARD C ON(A.WL_CATAG = C.STANDARD_CODE) 
+		                     INNER JOIN TEAM D ON(A.TEAM_CODE = D.TEAM_CODE) 
+		                     INNER JOIN DEPARTMENT E ON(D.DEPT_CODE = E.DEPT_CODE)
+		)
+		,WORKLOGATT AS (
+			SELECT ROWNUM, A.*
+			FROM(SELECT C.EMP_CODE, C.EMP_ATTCODE, B.EMP_KOR, C.IMG_CATAG
+			       FROM WORKLOG A INNER JOIN EMPLOYEE B ON (A.EMP_CODE = B.EMP_CODE)
+			                          LEFT OUTER JOIN IMAGE_ATTATCH C ON (B.EMP_CODE = C.EMP_CODE)
+			      where img_catag IN('IMG100', 'IMG200') 
+			        AND WL_CODE = #{wl_code}
+			      ORDER BY IMG_CATAG) A
+			WHERE ROWNUM = 1
+		)
+		SELECT Z.*, Y.*, X.EMP_ATTCODE
+		FROM WORK Z LEFT OUTER JOIN WORK_ATT Y ON (Z.WL_CODE = Y.WL_CODE)
+		            LEFT OUTER JOIN WORKLOGATT X ON(Z.EMP_CODE = X.EMP_CODE)
+        	WHERE Z.WL_CODE = #{wl_code}
+		  AND Z.WL_CATAG = #{wl_catag}
+	    
+	</select>
+	
+	<select id="selectAttList" parameterType="String" resultType="WorkLog_AttatchVO">
+		select *
+		 from worklog_attatch
+		where wl_code = #{wl_code} 
+	</select>
+	
+	
+<!-- 	주간업무일지 상세보기 -->
+	<select id="selectWorkLogweek" parameterType="WorkLogVO" resultMap="worklogMap">
+<!-- 		SELECT  -->
+<!-- 	        A.WL_CODE WL_CODE, WL_CATAG, C.EMP_KOR EMP_CODE, E.TEAM_NAME TEAM_CODE, A.WL_TITLE, TO_CHAR(A.WL_DATE, 'YYYY-MM-DD') WL_DATE, A.WL_CONTENT, NVL(A.WL_SHARE, '미공유') WL_SHARE, -->
+<!-- 			    A.WL_DEL, A.WL_REPORT, A.WL_TEAM -->
+<!-- 			   , B.WL_ATTCODE, B.WL_CODE, B.FILE_PATH, B.FILE_SIZE, B.ORG_NAME, B.SAVE_NAME -->
+<!-- 			   , F.DEPT_NAME AS DEPT_CODE -->
+<!-- 	    FROM WORKLOG A LEFT OUTER JOIN WORKLOG_ATTATCH B ON(A.WL_CODE = B.WL_CODE) -->
+<!-- 	                        INNER JOIN EMPLOYEE C ON(A.EMP_CODE = C.EMP_CODE) -->
+<!-- 	                        INNER JOIN STANDARD D ON(A.WL_CATAG = D.STANDARD_CODE) -->
+<!-- 	                        INNER JOIN TEAM E ON(A.TEAM_CODE = E.TEAM_CODE) -->
+<!-- 	                        INNER JOIN DEPARTMENT F ON(E.DEPT_CODE = F.DEPT_CODE) -->
+<!-- 	    WHERE A.WL_CODE = #{wl_code} -->
+<!-- 	    AND A.WL_CATAG = 'WLC200' -->
+	    
+	    
+<!-- 	    WITH WORK_ATT AS (   -->
+<!-- 		  SELECT WL_ATTCODE, F.WL_CODE, FILE_PATH, FILE_SIZE, ORG_NAME, SAVE_NAME -->
+<!-- 		    FROM WORKLOG_ATTATCH F RIGHT OUTER JOIN WORKLOG G ON (F.WL_CODE = G.WL_CODE)   -->
+<!-- 		), -->
+<!-- 		WORK AS( -->
+<!-- 		    SELECT A.WL_CODE, A.WL_CATAG, B.EMP_KOR EMP_CODE, D.TEAM_NAME TEAM_CODE, A.WL_TITLE, -->
+<!-- 		           A.WL_DATE, A.WL_CONTENT, A.WL_SHARE, A.WL_DEL,  A.WL_REPORT, A.WL_TEAM -->
+<!-- 		      FROM WORKLOG A INNER JOIN EMPLOYEE B ON(A.EMP_CODE = B.EMP_CODE)  -->
+<!-- 		                     INNER JOIN STANDARD C ON(A.WL_CATAG = C.STANDARD_CODE)  -->
+<!-- 		                     INNER JOIN TEAM D ON(A.TEAM_CODE = D.TEAM_CODE)  -->
+<!-- 		                     INNER JOIN DEPARTMENT E ON(D.DEPT_CODE = E.DEPT_CODE) -->
+<!-- 		) -->
+<!-- 		SELECT Z.*, Y.* -->
+<!-- 		FROM WORK Z LEFT OUTER JOIN WORK_ATT Y ON (Z.WL_CODE = Y.WL_CODE) -->
+<!-- 		WHERE Z.WL_CODE = #{wl_code} -->
+<!-- 		  AND Z.WL_CATAG = 'WLC200' -->
+	</select>
+<!-- 팀 업무일지 상세보기 -->
+	<select id="selectWorkLogteam" parameterType="String" resultMap="worklogMap">
+<!-- 		SELECT  -->
+<!-- 		    A.WL_CODE WL_CODE, WL_CATAG, C.EMP_KOR EMP_CODE, E.TEAM_NAME TEAM_CODE, A.WL_TITLE, TO_CHAR(A.WL_DATE, 'YYYY-MM-DD') WL_DATE, A.WL_CONTENT, NVL(A.WL_SHARE, '미공유') WL_SHARE, -->
+<!-- 		        A.WL_DEL, A.WL_REPORT, A.WL_TEAM -->
+<!-- 		       , B.WL_ATTCODE, B.WL_CODE, B.FILE_PATH, B.FILE_SIZE, B.ORG_NAME, B.SAVE_NAME -->
+<!-- 		       , F.DEPT_NAME AS DEPT_CODE -->
+<!-- 		FROM WORKLOG A LEFT OUTER JOIN WORKLOG_ATTATCH B ON(A.WL_CODE = B.WL_CODE) -->
+<!-- 		                    INNER JOIN EMPLOYEE C ON(A.EMP_CODE = C.EMP_CODE) -->
+<!-- 		                    INNER JOIN STANDARD D ON(A.WL_CATAG = D.STANDARD_CODE) -->
+<!-- 		                    INNER JOIN TEAM E ON(A.TEAM_CODE = E.TEAM_CODE) -->
+<!-- 		                    INNER JOIN DEPARTMENT F ON(E.DEPT_CODE = F.DEPT_CODE) -->
+<!-- 		WHERE A.WL_CODE = #{wl_code} -->
+<!-- 		AND A.WL_TEAM = 'Y' -->
+		WITH WORK_ATT AS (  
+		  SELECT WL_ATTCODE, F.WL_CODE, FILE_PATH, FILE_SIZE, ORG_NAME, SAVE_NAME
+		    FROM WORKLOG_ATTATCH F RIGHT OUTER JOIN WORKLOG G ON (F.WL_CODE = G.WL_CODE)  
+		),
+		WORK AS(
+		    SELECT A.WL_CODE, A.WL_CATAG, A.EMP_CODE, D.TEAM_NAME TEAM_CODE, A.WL_TITLE,
+		           A.WL_DATE, A.WL_CONTENT, A.WL_SHARE, A.WL_DEL,  A.WL_REPORT, A.WL_TEAM
+		      FROM WORKLOG A INNER JOIN EMPLOYEE B ON(A.EMP_CODE = B.EMP_CODE) 
+		                     INNER JOIN STANDARD C ON(A.WL_CATAG = C.STANDARD_CODE) 
+		                     INNER JOIN TEAM D ON(A.TEAM_CODE = D.TEAM_CODE) 
+		                     INNER JOIN DEPARTMENT E ON(D.DEPT_CODE = E.DEPT_CODE)
+		)
+		,WORKLOGATT AS (
+			SELECT ROWNUM, A.*
+			FROM(SELECT C.EMP_CODE, C.EMP_ATTCODE, B.EMP_KOR, C.IMG_CATAG
+			       FROM WORKLOG A INNER JOIN EMPLOYEE B ON (A.EMP_CODE = B.EMP_CODE)
+			                          LEFT OUTER JOIN IMAGE_ATTATCH C ON (B.EMP_CODE = C.EMP_CODE)
+			      where img_catag IN('IMG100', 'IMG200') 
+			        AND WL_CODE = #{wl_code}
+			      ORDER BY IMG_CATAG) A
+			WHERE ROWNUM = 1
+		)
+		SELECT Z.*, Y.*, X.EMP_ATTCODE, x.emp_kor
+		FROM WORK Z LEFT OUTER JOIN WORK_ATT Y ON (Z.WL_CODE = Y.WL_CODE)
+				    LEFT OUTER JOIN WORKLOGATT X ON(Z.EMP_CODE = X.EMP_CODE)
+		WHERE Z.WL_CODE =  #{wl_code}
+		  AND Z.WL_TEAM = 'Y'
+		
+		
+	</select>
+	
+	
+	<!-- 업무일지 등록 -->
+	<insert id="insertWorkLogday" parameterType="WorkLogVO">
+		<selectKey resultType="String" keyProperty="wl_code" order="BEFORE">
+			SELECT 'WO' || LPAD(NVL(TO_NUMBER(SUBSTR(MAX(WL_CODE), 3)), 0)+1, 3, '0') 
+			FROM WORKLOG
+		</selectKey>
+		INSERT INTO WORKLOG (
+		    WL_CODE, WL_CATAG, EMP_CODE, TEAM_CODE, WL_TITLE,
+		    WL_DATE, WL_CONTENT, WL_SHARE, WL_DEL, WL_REPORT, WL_TEAM
+		) VALUES (
+		   #{wl_code}, #{wl_catag,jdbcType=VARCHAR}, #{emp_code,jdbcType=VARCHAR}, #{team_code,jdbcType=VARCHAR}
+		   , #{wl_title,jdbcType=VARCHAR}, #{wl_date,jdbcType=VARCHAR}, #{wl_content,jdbcType=CLOB}, #{wl_share,jdbcType=VARCHAR}
+		   , #{wl_del,jdbcType=VARCHAR}, #{wl_report,jdbcType=VARCHAR}, #{wl_team,jdbcType=VARCHAR}
+		)
+	</insert>
+	
+	<!-- 팀 업무일지 등록 -->
+	<insert id="insertWorkLogteam" parameterType="WorkLogVO">
+		<selectKey resultType="String" keyProperty="wl_code" order="BEFORE">
+			SELECT 'WO' || LPAD(NVL(TO_NUMBER(SUBSTR(MAX(WL_CODE), 3)), 0)+1, 3, '0') 
+			FROM WORKLOG
+		</selectKey>
+		INSERT INTO WORKLOG (
+		    WL_CODE, WL_CATAG, EMP_CODE, TEAM_CODE, WL_TITLE,
+		    WL_DATE, WL_CONTENT, WL_SHARE, WL_DEL, WL_REPORT, WL_TEAM
+		) VALUES (
+		   #{wl_code}, 'WLC200', #{emp_code,jdbcType=VARCHAR}, #{team_code,jdbcType=VARCHAR}
+		   , #{wl_title,jdbcType=VARCHAR}, #{wl_date,jdbcType=VARCHAR}, #{wl_content,jdbcType=CLOB}, #{wl_share,jdbcType=VARCHAR}
+		   , #{wl_del,jdbcType=VARCHAR}, #{wl_report,jdbcType=VARCHAR}, 'Y'
+		)
+	</insert>
+	
+	<!-- 업무일지 수정 -->
+	<update id="updateWorkLogday" parameterType="WorkLogVO">
+		UPDATE WORKLOG
+		   SET
+		    WL_CATAG = #{wl_catag, jdbcType=VARCHAR},
+		    TEAM_CODE = #{team_code, jdbcType=VARCHAR},
+		    WL_TITLE = #{wl_title, jdbcType=VARCHAR},
+		    WL_DATE = #{wl_date, jdbcType=DATE},
+		    WL_CONTENT = #{wl_content, jdbcType=CLOB},
+		    WL_SHARE = #{wl_share, jdbcType=VARCHAR}
+		WHERE
+		    WL_CODE = #{wl_code}
+	</update>
+	
+	<!-- 업무일지 삭제 -->
+	<update id="deleteWorkLogday" parameterType="String">
+		UPDATE WORKLOG
+		SET WL_DEL = 'Y'
+		WHERE WL_CODE = #{wl_code}
+	</update>
+	
+	<!-- 일지 복구 -->
+	<update id="backWorkLogtrash" parameterType="WorkLogVO">
+		UPDATE WORKLOG
+		SET WL_DEL = NULL
+		WHERE WL_CODE = #{wl_code}
+	</update>
+	
+	<!-- 일지 영구삭제 -->
+	<delete id="deleteWorkLogtrash" parameterType="String">
+		DELETE FROM WORKLOG
+		WHERE WL_CODE = #{wl_code}
+	</delete>
+
+</mapper>

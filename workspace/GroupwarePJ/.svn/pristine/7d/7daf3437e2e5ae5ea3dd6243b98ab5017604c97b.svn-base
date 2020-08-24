@@ -1,0 +1,31 @@
+package kr.or.ddit.vo;
+
+import lombok.Data;
+import lombok.ToString;
+
+/**
+ * @author �ۼ��ڸ�
+ * @since 2020. 6. 29
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[�����̷�(Modification Information)]]
+ * ������                          ������               ��������
+ * --------     --------    ----------------------
+ * 2020. 6. 29      �ڼ���       �����ۼ�
+ * Copyright (c) 2020 by DDIT All right reserved
+ * </pre>
+ */
+@Data
+@ToString
+public class FormVO {//���
+
+	private int rnum;
+	private String form_code;
+	private String fc_code;
+	private String form_name;
+	private String form_content;
+	
+	private String fc_name;
+	
+}

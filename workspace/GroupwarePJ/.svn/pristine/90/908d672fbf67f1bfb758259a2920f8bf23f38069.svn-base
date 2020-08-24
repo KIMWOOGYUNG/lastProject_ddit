@@ -1,0 +1,59 @@
+<!-- <?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.work.dao.IPublicWorkLogDAO">
+	<sql id="searchFrag">
+		<where>
+			<if test="searchVO!=null and @org.apache.commons.lang3.StringUtils@isNotBlank(searchVO.searchWord)">
+				WL_DATE = TO_DATE(#{searchVO.searchWord}, 'YYYY.MM.DD')
+			</if>
+		</where>
+	</sql>
+
+	<select id="selectWorkLogCountday" resultType="int" parameterType="PagingVO">
+		SELECT COUNT(*)
+		FROM (SELECT *
+			FROM WORKLOG
+	        WHERE WL_CATAG = 'WLC100'
+	        AND WL_SHARE = 'Y')A
+        <include refid="searchFrag" />
+	</select>
+	<select id="selectWorkLogCountweek" resultType="int" parameterType="PagingVO">
+		SELECT COUNT(*)
+		FROM (SELECT *
+			FROM WORKLOG
+	        WHERE WL_CATAG = 'WLC200'
+	        AND WL_SHARE = 'Y')A
+        <include refid="searchFrag" />
+	</select>
+	
+	
+	<select id="selectWorkLogListday" resultType="WorkLogVO" parameterType="PagingVO">
+		SELECT D.*
+		FROM (SELECT ROWNUM RNUM, C.*
+				FROM (SELECT A.WL_CODE, A.WL_CATAG, B.EMP_KOR EMP_CODE, A.TEAM_CODE, A.WL_TITLE, to_char(WL_DATE, 'YYYY.MM.DD') WL_DATE,
+	   		   		 	A.WL_CONTENT, NVL(WL_SHARE, '미공유') WL_SHARE, A.WL_DEL, A.WL_REPORT, A.WL_TEAM
+			     		FROM WORKLOG A INNER JOIN EMPLOYEE B ON (A. EMP_CODE = B.EMP_CODE)
+				WHERE WL_CATAG = 'WLC100'
+				AND WL_SHARE = 'Y') C
+		<include refid="searchFrag" />) D 
+		<![CDATA[
+		  WHERE D.RNUM >= #{startRow} AND D.RNUM <= #{endRow}
+		]]>
+	</select>
+	<select id="selectWorkLogListweek" resultType="WorkLogVO" parameterType="PagingVO">
+		SELECT D.*
+		FROM (SELECT ROWNUM RNUM, C.*
+				FROM (SELECT A.WL_CODE, A.WL_CATAG, B.EMP_KOR EMP_CODE, A.TEAM_CODE, A.WL_TITLE, to_char(WL_DATE, 'YYYY.MM.DD') WL_DATE,
+	   		   		 	A.WL_CONTENT, NVL(WL_SHARE, '미공유') WL_SHARE, A.WL_DEL, A.WL_REPORT, A.WL_TEAM
+			     		FROM WORKLOG A INNER JOIN EMPLOYEE B ON (A. EMP_CODE = B.EMP_CODE)
+				WHERE WL_CATAG = 'WLC200'
+				AND WL_SHARE = 'Y') C
+		<include refid="searchFrag" />) D 
+		<![CDATA[
+		  WHERE D.RNUM >= #{startRow} AND D.RNUM <= #{endRow}
+		]]>
+	</select>
+	
+	
+
+</mapper> -->

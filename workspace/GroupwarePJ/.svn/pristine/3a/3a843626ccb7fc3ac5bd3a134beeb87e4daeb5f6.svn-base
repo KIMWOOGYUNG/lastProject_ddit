@@ -1,0 +1,17 @@
+package kr.or.ddit.message.service;
+
+public interface IMessageService {
+
+/**
+ *  쪽지 쓰기 
+ */
+	
+	
+	
+	
+	
+	
+	
+	
+	
+}

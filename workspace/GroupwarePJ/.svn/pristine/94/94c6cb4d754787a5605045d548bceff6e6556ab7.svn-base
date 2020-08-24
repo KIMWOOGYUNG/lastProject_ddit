@@ -1,0 +1,46 @@
+package kr.or.ddit.project.controller;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import kr.or.ddit.hr_admin.service.IAdminDepartService;
+import kr.or.ddit.project.dao.IPJStandardDAO;
+import kr.or.ddit.project.service.IProjectListService;
+import kr.or.ddit.vo.ProjectVO;
+
+@Controller
+public class ProjectFormController {
+	
+	@Inject
+	IProjectListService service;
+	@Inject
+	IAdminDepartService deptService;
+	@Inject
+	IPJStandardDAO stdDao;
+	
+	private void attibuteSetting(Model model){
+		model.addAttribute("deptList", deptService.selectDeptList());
+		model.addAttribute("impList", stdDao.selectImportant());
+		model.addAttribute("sttList", stdDao.selectStatus());
+		model.addAttribute("tskList", stdDao.selectTaskType());
+	}
+	
+	
+	@GetMapping("/project/newProject")
+	public String newProject(Model model) {
+		attibuteSetting(model);
+		return "newProject.project";
+	}
+	
+	@GetMapping("/project/editProject")
+	public String editProject(@RequestParam String project_code, Model model) {
+		attibuteSetting(model);
+		ProjectVO vo = service.selectProject(project_code);
+		model.addAttribute("project", vo);
+		return "newProject.project";
+	}
+}

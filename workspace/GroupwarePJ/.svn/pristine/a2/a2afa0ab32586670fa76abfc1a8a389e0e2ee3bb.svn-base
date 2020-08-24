@@ -1,0 +1,40 @@
+package kr.or.ddit.schedule.service;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import kr.or.ddit.schedule.dao.Com_IScheduleDAO;
+import kr.or.ddit.vo.Com_ScheduleVO;
+import kr.or.ddit.vo.PagingVO;
+
+public class Com_ScheduleServiceImpl implements Com_IScheduleService {
+
+	@Inject
+	Com_IScheduleDAO comscheduleDAO;
+	
+	
+	@Override
+	public List<Com_ScheduleVO> readScheduleList(PagingVO<Com_ScheduleVO> pagingVO) {
+		return comscheduleDAO.selectComScheduleList(pagingVO);
+	}
+
+	@Override
+	public Com_ScheduleVO readSchedule(String cs_code) {
+		Com_ScheduleVO comschedule = comscheduleDAO.selectComSchedule(cs_code);
+		comscheduleDAO.selectComSchedule(cs_code);
+		return comschedule;
+	}
+
+}
+
+
+
+
+
+
+
+
+
+
+

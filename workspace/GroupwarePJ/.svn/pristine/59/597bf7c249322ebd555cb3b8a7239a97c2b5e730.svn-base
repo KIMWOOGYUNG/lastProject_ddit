@@ -1,0 +1,39 @@
+//package kr.or.ddit.community.controller;
+//
+//import org.springframework.stereotype.Controller;
+//import org.springframework.web.bind.annotation.GetMapping;
+//
+//@Controller
+//public class CommunityController {
+//	
+//	@GetMapping("/community/notice")
+//	public String notice() {
+//		String goPage = "Notice.community";
+//		return goPage;
+//	}
+//	
+//	@GetMapping("/community/freeboard")
+//	public String freeboard() {
+//		String goPage = "Freeboard.community";
+//		return goPage;
+//	}
+//	
+//	@GetMapping("/community/internalclub")
+//	public String internalclub() {
+//		String goPage = "Internalclub.community";
+//		return goPage;
+//	}
+//	
+//	@GetMapping("/community/restaurant")
+//	public String restaurant() {
+//		String goPage = "Restaurant.community";
+//		return goPage;
+//	}
+//	
+//	@GetMapping("/community/market")
+//	public String market() {
+//		String goPage = "Market.community";
+//		return goPage;
+//	}
+//	
+//}

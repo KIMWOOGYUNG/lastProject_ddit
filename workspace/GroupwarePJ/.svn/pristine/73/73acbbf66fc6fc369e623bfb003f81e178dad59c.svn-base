@@ -1,0 +1,52 @@
+package kr.or.ddit.work.dao;
+
+import java.util.List;
+
+import org.springframework.stereotype.Repository;
+
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.WorkLogVO;
+
+@Repository
+public interface IMyWorkLogDAO {
+	// 일일업무일지
+	
+	// 일지등록
+	public int insertWorkLogday(WorkLogVO worklogVO);
+	
+	// 일지상세조회
+	public WorkLogVO selectWorkLogday(String wl_code);
+	
+	// 일지 수 조회
+	public int selectWorkLogCountday(PagingVO<WorkLogVO> pagingVO);
+	
+	// 일지목록조회
+	public List<WorkLogVO> selectWorkLogListday(PagingVO<WorkLogVO> pagingVO);
+	
+	// 일지수정
+	public int updateWorkLogday(WorkLogVO worklogVO);
+	
+	// 일지삭제 
+	public int deleteWorkLogday(String wl_code);
+
+//------------------------------------------------------------------------------------------------
+	// 주간업무일지
+	
+	// 일지등록
+	public int insertWorkLogweek(WorkLogVO worklogVO);
+	
+	// 일지상세조회
+	public WorkLogVO selectWorkLogweek(String wl_code);
+	
+	// 일지 수 조회
+	public int selectWorkLogCountweek(PagingVO<WorkLogVO> pagingVO);
+	
+	// 일지목록조회
+	public List<WorkLogVO> selectWorkLogListweek(PagingVO<WorkLogVO> pagingVO);
+	
+	// 일지수정
+	public int updateWorkLogweek(WorkLogVO worklogVO);
+	
+	// 일지삭제 
+	public int deleteWorkLogweek(String wl_code);
+}

@@ -1,0 +1,76 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib uri="http://www.springframework.org/tags" prefix="spring"%>
+
+
+
+<!-- Main Sidebar Container -->
+<aside class="main-sidebar sidebar-dark-primary elevation-4">
+	<!-- Brand Logo -->
+	<a href="index3.html" class="brand-link"> <span
+		class="brand-text font-weight-light">AdminLTE 3</span>
+	</a>
+
+	<!-- Sidebar -->
+	<div class="sidebar">
+		<!-- Sidebar user panel (optional) -->
+		<div class="user-panel mt-3 pb-3 mb-3 d-flex">
+			<div class="image"></div>
+			<div class="info">
+				<a href="#" class="d-block">Alexander Pierce</a>
+			</div>
+		</div>
+
+		<!-- Sidebar Menu -->
+		<nav class="mt-2">
+			<ul class="nav nav-pills nav-sidebar flex-column"
+				data-widget="treeview" role="menu" data-accordion="false">
+				<!-- Add icons to the links using the .nav-icon class
+               with font-awesome or any other icon font library -->
+               
+                   	<!-- 쪽지-->
+		       <li class="nav-item">
+				<a href="#" class="nav-link">
+				<p>- <spring:message code="menu11"/> -</p>
+				</a>
+				</li> 
+               
+
+				
+				<li class="nav-item has-treeview">
+				<a href="${cPath }/note/entirenote" class="nav-link"><!-- 전체쪽지 -->
+				<p><spring:message code="note.sideMenu1"/></p>
+				</a>
+				</li>
+				
+				<li class="nav-item has-treeview">
+				<a href="${cPath }/note/receivenote" class="nav-link"><!-- 수신쪽지 -->
+				<p><spring:message code="note.sideMenu2"/></p>
+				</a>
+				</li>
+				
+				<li class="nav-item has-treeview">
+				<a href="${cPath }/note/sendnote" class="nav-link"><!-- 발신쪽지 -->
+				<p><spring:message code="note.sideMenu3"/></p>
+				</a>
+				</li>
+				
+				<li class="nav-item has-treeview">
+				<a href="${cPath }/note/importantnote" class="nav-link"><!-- 중요보관함 -->
+				<p><spring:message code="note.sideMenu4"/></p>
+				</a>
+				</li>
+				
+				<li class="nav-item has-treeview">
+				<a href="${cPath }/note/deletenote" class="nav-link"><!-- 삭제함 -->
+				<p><spring:message code="note.sideMenu5"/></p>
+				</a>
+				</li>
+			</ul>
+			
+		</nav>
+		<!-- /.sidebar-menu -->
+	</div>
+	<!-- /.sidebar -->
+</aside>

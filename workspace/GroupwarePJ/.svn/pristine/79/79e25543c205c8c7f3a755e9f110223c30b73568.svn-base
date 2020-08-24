@@ -1,0 +1,50 @@
+package kr.or.ddit.login_logout.controller;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpSession;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.login_logout.service.LoginServiceImpl;
+import kr.or.ddit.vo.EmployeeVO;
+
+@Controller
+public class FindPasswordController {
+
+	@Inject
+	LoginServiceImpl service;
+	
+	@GetMapping("/main/findpassword") //화면이동
+    public String findPassword() {
+    	return "main/findPassword";  
+	}
+	
+	@PostMapping("/main/findpassword")
+	public String emailCheck(HttpSession session,
+			@RequestParam(required = false) String emp_code, 
+			@RequestParam(required = false) String emp_mail,
+			EmployeeVO employee) {
+		String goPage= null;
+		String message= null;
+		
+		if(StringUtils.isBlank(emp_code) || StringUtils.isBlank(emp_mail) ) {
+			goPage = "main/findPassword";
+			message = "사원번호,이메일 공란없이 모두 입력해주세요.";
+		}else {
+			employee = service.checkEmpMail(emp_code);
+			String dbMail = employee.getEmp_mail();
+			System.out.println(dbMail);
+			System.out.println(emp_mail);
+			//두개가 같은 경우 해당 email로 인증번호 전송되도록처리하기!
+			goPage = "index.index";
+		}
+			
+			return goPage;
+	}
+	
+}

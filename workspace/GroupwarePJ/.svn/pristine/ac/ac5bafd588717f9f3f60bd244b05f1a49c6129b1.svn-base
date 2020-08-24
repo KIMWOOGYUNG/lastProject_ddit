@@ -1,0 +1,55 @@
+package kr.or.ddit.att_admin.service;
+
+import java.util.List;
+
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.Time_AttendVO;
+
+public interface IAdminAttService {
+	
+	
+/**
+ * 출근 여부를 확인하기 위함	
+ * @param timeAttVO
+ * @return
+ */
+ public Time_AttendVO readEmpAtt(Time_AttendVO timeAttVO);	
+ /**
+  * 퇴근 업데이트 
+  * @param empVO
+  * @return
+  */
+ public ResultState modifyEmpAtt(Time_AttendVO timeAttVO);
+/**
+ * 출근 등록	
+ * @param timeAttVO
+ * @return
+ */
+ public ResultState createEmpAtt(Time_AttendVO timeAttVO);	
+ /**
+  * 회원 IP 상세 조회 
+  * @param emp_code
+  * @return
+  */
+ public EmployeeVO readEmpIp(String emp_code);
+ /**
+  * 검색 조건에 맞는 회원 수 
+  * @param pagingVO
+  * @return
+  */
+ public int readEmpIpCount(PagingVO<EmployeeVO> pagingVO);
+ /**
+  * 검색 조건에 맞는 회원 목록 
+  * @param pagingVO
+  * @return
+  */
+ public List<EmployeeVO> readEmpIpList(PagingVO<EmployeeVO> pagingVO);
+ /**
+  * 회원 IP 수정 
+  * @param empVO
+  * @return
+  */
+ public ResultState modifyEmpIp(EmployeeVO empVO);
+}

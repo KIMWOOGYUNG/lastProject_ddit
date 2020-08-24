@@ -1,0 +1,45 @@
+package kr.or.ddit.vo;
+
+import java.util.List;
+
+import lombok.Data;
+import lombok.ToString;
+
+/**
+ * @author �ۼ��ڸ�
+ * @since 2020. 6. 29
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[�����̷�(Modification Information)]]
+ * ������                          ������               ��������
+ * --------     --------    ----------------------
+ * 2020. 6. 29      �ڼ���       �����ۼ�
+ * Copyright (c) 2020 by DDIT All right reserved
+ * </pre>
+ */
+@Data
+@ToString
+public class TaskVO {//�ϰ�
+	
+	private String rnum;
+	private String task_code;
+	private String task_name;
+	private String task_type;
+	private String task_stat;
+	private String task_important;
+	private String pj_memcode;
+	private String task_title;
+	private String task_change;
+	private String task_start;
+	private String task_end;
+	private Integer task_progress;
+
+	List<Task_AttVO> task_attList;
+	
+	private String project_code;	//detailSearch
+	private String emp_code_task;	//detailSearch
+	
+	private String emp_kor;
+	private String project_name;
+}

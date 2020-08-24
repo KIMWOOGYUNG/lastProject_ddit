@@ -1,0 +1,44 @@
+package kr.or.ddit.message.service;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.message.dao.ReceiveMessageDAO;
+import kr.or.ddit.vo.MessageVO;
+import kr.or.ddit.vo.PagingVO;
+@Service
+public class ReceiveMsgServiceImpl implements IReceiveMsgService {
+
+	@Inject
+	ReceiveMessageDAO dao;
+	
+	@Override
+	public ResultState createMsg(MessageVO msg) {
+		return null;
+	}
+
+	@Override//검색조건에 맞는 쪽지 조회
+	public List<MessageVO> selectMsgList(PagingVO<MessageVO> pagingVO) {
+		return dao.selectMsgList(pagingVO);
+	}
+
+	@Override//쪽지 리스트 출력(상세보기)
+	public MessageVO selectmsg(String emp_receive) {
+		return dao.selectMsg(emp_receive);
+	}
+
+	@Override//쪽지수 읽어오기 
+	public int selectmsgCounts(PagingVO<MessageVO> pagingVO) {
+		return dao.selectMsgCounts(pagingVO);
+	}
+
+	@Override
+	public ResultState removemsg(MessageVO msg) {
+		return null;
+	}
+
+}

@@ -1,0 +1,68 @@
+package kr.or.ddit.project.dao;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.PJ_MemberVO;
+import kr.or.ddit.vo.PJ_RgroupVO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.ProjectVO;
+import kr.or.ddit.vo.Project_roleVO;
+import kr.or.ddit.vo.TaskVO;
+
+@Repository
+public interface IProjectListDAO {
+	
+//프로젝트 추가---------------------------------------------------------------------------------
+
+	public int insertProject(ProjectVO project);	//새 프로젝트 추가
+	public List<Project_roleVO>selectRoleList();	//역할 조회
+	
+	public int selectPRG_PK();	//구성원 추가를 위해 구성원 기본키 조회
+	public int insertPJ_Rgroup(PJ_RgroupVO rgroup);	//구성원 추가
+	
+//팀 멤버 관리----------------------------------------------------------------------------------
+	
+	public List<PJ_RgroupVO>selectPJ_Rgroup(String project_code);	//프로젝트의 역할 구성 조회
+	
+	public int selectEmpCount(PagingVO<EmployeeVO> pagingVO);	//사원 수
+	public List<EmployeeVO>selectEmpList(PagingVO<EmployeeVO> pagingVO);	//멤버로 추가하기 위해 사원 리스트 조회
+	
+	public int insertPJ_Member(PJ_MemberVO pjMember);	//멤버 추가
+	public int memExist(PJ_MemberVO pj_member);				//기존 멤버인지 확인
+	public int reinsertPJ_Member(PJ_MemberVO pj_member);	//제외되었던 멤버가 다시 추가될 경우
+	public String selectPJ_MemCode(PJ_MemberVO pj_member);	//삭제할 멤버의 pj_memcode 조회
+	public int outPJ_Member(String pj_memcode);	//멤버 제외
+	
+//프로젝트 목록 조회------------------------------------------------------------------------------
+	
+	public int selectProjectCount(PagingVO<ProjectVO> pagingVO);	//프로젝트의 개수 구하기
+	public List<ProjectVO> selectProjectList(PagingVO<ProjectVO> pagingVO);	//프로젝트 목록 조회
+	public int selectPJProgress(String project_code);	//프로젝트 진척도 조회
+	
+//프로젝트 상세 조회------------------------------------------------------------------------------
+
+	public ProjectVO selectProject(String project_code);	//해당 프로젝트 상세 조회
+	public int selectTMProgress(String pj_memcode);	//멤버별 진척도 조회
+	public List<Map<String, String>> selectMonthlyProgress(String project_code); //월별 진척도 차트
+	public List<TaskVO> selectRecentTaskList(String project_code);	//프로젝트의 최근 일감 조회
+	
+//프로젝트 수정---------------------------------------------------------------------------------
+
+	public int updateProject(ProjectVO project);	//프로젝트 수정
+	public String selectPJ_Member(Map<String,String> map);	//팀멤버 조회
+	public int deletePJ_Rgroup(Map<String,String> map);	//구성원 삭제
+	
+//프로젝트 삭제---------------------------------------------------------------------------------
+
+	public int deleteProject(String project_code);	//프로젝트 삭제
+
+//사원의 프로젝트 목록-----------------------------------------------------------------------------
+	
+	public List<ProjectVO> selectProjectListForTask(String emp_code);	//일감 등록시 사원의 프로젝트 목록 조회
+
+	
+}

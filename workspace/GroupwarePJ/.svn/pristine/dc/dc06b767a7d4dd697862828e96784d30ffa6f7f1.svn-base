@@ -1,0 +1,111 @@
+package kr.or.ddit.att_admin.controller;
+
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PostMapping;
+
+import kr.or.ddit.att_admin.service.IAdminAttService;
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.vo.Com_PolicyVO;
+import kr.or.ddit.vo.Com_WorkStdVO;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.Time_AttendVO;
+
+@Controller
+public class AttCheckController {
+	
+	@Inject
+	IAdminAttService service;
+	
+	//접속 IP 가져오기 
+	private String getIp(HttpServletRequest request) {
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip == null) {
+            ip = request.getHeader("Proxy-Client-IP");
+        }
+        if (ip == null) {
+            ip = request.getHeader("WL-Proxy-Client-IP"); // 웹로직
+        }
+        if (ip == null) {
+            ip = request.getHeader("HTTP_CLIENT_IP");
+        }
+        if (ip == null) {
+            ip = request.getHeader("HTTP_X_FORWARDED_FOR");
+        }
+        if (ip == null) {
+            ip = request.getRemoteAddr();
+        }
+        return ip;
+    }
+
+
+	//메인의 출퇴근 체크 
+	 @PostMapping(value="/attCheck.do" ,produces = "application/text; charset=utf8")
+	 @ResponseBody //이걸 써야 브라우저가 알아먹을 수 있는 데이터로 보내줌, 스트링도 마찬가지
+	 public String attCheck(HttpSession session, 
+			 @RequestParam String cws_code, String checkTime, HttpServletRequest request)  {
+		 //세션에서 emp_code랑 이름 구하기
+		 EmployeeVO employeeVO =(EmployeeVO) session.getAttribute("authUser");
+		 String emp_code = employeeVO.getEmp_code();
+		 String emp_kor = employeeVO.getEmp_kor();
+		 
+		 //출퇴근 체크 가능한 IP인지 확인, 불가할 경우 출퇴근체크가 불가능한 IP로 접속하셨습니다 return
+	 	 String userIp = getIp(request);
+	     String dbIP = employeeVO.getEmp_ip();
+	 	 String dbIP2 = employeeVO.getEmp_ip2();
+	 	 if(!userIp.equals(dbIP) && !userIp.equals(dbIP2)) {
+	 		 //IP두개중 어느거와도 같지않을때
+	 		 return "출퇴근체크가 불가능한 IP로 접속하셨습니다";
+	 	 }else {
+		 	 //회사정책에서 출퇴근시간 가져오기
+		 	 Com_PolicyVO policyVO = service.readComPolicy();
+		 	 String tempcomTime =policyVO.getCome_time().replace(":", ""); //0900
+			 String leaveTime = policyVO.getLeave_time().replace(":", ""); //1800
+			 int comTime = Integer.parseInt(tempcomTime);
+			 int chTime = Integer.parseInt(checkTime);
+		 	 //에이작스로 받은 cws_code(ex.20200701)VO에 담아주기 
+			 Time_AttendVO timeAttVO = new Time_AttendVO();
+			 timeAttVO.setEmp_code(emp_code);
+			 timeAttVO.setCws_code(cws_code);
+			 //출근체크 여부를 확인하기 위해 select문으로 먼저 보냄 
+			 Time_AttendVO attVO = service.readEmpAtt(timeAttVO);
+			 if(attVO==null) { //출근일때
+				 // 들어온 cws_code로 CWS_CATAG 확인해서 CWS100(정상출근일)이 아닌 경우에는 TA_CATAG_CODE 변경금지!
+				 Com_WorkStdVO comVO = service.readComStandard(cws_code);
+				 String cwsCatag = comVO.getCws_catag();
+				 	if("CWS100".equals(cwsCatag)) { // 회사 근무기준일 CWS_CATAG가 CWS100(정상출근일)인경우에
+				 		if(comTime<chTime) { //지각임 ㅠㅠ 
+				 		    timeAttVO.setTa_catag_code("TC002");
+				 		}else if(comTime >=chTime) { //정상출근 
+				 			timeAttVO.setTa_catag_code("TC001");
+				 		}
+				 	}
+				 // 휴가 승인 날 때, 사원의 Time_attend TA_CATAG_CODE TC003(휴가)도 같이 처리되어야함
+				
+				 	
+				 	
+				 // 휴무일 등록 될때 모든 사원의 TA_CATAG_CODE는 TC004(휴무)로 등록되어야함
+				 /* 결근: 회사 근무기준일 CWS_CATAG가 CWS100(정상출근일)인데 출근이 안찍혀있다 
+				   TA_CATAG_CODE 결근(TC005)처리 -> 언제? 보여주는 페이지에서 처리하면될듯. 
+				 */
+				 service.createEmpAtt(timeAttVO);
+				 return emp_kor +"님 출근처리 되었습니다.";
+			 }else { //퇴근일때
+				 ResultState result = service.modifyEmpAtt(timeAttVO);
+				 if(result.equals(ResultState.OK)){
+					 return emp_kor +"님 퇴근처리 되었습니다.";
+				 }
+			 }
+			 return emp_kor+"님 출/퇴근처리 되었습니다.";
+	 }
+	 	 
+	 	 
+	 }
+
+}

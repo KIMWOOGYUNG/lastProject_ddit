@@ -1,0 +1,51 @@
+package kr.or.ddit.project.service;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+
+import kr.or.ddit.project.dao.IMyProjectListDAO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.ProjectVO;
+
+@Service
+public class MyProjectListServiceImpl implements IMyProjectListService {
+	@Inject
+	IMyProjectListDAO projectDAO;
+	
+	@Override
+	public int insertProject(ProjectVO project) {
+		return 0;
+	}
+
+	@Override
+	public int selectProjectCount(PagingVO<ProjectVO> pagingVO) {
+		return projectDAO.selectProjectCount(pagingVO);
+	}
+
+	@Override
+	public List<ProjectVO> selectProjectList(PagingVO<ProjectVO> pagingVO) {
+		return projectDAO.selectProjectList(pagingVO);
+	}
+
+	@Override
+	public ProjectVO selectProject(int project_code) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public int updateProject(ProjectVO project) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int deleteProject(ProjectVO project) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+}

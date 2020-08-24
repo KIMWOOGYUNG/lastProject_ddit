@@ -1,0 +1,22 @@
+package kr.or.ddit.hr_admin.dao;
+
+import java.util.List;
+
+import org.springframework.stereotype.Repository;
+
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.PagingVO;
+
+@Repository
+public interface IAdminEmployDAO {
+	public List<EmployeeVO> selectEmpmanageList(PagingVO<EmployeeVO>pagingVO);
+	
+	public EmployeeVO selectEmpmanage(String emp_code);
+	
+	public int selectEmpmanageCount(PagingVO<EmployeeVO> pagingVO);
+	
+	public int insertEmp(EmployeeVO employee);
+	
+	public int deleteEmp(String emp_code);
+	
+}

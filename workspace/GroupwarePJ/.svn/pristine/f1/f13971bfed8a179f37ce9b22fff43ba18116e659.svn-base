@@ -1,0 +1,201 @@
+//package kr.or.ddit.faceidentify;
+//
+//import java.io.IOException;
+//import java.net.URI;
+//import java.util.Map;
+//
+//import org.apache.http.HttpEntity;
+//import org.apache.http.HttpResponse;
+//import org.apache.http.entity.ByteArrayEntity;
+//import org.apache.http.entity.ContentType;
+//import org.apache.http.entity.StringEntity;
+//import org.apache.http.util.EntityUtils;
+//
+//import net.minidev.json.JSONObject;
+//import sun.net.www.http.HttpClient;
+//
+//public class OtherTest {
+//	// 구독키
+//		private static String SUBSCRIPTIONKEY="3bdac3b821624790ba923fb61c1bba35";
+//		// ENDPOINT
+////		https://faceareum.cognitiveservices.azure.com/face/v1.0/detect
+//		private static String ENDPOINT="https://faceareum.cognitiveservices.azure.com/face/v1.0";
+//		private static String URIBASE = ENDPOINT + "/detect";
+//		
+//		// Face Detection으로 추출할 속성들
+//		// REST 요청의 쿼리스트링으로 포함시킨다.
+//		private static String FACEATTRIBUTES = "age,gender,headPose,smile,facialHair,glasses,emotion,hair,makeup,occlusion,accessories,blur,exposure,noise";
+//		public static void main(String[] args) {
+//			
+//		}
+//	
+//	// Person Group 생성( PersonGroup-create)
+//	// : 구체적 사용자 데이터와 PersonGroupId를 가진 그룹으로 Person의 데이터와 인지된 얼굴 특성에 대한 정보를 가진 일종의 컴테이너 생성
+//	private static final String URIBASE = "https://koreacentral.api.cognitive.microsoft.com/face/v1.0/persongroups";
+//	private static int createPersonGroup(String groupId, String groupName) {
+//		HttpClient httpClient = HttpClientBuilder.create().build();
+//		try {
+//			URIBuilder builder = new URIBuilder(URIBASE + "/" + groupId);
+//			URI uri = builder.build();
+//			
+//			HttpPut putRequest = new HttpPut();
+//			putRequest.setHeader("Content-Type",ContentType.APPLICATION_JSON.toString());
+//			putRequest.setHeader("Ocp-Apim-Subscription-Key", SUBSCRIPTIONKEY);
+//			
+//			String json = "{\"name\":\"" + groupName + "\"}";
+//			StringEntity reqEntity = new StringEntity(json);
+//			putRequest.setEntity(reqEntity);
+//			
+//			HttpResponse response = httpClient.execute(putRequest);
+//			int status = response.getStatusLine().getStatusCode();
+//			if(status!=200) {
+//				System.out.println(EntityUtils.toString(response.getEntity()));
+//			}
+//			return status;
+//			
+//		} catch (Exception e) {
+//			System.err.println(e.getMessage());
+//			return -1;
+//		}
+//	}
+//	
+//	// PersonGroup내에 Person 생성(PersonGroup Person-Create)
+//	// : 생성한 그룹에 각각의 Person들을 추가
+//	private static Map<String, Object> createPersonToGroup(String groupId, String personName){
+//		String personURI = URIBASE + "/" + groupId + "/persons";
+//		System.out.println(personURI);
+//		HttpClient httpClient = HttpClientBuilder.create().build();
+//		try {
+//			URIBuilder builder = new URIBuilder(personURI);
+//			URI uri = builder.build();
+//			
+//			HttpPost postRequest = new HttpPost(uri);
+//			postRequest.setHeader("Content-type", ContentType.APPLICATION_JSON.toString());
+//			postRequest.setHeader("Ocp-Apim-Subscription-Key", SUBSCRIPTIONKEY);
+//			
+//			String json = "{\"name\":\"" + personName + "\"}";
+//			StringEntity reqEntity = new StringEntity(json);
+//			postRequest.setEntity(reqEntity); 
+//			
+//			HttpResponse response = httpClient.execute(postRequest);
+//			int statusCode = response.getStatusLine().getStatusCode();
+//			HttpEntity entity = response.getEntity();
+//			String content = EntityUtils.toString(entity).trim();
+//			JSONObject obj = new JSONObject(content);
+//			System.out.println(obj.toString());
+//			Map<String, Object> result = obj.toMap();
+//			if(statusCode!=200)result.put("success", false);
+//			return result;
+//		} catch (Exception e) {
+//			System.err.println(e.getMessage());
+//			return null;
+//		}
+//	}
+//	
+//	// Person에 Face 추가(PersonGroup Person - AddFace)
+//	// : Person의 식별 및 대조에 사용될 안면 이미지 추가
+//	private static Map<String, Object> addFaceToPersonInGroup(String groupId, String personId, byte[]imageByteArray) throws ClientProtocolException{
+//		String addFaceURI = URIBASE + "/" + groupId + "/personId/" + personId + "/persistedFaces";
+//		System.out.println(addFaceURI);
+//		HttpClient httpClient = HttpClientBuilder.create().build();
+//		try {
+//			URIBuilder builder = new URIBuilder(addFaceURI);
+////			builder.setParameter("targetFace", arg1);
+////			builder.setParameter("detectionModel", arg1);
+////			builder.setParameter("userData", arg1);
+//			URI uri = builder.build();
+//			
+//			HttpPost postRequest = new HttpPost(uri);
+//			postRequest.setHeader("Content-Type", ContentType.APPLICATION_OCTET_STREAM.toString());
+//			postRequest.setHeader("Ocp-Apim-Subscription-Key", SUBSCRIPTIONKEY);
+//			ByteArrayEntity requestEntity = new ByteArrayEntity(imageByteArray);
+//			postRequest.setEntity(requestEntity);
+//			
+//			HttpResponse resp = httpClient.execute(postRequest);
+//			HttpEntity entity = resp.getEntity();
+//			int statusCode = resp.getStatusLine().getStatusCode();
+//			String content = EntityUtils.toString(entity).trim();
+//			JSONObject obj = new JSONObject(content);
+//			System.out.println(obj.toString());
+//			Map<String, Object> result = obj.toMap();
+//			if(statusCode!=200) result.put("success", false);
+//			return result;
+//		} catch (Exception e) {
+//			System.err.println(e.getMessage());
+//			return null;
+//		}
+//	}
+//	
+//	// PersonGroup training(PersonGroup - Train)
+//	// : 변경된 PersonGroup을 대상으로 훈련
+//	private static int trainPersonGroup(String groupId) {
+//		String trainURI = URIBASE + "/" + groupId + "/train";
+//		HttpClient client = HttpClientBuilder.create().build();
+//		HttpPost postRequest = new HttpPost(trainURI);
+//		postRequest.setHeader("Ocp-Apim-Subscription-Key", SUBSCRIPTIONKEY);
+//		try {
+//			HttpResponse response = client.execute(postRequest);
+//			int statusCode = response.getStatusLine().getStatusCode();
+//			if(statusCode!=202) {
+//				System.out.println(EntityUtils.toString(response.getEntity()));
+//			}
+//			return statusCode;
+//		} catch (Exception e) {
+//			System.err.println(e.getMessage());
+//			return -1;
+//		}
+//	}
+//	
+//	// 훈련상태정보 확인(PersonGroup-Get training status)
+//	// : Train 요청에 대한 응답이 상태코드 202로 돌아오기 때문에, 주기적인 비동기 요청을 총해 훈련상태정보 확인
+//	private static Map<String, Object> getTrainingStatus(String groupId){
+//		String trainURI = URIBASE + "/" + groupId + "/training";
+//		HttpClient client = HttpClientBuilder.create().build();
+//		HttpGet getRequest = new HttpGet(trainURI);
+//		getRequest.setHeader("Ocp-Apim-Subscription-Key", SUBSCRIPTIONKEY);
+//		try {
+//			HttpResponse response = client.execute(getRequest);
+//			int statusCode = response.getStatusLine().getStatusCode();
+//			HttpEntity entity = response.getEntity();
+//			String contents = EntityUtils.toString(entity);
+//			JSONObject obj = new JSONObject(contents);
+//			Map<String, Object> result = obj.toMap();
+//			if(statusCode!=200) {
+//				result.put("success", false);
+//			}
+//		} catch (IOException e) {
+//			System.err.println(e.getMessage());
+//			return null;
+//		}
+//	}
+//	
+//	// 얼굴 확인(Face - Verify), 신원 조회시 사용(Face - Identity)
+//	// : 확보된 안면 이미지와 저장된 persisted Face를 대조하여 신원 확인 등에 사용
+//	// (PersonGroup Person - Delete를 호출하기 전까지 얼굴의 특성과 사용자 데이터를 저장, 얼굴이미지는 저장 X)
+//	private static Map<String, Object> verifyFace(String faceId, String personId, String personGroupId){
+//		String verifyURI = ENDPOINT + "/verify";
+//		HttpClient client = HttpClientBuilder.create().build();
+//		
+//		HttpPost postRequest = new HttpPost(verifyURI);
+//		postRequest.setHeader("Content-Type", ContentType.APPLICATION_JSON.toString());
+//		postRequest.setHeader("Ocp-Apim-Subscription-Key", SUBSCRIPTIONKEY);
+//		String json = "{\"faceId\""+faceId+"\",\"personGroupId\":\"" + personGroupId + "\", \"personId\":\"" + personId + "\"}";
+//		try {
+//			StringEntity entity = new StringEntity(json);
+//			postRequest.setEntity(entity);
+//			HttpResponse response = client.execute(postRequest);
+//			int statusCode = response.getStatusLine().getStatusCode();
+//			String content = EntityUtils.toString(response.getEntity());
+//			JSONObject jsonObject = new JSONObject(content);
+//			Map<String, Object> result = jsonObject.toMap();
+//			if(statusCode!=200) result.put("success", false);
+//			return result;
+//		} catch (Exception e) {
+//			System.err.println(e.getMessage());
+//			return null;
+//		}
+//	}
+//
+//
+//
+//}

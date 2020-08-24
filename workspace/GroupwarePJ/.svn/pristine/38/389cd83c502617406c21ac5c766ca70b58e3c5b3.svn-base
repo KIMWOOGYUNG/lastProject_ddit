@@ -1,0 +1,61 @@
+package kr.or.ddit.project.controller;
+
+import java.util.List;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import kr.or.ddit.project.service.ITaskListService;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.ProjectVO;
+import kr.or.ddit.vo.SearchVO;
+import kr.or.ddit.vo.TaskVO;
+
+@Controller
+public class ProjectTaskController {
+	  
+	ITaskListService service;
+	
+	@GetMapping(value="/project/projectwork/task/list", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public PagingVO<ProjectVO> ajaxForlist(
+		@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+		SearchVO searchVO, Model model
+		){
+		taskList(currentPage, searchVO, model);
+		return (PagingVO<ProjectVO>) model.asMap().get("pagingVO");
+	}
+	
+	//일감 목록
+	@GetMapping("/project/projectwork/task/list")
+	public String taskList(@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+			SearchVO searchVO, Model model) {
+		PagingVO<TaskVO> pagingVO = new PagingVO<>();
+		pagingVO.setSearchVO(searchVO);
+		pagingVO.setCurrentPage(currentPage);
+		int totalRecord = service.selectTaskCount(pagingVO);
+		pagingVO.setTotalRecord(totalRecord);
+		
+		List<TaskVO> taskList = service.selectTaskList(pagingVO);
+		pagingVO.setDataList(taskList);
+		
+		model.addAttribute("pagingVO", pagingVO);
+		
+		return "taskList.project";
+	}
+	
+	//일감 상세보기
+	@GetMapping("/project/eachtask/{task_code}")
+	public String projectDetail(@PathVariable String task_code, Model model) {
+		System.out.println(1234);
+		TaskVO vo = service.selectTask(task_code);
+		model.addAttribute("project", vo);
+		return "taskDetail.project";
+	}
+
+}

@@ -1,0 +1,109 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+
+<script src="${cPath }/resources/ckeditor/ckeditor.js"></script>
+
+<h2>보고서 작성</h2>
+
+<table>
+	<tr>
+		<td><button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#addrModal" >
+<i class=" fas fa-save"></i> 결제라인등록 
+</button></td>
+		<td><input type="text"></td>
+	</tr>
+	<tr>
+		<td><button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#addrModal">
+<i class=" fas fa-save"></i> 참조자등록 
+</button></td>
+		<td><input type="text"></td>
+	</tr>
+	<tr>
+		<td><button class="btn btn-primary btn-sm" data-toggle="modal"  data-target="#addrModal">
+<i class=" fas fa-save"></i> 열람권자등록 
+</button></td>
+		<td><input type="text"></td>
+	</tr>
+		<tr>
+		<td><button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#addrModal">
+<i class=" fas fa-save"></i> 대결권자등록 
+</button></td>
+		<td><input type="text"></td>
+	</tr>
+</table>
+
+<!-- Modal -->
+<div class="modal fade" id="addrModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        
+        <h4 class="modal-title" id="myModalLabel">Modal title</h4>
+      </div>
+      <div  class="modal-body">
+		 <nav class="mt-2">
+       		<ul id="myModalBody" class="nav nav-pills nav-sidebar flex-column" role="menu" data-accordion="false">
+       		
+       		</ul>	
+     	 </nav>
+		</div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">취소</button>
+        <button type="button" class="btn btn-primary" data-dismiss="modal">등록</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<textarea class="form-control" name="bo_content" id="bo_content">
+${board.bo_content }
+</textarea>
+
+<script type="text/javascript">
+var modalBody = $("#myModalBody");
+	$("button[data-target='#addrModal']").on("click",function(){
+		$(".modal-title").text($(this).text());
+		$.ajax({
+			url: "${cPath}/address/dept",
+			success:function(resp){
+				let deptList = resp;
+				let trTags = [];
+				if(deptList.length>0){
+					$.each(deptList,function(idx,dept){
+						console.log(dept.dept_cnt);
+						if(dept.dept_cnt==0){
+						let trTag = $("<li>").append(
+									$("<a>").attr("href","#").append(
+											$("<p>").text(dept.dept_name))
+								).addClass("nav-item")
+								trTags.push(trTag);
+						}else{
+							let trTag = $("<li>").append(
+									$("<a>").attr("href","#").append($("<p>").append(dept.dept_name,$("<i>").addClass("right fas fa-angle-left"))),
+									$("<ul>").addClass("nav nav-treeview")
+								).addClass("nav-item has-treeview")
+								trTags.push(trTag);
+						}
+						
+					})
+					modalBody.html(trTags);	
+				}
+			},
+			error : function(errorResp) {
+				console.log(errorResp.status + ":"+ errorResp.responseText);
+			}
+		})
+	});
+	
+	
+	$()
+	CKEDITOR.replace('bo_content',{
+		 // Adding drag and drop image upload.
+	      uploadUrl: '${pageContext.request.contextPath}/board/image?command=QuickUpload&type=Files&responseType=json',
+
+	     // Configure your file manager integration. This example uses CKFinder 3 for PHP.
+	      filebrowserImageUploadUrl: '${pageContext.request.contextPath}/board/image?command=QuickUpload&type=Images',
+	});
+	
+</script>
+

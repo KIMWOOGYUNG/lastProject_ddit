@@ -1,0 +1,20 @@
+package kr.or.ddit.schedule.service;
+
+
+
+import java.util.List;
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.vo.Com_ScheduleVO;
+import kr.or.ddit.vo.PagingVO;
+
+public interface ICom_ScheduleService {
+	
+	public List<Com_ScheduleVO> readScheduleList(PagingVO<Com_ScheduleVO> pagingVO);
+	
+	public Com_ScheduleVO readSchedule(String cs_code);
+	
+	public int readCom_ScheduleCount(PagingVO<Com_ScheduleVO> pagingVO);
+	
+	
+	
+}

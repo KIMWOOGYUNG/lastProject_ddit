@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.project.dao.IPJStandardDAO">
+	<select id="selectImportant" resultType="StandardVO">
+		SELECT * FROM STANDARD
+		WHERE STANDARD_CODE LIKE 'IMP' || '%'
+	</select>
+	
+	<select id="selectStatus" resultType="StandardVO">
+		SELECT * FROM STANDARD
+		WHERE STANDARD_CODE LIKE 'STT' || '%'
+	</select>
+	
+	<select id="selectTaskType" resultType="StandardVO">
+		SELECT * FROM STANDARD
+		WHERE STANDARD_CODE LIKE 'TSK' || '%'
+	</select>
+	
+	<select id="selectDeptList" resultType="hashMap">
+		SELECT DEPT_CODE "dept_code", DEPT_NAME "dept_name"
+		FROM DEPARTMENT
+	</select>
+	
+	<select id="selectTeamList" resultType="TeamVO" parameterType="string">
+		SELECT TEAM_CODE, TEAM_NAME, DEPT_CODE
+		FROM TEAM
+		<where>
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(dept)">
+				DEPT_CODE = #{dept}
+			</if>
+		</where>
+	</select>
+	
+	<select id="selectDept" resultType="DepartmentVO">
+		SELECT DEPT_CODE "dept_code", DEPT_NAME "dept_name"
+		FROM DEPARTMENT
+	</select>
+	
+</mapper>

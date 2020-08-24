@@ -1,0 +1,72 @@
+package kr.or.ddit.approval.controller;
+
+import java.util.List;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import kr.or.ddit.approval.service.IPublicFormBoxService;
+import kr.or.ddit.vo.FormVO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.SearchVO;
+
+@Controller
+public class PublicFormBoxController {
+	@Inject
+	IPublicFormBoxService service;
+	
+	@GetMapping(value="/approval/publicformbox/publicformList", produces=MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public PagingVO<FormVO> ajaxForlist(@RequestParam(name="page", required=false, defaultValue="1") int currentPage,
+	SearchVO searchVO, Model model, HttpSession session
+	){
+		
+		publicFormList(currentPage, searchVO, model, session);
+		
+		return (PagingVO<FormVO>) model.asMap().get("pagingVO");
+		
+	}
+	
+	// 내 서식 목록
+	@GetMapping("/approval/publicformbox/publicformList")
+	public String publicFormList(@RequestParam(name="page", required = false, defaultValue="1") int currentPage,
+			SearchVO searchVO, Model model, HttpSession session) {
+//		FormVO FormVO = (FormVO)session.getAttribute("ApprovalForm");
+		
+		PagingVO<FormVO> pagingVO = new PagingVO<>();
+		pagingVO.setSearchVO(searchVO);
+		pagingVO.setCurrentPage(currentPage);
+		int totalRecord = service.selectFormCount(pagingVO);
+		pagingVO.setTotalRecord(totalRecord);
+		
+		List<FormVO> FormList = service.selectFormList(pagingVO);
+		pagingVO.setDataList(FormList);
+
+		model.addAttribute("pagingVO",pagingVO);
+
+		return "publicformList.approval";
+
+	}
+	
+	// 서식 상세보기
+	@GetMapping("/approval/publicformbox/publicformView/{fc_code}")
+	public String formDetail(@PathVariable(required = true) String fc_code, Model model) {
+		FormVO vo = service.selectForm(fc_code);
+		
+		model.addAttribute("form", vo);
+		
+		return "vacationformView.approval";
+	}
+	
+	
+
+
+}

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.schedule.dao.IDep_ScheduleDAO">
+
+	
+	<select id="selectDeptSchedule" parameterType="kr.or.ddit.vo.Dept_ScheduleVO" resultType="kr.or.ddit.vo.Dept_ScheduleVO">
+	SELECT 
+		DS_CODE,
+		DS_TITLE,
+		DS_CONTENT,
+		WRITER,
+		MANAGER,
+		DS_START,
+		DS_END,
+		DS_IMPORTANT,
+		PROJECT_CODE
+	from DEPT_SCHEDULE
+	
+	</select>
+	
+	<select id="selectDeptScheduleList" parameterType="kr.or.ddit.vo.PagingVO" resultType="kr.or.ddit.vo.Dept_ScheduleVO">
+	SELECT DS_TITLE, WRITER,
+	  DS_START, DS_END, DS_IMPORTANT
+	from DEPT_SCHEDULE A, PROJECT B
+	WHERE A.PROJECT_CODE = B.PROJECT_CODE
+	
+	
+	</select>
+	
+	<select id="selectDept_scheduleCount" parameterType="kr.or.ddit.vo.PagingVO" resultType="int">
+		SELECT COUNT(DS_CODE)
+		FROM DEPT_SCHEDULE
+	</select>
+	
+	
+</mapper>

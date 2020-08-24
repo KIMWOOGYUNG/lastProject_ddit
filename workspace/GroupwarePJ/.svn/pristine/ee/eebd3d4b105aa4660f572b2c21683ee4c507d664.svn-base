@@ -1,0 +1,218 @@
+package kr.or.ddit.approval.controller;
+
+import java.util.Date;
+import java.util.List;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpSession;
+import javax.validation.Valid;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.Errors;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.nimbusds.oauth2.sdk.util.StringUtils;
+
+import kr.or.ddit.approval.service.IPublicFormBoxService;
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.event.MessageEvent;
+import kr.or.ddit.vo.FormVO;
+import kr.or.ddit.vo.Form_CatagVO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.PushMessageVO;
+import kr.or.ddit.vo.SearchVO;
+
+@Controller
+public class PublicFormBoxController {
+	@Inject
+	IPublicFormBoxService service;
+	
+	@GetMapping(value = "/approval/publicformbox/publicformList", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public PagingVO<FormVO> ajaxForlist(
+			@RequestParam(name = "page", required = false, defaultValue = "1") int currentPage, SearchVO searchVO,
+			Model model, HttpSession session) {
+
+		publicFormList(currentPage, searchVO, model, session);
+
+		return (PagingVO<FormVO>) model.asMap().get("pagingVO");
+
+	}
+
+	// 내 서식 목록
+	@GetMapping("/approval/publicformbox/publicformList")
+	public String publicFormList(@RequestParam(name = "page", required = false, defaultValue = "1") int currentPage,
+			SearchVO searchVO, Model model, HttpSession session) {
+//		FormVO FormVO = (FormVO)session.getAttribute("ApprovalForm");
+
+		PagingVO<FormVO> pagingVO = new PagingVO<>();
+		pagingVO.setSearchVO(searchVO);
+		pagingVO.setCurrentPage(currentPage);
+		int totalRecord = service.selectFormCount(pagingVO);
+		pagingVO.setTotalRecord(totalRecord);
+
+		List<FormVO> FormList = service.selectFormList(pagingVO);
+		pagingVO.setDataList(FormList);
+
+		model.addAttribute("pagingVO", pagingVO);
+
+		return "publicformList.approval";
+
+	}
+
+
+
+	// 서식 추가
+	@GetMapping("/approval/publicformbox/insertform")
+	public String publicform(Model model) {
+		model.addAttribute("state", "insertform");
+		
+		return "publicboxForm.approval";
+	}
+
+	@PostMapping(value = "/approval/publicformbox/insertform", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public String publicforminsert(@Valid @ModelAttribute("form_code") FormVO formVO, Errors errors, Model model,
+			HttpSession session) {
+
+		String goPage = null;
+		String message = null;
+		if (!errors.hasErrors()) {
+			ResultState result = service.insertForm(formVO);
+			switch (result) {
+			case FAIL:
+				goPage = "publicboxForm.approval";
+				message = "다시 입력하세요.";
+				break;
+
+			default:
+				goPage = "publicformList.approval";
+				message = "insert성공";
+				break;
+			}
+		} else {
+			System.out.println(errors.toString());
+			goPage = "publicboxForm.approval";
+		}
+
+		model.addAttribute("message", message);
+
+		return goPage;
+	}
+	
+	// 서식 상세보기
+	@GetMapping("/approval/publicformbox/publicformView/{form_code}")
+	public String formDetail(@PathVariable(required = true) String form_code, Model model) {
+		
+		FormVO vo = service.selectForm(form_code);
+		model.addAttribute("form", vo);
+
+		return "publicFormView.approval";
+
+	}
+	
+	@PostMapping(value="/approval/publicformbox/form", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public FormVO callFormData(String form_code){		
+		FormVO vo = service.selectForm(form_code);
+		return vo;
+	}
+	
+	// 서식 수정
+	@GetMapping("/approval/publicformbox/updateForm/{form_code}")
+	public String update(@PathVariable String form_code, Model model) {
+		FormVO form = service.selectForm(form_code);
+		model.addAttribute("form", form);
+		
+		model.addAttribute("state", "updateForm");
+		model.addAttribute("form_code", form_code);
+		
+		return "publicboxForm.approval";
+	}
+	
+	@PostMapping("/approval/publicformbox/updateForm/{form_code}")
+	public String updateForm(
+			@Valid @ModelAttribute("form") FormVO form, @RequestParam String form_code, BindingResult errors, Model model, RedirectAttributes redirectAttributes
+			){
+		
+		String goPage = null;
+		String message = null;
+		
+		if(!errors.hasErrors()) {
+			ResultState result = service.updateForm(form);
+			switch(result) {
+			case FAIL:
+				message = "다시시도";
+				redirectAttributes.addFlashAttribute("form", form);
+				goPage = "redirect:/approval/publicformbox/updateForm/" + form_code;
+				break;
+			default:
+				goPage = "redirect:/approval/publicformbox/publicformList";
+				break;
+			}
+		}else {
+			goPage = "redirect:/approval/publicformbox/updateForm/" + form_code;
+			redirectAttributes.addFlashAttribute("form",form);
+		}
+		
+		
+		model.addAttribute("message",message);
+		
+		return goPage;
+	}
+	
+	// 서식 삭제
+	@PostMapping("/approval/publicformbox/delForm")
+	public String delForm(@RequestParam String form_code, Model model) {
+		String goPage = null;
+		ResultState result = null;
+		
+		if(form_code.contains(",")) {
+			String[] splited = form_code.split(",");
+			for(int i = 0; i<splited.length;i++) {
+				result = service.deleteForm(splited[i]);
+			}
+		}else {
+			result = service.deleteForm(form_code);
+		}
+		switch(result) {
+		case FAIL :
+			goPage = "redirect:/approval/publicformbox/publicformList";
+		default : 
+			goPage = "redirect:/approval/publicformbox/publicformList";
+		}
+		
+		return goPage;
+	}
+	
+	// 카테고리 호출
+	@GetMapping(value = "/approval/publicformbox/catag" , produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public List<FormVO> callCatagList(String fc_code){		
+		PagingVO<FormVO> pagingVO = new PagingVO<FormVO>();
+		
+		if(StringUtils.isNotBlank(fc_code)) {
+			FormVO detailSearch = new FormVO();
+			detailSearch.setFc_code(fc_code);
+			pagingVO.setDetailSearch(detailSearch);
+		}
+		List<FormVO>dataList = service.selectFormList(pagingVO);
+		
+		
+		 
+		   
+		
+		return dataList;
+	}
+
+}

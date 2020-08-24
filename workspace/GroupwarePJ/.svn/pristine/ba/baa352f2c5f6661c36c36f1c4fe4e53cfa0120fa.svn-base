@@ -1,0 +1,80 @@
+package kr.or.ddit.addr.service;
+
+import java.util.List;
+
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.vo.AddressVO;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.PagingVO;
+
+public interface IaddrService {
+
+/**
+ * 내주소록 사원 등록
+ */
+	public ResultState createAddress(AddressVO addr);
+	
+	
+	/**
+	 * 내 주소록 사원 상세조회
+	 * 
+	 */
+	public AddressVO readAddress(String add_name);
+	
+	/**
+	 * 검색 조건에 맞는 등록 내 주소록 사원수 
+	 * @param pagingVO
+	 * @return
+	 */
+	
+	public int readAddressCount(PagingVO pagingVO);
+	
+	
+	/**
+	 * 검색 조건에 맞는 내 주소록 사원목록
+	 *
+	 */
+	public List<AddressVO> readAddressList(PagingVO pagingVO);
+	
+	
+	
+	/**
+	 * 내 주소록 사원정보 수정
+	 */
+	public ResultState modifyAddress(AddressVO addr);
+	
+	
+	
+	/**
+	 * 내 주소록 사원 삭제
+	 */
+	public ResultState removeAddress(AddressVO addr);
+	
+	
+	////////////사내 주소록
+	/**
+	 * 사내 주소록 리스트 
+	 */
+	public List<EmployeeVO> AddrList();
+	
+	/**
+	 * 사내 주소록 상세 조회 
+	 */
+	public AddressVO readAddr(String add_name);
+
+	
+	/**
+	 * 사내 주소록 검색 조건에 맞는 등록 사내 주소록 사원수 
+	 * 
+	 */
+	public int readAddrCount(PagingVO pagingVO);
+	
+	
+	/**
+	 * 사내주소록 검색 조건에 맞는 사내 주소록 사원목록
+	 */
+	public List<AddressVO> readAddrList(PagingVO pagingVO);
+	
+	
+	
+}

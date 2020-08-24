@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.schedule.dao.IMy_ScheduleDAO">
+
+<!-- 내일정 상세 조회 -->
+<select id="selectMySchedule" parameterType="kr.or.ddit.vo.My_ScheduleVO" resultType="kr.or.ddit.vo.My_ScheduleVO">
+	SELECT   
+    MS_CODE,
+    MS_TITLE,
+    MS_CONTENT,
+    EMP_KOR AS EMP_CODE,
+    TO_CHAR(MS_STARTDATE,'YYYY-MM-DD') MS_STARTDATE,
+    TO_CHAR(MS_ENDDATE,'YYYY-MM-DD') MS_ENDDATE,
+    STANDARD_NAME AS MS_IMPORTANT,
+    PROJECT_NAME AS PROJECT_CODE
+    FROM MY_SCHEDULE A INNER JOIN EMPLOYEE B ON (A.EMP_CODE = B.EMP_CODE)
+    INNER JOIN STANDARD C ON(A.MS_IMPORTANT = C.STANDARD_CODE)
+    INNER JOIN PROJECT D ON(A.PROJECT_CODE = D.PROJECT_CODE)
+    WHERE MS_CODE = #{ms_code}
+</select>
+
+<!-- 내 일정 테이블 리스트 -->
+<select id="selectMyScheduleList" parameterType="kr.or.ddit.vo.PagingVO" resultType="kr.or.ddit.vo.My_ScheduleVO">
+	SELECT MS_CODE,MS_TITLE, EMP_KOR AS EMP_CODE,
+	TO_CHAR(MS_STARTDATE,'YYYY-MM-DD') MS_STARTDATE,
+	TO_CHAR(MS_ENDDATE,'YYYY-MM-DD') MS_ENDDATE,
+	STANDARD_NAME AS MS_IMPORTANT,PROJECT_NAME AS PROJECT_CODE
+	FROM MY_SCHEDULE A INNER JOIN EMPLOYEE B ON (A.EMP_CODE = B.EMP_CODE)
+	INNER JOIN STANDARD C ON (A.MS_IMPORTANT = C.STANDARD_CODE)
+	INNER JOIN PROJECT D ON (A.PROJECT_CODE = D.PROJECT_CODE)
+
+</select>
+
+<!-- 페이지 카운트 -->
+<select id="selectMyScheduleCount" parameterType="kr.or.ddit.vo.PagingVO" resultType="int">
+	SELECT COUNT(MS_CODE)
+	FROM MY_SCHEDULE
+</select>
+
+
+	<!--내 일정 등록 -->
+	<insert id="insertMyschedule" parameterType="kr.or.ddit.vo.My_ScheduleVO">
+	<selectKey keyProperty="ms_code" resultType="string" order="BEFORE">
+	  SELECT 'MS' || LPAD(NVL(TO_NUMBER(SUBSTR(MAX(MS_CODE), 3)), 0)+1, 3, '0') 
+   	  FROM MY_SCHEDULE
+	</selectKey>
+	INSERT INTO MY_SCHEDULE(
+    MS_CODE,MS_TITLE,MS_CONTENT,EMP_CODE,
+    MS_STARTDATE,MS_ENDDATE,MS_IMPORTANT,PROJECT_CODE
+    )VALUES(
+    #{ms_code,jdbcType=VARCHAR},#{ms_title,jdbcType=VARCHAR},#{ms_content,jdbcType=VARCHAR},#{emp_code,jdbcType=VARCHAR},
+    TO_DATE(#{ms_startdate,jdbcType=DATE}, 'YYYY-MM-DD'),TO_DATE(#{ms_enddate,jdbcType=DATE}, 'YYYY-MM-DD'),
+    #{ms_important,jdbcType=VARCHAR},#{project_code,jdbcType=VARCHAR}
+    )
+	</insert>
+
+
+	<!--내일정 삭제 -->
+<!-- 	<delete id="deleteMyschedule" parameterType="string"> -->
+<!-- 	DELETE FROM MY_SCHEDULE -->
+<!-- 	WHERE MS_CODE = #{ms_code} -->
+<!-- 	</delete> -->
+
+
+
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

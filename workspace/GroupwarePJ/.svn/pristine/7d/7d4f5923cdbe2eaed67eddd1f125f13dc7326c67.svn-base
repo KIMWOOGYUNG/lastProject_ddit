@@ -1,0 +1,34 @@
+package kr.or.ddit.project.controller;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import kr.or.ddit.project.service.ITaskListService;
+import kr.or.ddit.vo.TaskVO;
+
+@Controller
+public class ProjectGanttController {
+	@Inject
+	ITaskListService service;
+	
+	@GetMapping("/project/projectplan/{project_code}/ganttchart")
+	public String projectGantt(Model model) {
+		List<TaskVO> taskList = service.selectTaskGantt();
+		model.addAttribute("taskList", taskList);
+		return "projectGantt.project";
+	}
+	
+	@PostMapping(value="/project/projectplan/{project_code}/ganttList")
+	@ResponseBody
+	public List<TaskVO> ganttList() {
+		List<TaskVO> taskList = service.selectTaskGantt();
+		return taskList;
+	}
+}

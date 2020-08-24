@@ -1,0 +1,93 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib uri="http://www.springframework.org/tags" prefix="spring"%>
+<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form" %>
+<script src="${cPath }/resources/ckeditor/ckeditor.js"></script>
+
+<script type = "text/javascript" src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.5.3/jspdf.min.js"></script>
+<script type = "text/javascript" src = "https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+<style>
+	.text, .form-control{display: inline;}
+	.check{width: 20px; height: 20px}
+
+</style>
+
+<form:form id="publicboxForm" modelAttribute="form" method="post" enctype="multipart/form-data" class="w-100" action="${cPath }/approval/publicformbox/publicformView/${form_code}">
+	<div class = "content" style="margin: 40px 60px 0 60px">
+		<div class="card card-primary" style="width: 100%;">
+			<div class="card-header" >
+			<h3 class="card-title">${form.form_code }</h3>
+			</div>
+			<form role="form">
+				<div class="card-body" style="width: 100%; padding: 20px 40px 20px 40px">
+					카테고리 <input type="hidden" name="form_code" value="${form.form_code }">
+					<br><br>
+					 <select name="fc_code" class="form-control select2 select2-hidden-accessible" style="width: 10%;float:left" data-select2-id="1" tabindex="-1" aria-hidden="true">
+						<option value=" " selected>${form.fc_code }</option>    
+	                    <option value="FC100" <c:if test="${form.fc_code == FC100}">selected</c:if>>구매</option>
+	                    <option value="FC200" <c:if test="${form.fc_code == FC200}">selected</c:if>>회식</option>
+	                    <option value="FC300" <c:if test="${form.fc_code == FC300}">selected</c:if>>휴가</option>
+	                    <option value="FC400" <c:if test="${form.fc_code == FC400}">selected</c:if>>공문</option>
+	                    <option value="FC500" <c:if test="${form.fc_code == FC500}">selected</c:if>>출장</option>
+	                    <option value="FC600" <c:if test="${form.fc_code == FC600}">selected</c:if>>기안</option>
+					</select>
+					<br><br>
+					${form.form_name }
+					
+					<div id="pdfchange" style="width: 100%; padding-bottom: 100px;">
+						${form.form_content }
+					</div>
+					
+				</div>
+			</form>
+		</div>
+	</div>
+</form:form>
+
+<div id="top" style="width: 80; % margin: 0 auto; padding: 0 10px;">
+	<button class="btn btn-primary btn-sm float-sm-right" id="saveBtn"
+		style="margin: 5px;">
+		<i class="fas fa-download"> </i> 다운로드
+	</button>
+</div>
+
+<script>
+	$('#saveBtn').click(function() { // pdf저장 button id
+		let pdf = new jsPDF();
+		let canvas = pdf.canvas;
+		const pageWidth = 210;
+		const pageHeight = 295;
+		canvas.width = pageWidth;
+		
+		let ele = document.querySelector('#pdfchange');
+		
+		let width = ele.offsetWidth; // 요소 px 너비
+		let height = ele.offsetHeight; // 요소 px 높이
+		let imgHeight = pageWidth*height/width;  // 이미지 높이값 px to mm 변환
+		
+		if(!ele){
+			console.warn('not exist');
+			return false;
+		}
+		 html2canvas(ele).then(function(canvas){
+			 let position = 0;
+			 const imgData = canvas.toDataURL('image/jpg');
+						 
+			 pdf.addImage(imgData,'jpg',0,position,pageWidth,imgHeight);
+			 //Paging처리
+			 let heightLeft = imgHeight; 
+			 heightLeft -= pageHeight;
+			 while(heightLeft>=0){
+				 position = heightLeft - imgHeight;
+				 pdf.addPage();
+				 pdf.addImage(imgData,'jpg',0,position,pageWidth,imgHeight);
+				 heightLeft-=pageHeight;
+			 }
+			 pdf.save('form.pdf');
+		 });
+	});
+	
+</script>
+
+

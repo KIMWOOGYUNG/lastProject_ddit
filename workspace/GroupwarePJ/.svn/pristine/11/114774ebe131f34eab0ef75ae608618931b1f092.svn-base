@@ -1,0 +1,86 @@
+package kr.or.ddit.project.controller;
+
+import java.util.List;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import kr.or.ddit.project.service.IProjectListService;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.ProjectVO;
+import kr.or.ddit.vo.SearchVO;
+
+@Controller
+public class ProjectListController {
+	@Inject
+	IProjectListService service;
+	
+	@GetMapping(value="/project/projectlist/{who}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public PagingVO<ProjectVO> ajaxForlist(@PathVariable(name="who") String who,
+		@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+		SearchVO searchVO, Model model, HttpSession session
+		){
+		
+		projectList(who,currentPage, searchVO, model, session);
+		
+		return (PagingVO<ProjectVO>) model.asMap().get("pagingVO");
+	}
+	
+	//내 프로젝트 목록
+	@GetMapping("/project/projectlist/{who}")
+	public String projectList(@PathVariable(name="who") String who,
+			@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+			SearchVO searchVO, Model model, HttpSession session) {
+		EmployeeVO employeeVO= (EmployeeVO) session.getAttribute("authUser");
+	
+		PagingVO<ProjectVO> pagingVO = new PagingVO<>(9,5);
+		
+		if("all".equals(who)) {
+			model.addAttribute("title", "All Project");
+			
+		}else if("my".equals(who) ) {
+			model.addAttribute("title", "My Project");
+			ProjectVO detailSearch = new ProjectVO();
+			String emp_code = employeeVO.getEmp_code();
+			detailSearch.setEmp_code(emp_code);
+			pagingVO.setDetailSearch(detailSearch);
+			
+		}
+		
+		
+		pagingVO.setSearchVO(searchVO);
+		pagingVO.setCurrentPage(currentPage);
+		
+		int totalRecord = service.selectProjectCount(pagingVO);
+		pagingVO.setTotalRecord(totalRecord);
+		
+		List<ProjectVO> projectList = service.selectProjectList(pagingVO);
+		pagingVO.setDataList(projectList);
+		model.addAttribute("pagingVO", pagingVO);
+		model.addAttribute("who", who);
+		
+		return "projectList.project";
+	}
+
+	
+	//프로젝트 상세보기
+	@GetMapping("/project/eachproject/{project_code}")
+	public String projectDetail(@PathVariable String project_code, Model model) {
+		ProjectVO vo = service.selectProject(project_code);
+		model.addAttribute("project", vo);
+		return "projectDetail.project";
+	}
+	
+	
+}
+

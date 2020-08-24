@@ -1,0 +1,65 @@
+package kr.or.ddit.project.controller;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.project.service.ITaskListService;
+import kr.or.ddit.vo.CalendarVO;
+import kr.or.ddit.vo.TaskVO;
+
+@Controller
+public class ProjectCalendarController {
+	@Inject
+	ITaskListService service;
+	
+	//캘린더 페이지
+	@GetMapping("/project/projectplan/{project_code}/calendar")
+	public String projectCalendar(Model model, @PathVariable String project_code) {
+		List<TaskVO> taskList = service.selectTaskCal(project_code);
+		model.addAttribute("taskList",taskList);
+		model.addAttribute("project_code", project_code);
+		return "projectCalendar.project";
+	}
+	
+	//일정 정보
+	@PostMapping(value="/project/projectplan/{project_code}/calendar", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public List<CalendarVO> taskSetting(@PathVariable String project_code, RedirectAttributes redirectAttributes){
+		List<CalendarVO> dataList = new ArrayList<>();
+		List<TaskVO> taskList = service.selectTaskCal(project_code);
+		for(TaskVO task : taskList) {
+			dataList.add(task.sendDate());
+		}
+		return dataList;
+	}
+	
+	//일정 수정
+	@PostMapping(value="/project/projectplan/{project_code}/updateCalendar", produces="text/html;charset=UTF-8")
+	@ResponseBody
+	public String modifyDate(String task_code, String task_start, String task_end) {
+		String returnStr = null;
+		
+		TaskVO task = service.selectTask(task_code);
+		task.setTask_start(task_start);
+		task.setTask_end(task_end);
+		ResultState result = service.updateTaskCal(task);
+		if(result == ResultState.OK) {
+			returnStr = "일정이 변경되었습니다.";
+		}else if (result == ResultState.FAIL) {
+			returnStr = "일정 변경에 실패하였습니다. 잠시 후 다시 시도해주세요.";
+		}
+		return returnStr;
+	}
+}

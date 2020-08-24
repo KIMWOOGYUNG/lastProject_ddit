@@ -1,0 +1,7 @@
+1593484722706	Move 'myproject_list.jsp' to 'myproject'
+1593485707638	Move 'myproject_list.jsp' to 'project'
+1593485756932	Delete elements
+1593485944766	Rename type 'Projectlist_my_block'
+1593485971324	Rename type 'Projectlist_my_block_controller'
+1593485983153	Rename type 'MyprojectBlockController'
+1593500434586	Rename type 'MyProjectListImpl'

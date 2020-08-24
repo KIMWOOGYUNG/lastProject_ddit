@@ -1,0 +1,43 @@
+package kr.or.ddit.message.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+
+@Controller
+public class MsgController {
+
+	@GetMapping("/note/entirenote") //전체쪽지
+	public String Entirenote() {
+		String goPage="Entirenote.note";
+		return goPage;
+		
+	}
+	@GetMapping("/note/receivenote") //수신쪽지
+	public String Receivenote() {
+		String goPage="Receivenote.note";
+		return goPage;
+		
+	}
+	
+	@GetMapping("/note/sendnote") //발신쪽지
+	public String Sendnote() {
+		String goPage="Sendnote.note";
+		return goPage;
+		
+	}
+	@GetMapping("/note/importantnote") //중요보관함쪽지
+	public String Importnote() {
+		String goPage="Importantnote.note";
+		return goPage;
+		
+	}
+	@GetMapping("/note/deletenote") //삭제쪽지
+	public String Deletenote() {
+		String goPage="Deletenote.note";
+		return goPage;
+		
+	}
+	
+	
+	
+}

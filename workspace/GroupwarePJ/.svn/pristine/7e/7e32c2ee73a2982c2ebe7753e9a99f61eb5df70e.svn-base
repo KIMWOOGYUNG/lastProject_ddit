@@ -1,0 +1,267 @@
+package kr.or.ddit.approval.controller;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import exception.DataNotFoundException;
+import kr.or.ddit.approval.service.IApprovalService;
+import kr.or.ddit.vo.AjaxdataApprLineVO;
+import kr.or.ddit.vo.Appr_OrderVO;
+import kr.or.ddit.vo.Approve_LineVO;
+import kr.or.ddit.vo.DraftVO;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.ReviewerGroupVO;
+import kr.or.ddit.vo.ReviewerVO;
+import kr.or.ddit.vo.SearchVO;
+
+@Controller
+@RequestMapping("approval")
+public class ApprovalSettingController {
+	
+	@Inject
+	IApprovalService service;
+	
+	@GetMapping(value = "setting/{state}" ,produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public PagingVO<AjaxdataApprLineVO> ajaxPrint(@PathVariable(name = "state") String state, Model model,HttpSession session
+			,@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,SearchVO searchVO) {
+		goSetting(state,model,session,currentPage,searchVO);
+		return (PagingVO<AjaxdataApprLineVO>) model.asMap().get("pagingVO");
+	}
+	
+	@GetMapping("setting/{state}")
+	public String goSetting(@PathVariable(name = "state") String state, Model model,HttpSession session
+			,@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,SearchVO searchVO)	{
+		EmployeeVO employeeVO =(EmployeeVO) session.getAttribute("authUser");
+		
+		
+		String goPage = "lineSetting.approval"; 
+		ArrayList<AjaxdataApprLineVO> sendDataList = new ArrayList<AjaxdataApprLineVO>(); 
+		int totalRecord = 0;
+		if("apprLine".equals(state)) {
+			model.addAttribute("title", "결재라인 그룹 관리");
+			Approve_LineVO detailsearch = new Approve_LineVO();
+			detailsearch.setEmp_code(employeeVO.getEmp_code());
+			
+			PagingVO<Approve_LineVO> pagingVO = new PagingVO<Approve_LineVO>();
+			pagingVO.setDetailSearch(detailsearch);
+			pagingVO.setCurrentPage(currentPage);
+			pagingVO.setSearchVO(searchVO);
+			totalRecord = service.getApprLineCount(pagingVO);
+			pagingVO.setTotalPage(totalRecord);
+			List<Approve_LineVO> dataList = service.getApprLine(pagingVO);
+			
+			for(Approve_LineVO data : dataList) {
+				AjaxdataApprLineVO vo = data.sendData();
+				sendDataList.add(vo);
+			}
+		}else if("rg1Line".equals(state)) {
+			model.addAttribute("title", "참조자 그룹 관리");
+			ReviewerGroupVO detailsearch = new ReviewerGroupVO();
+			detailsearch.setEmp_code(employeeVO.getEmp_code());
+			detailsearch.setRg_type("1");
+			PagingVO<ReviewerGroupVO> pagingVO = new PagingVO<ReviewerGroupVO>();
+			pagingVO.setDetailSearch(detailsearch);
+			pagingVO.setCurrentPage(currentPage);
+			pagingVO.setSearchVO(searchVO);
+			totalRecord = service.getReviewerGroupCount(pagingVO);
+			pagingVO.setTotalPage(totalRecord);
+			List<ReviewerGroupVO> dataList = service.getReviewerGroup(pagingVO);
+			
+			for(ReviewerGroupVO data : dataList) {
+				AjaxdataApprLineVO vo = data.sendData();
+				sendDataList.add(vo);
+			}
+		}else if("rg2Line".equals(state)) {
+			model.addAttribute("title", "열람권자 그룹 관리");
+			ReviewerGroupVO detailsearch = new ReviewerGroupVO();
+			detailsearch.setEmp_code(employeeVO.getEmp_code());
+			detailsearch.setRg_type("2");
+			PagingVO<ReviewerGroupVO> pagingVO = new PagingVO<ReviewerGroupVO>();
+			pagingVO.setDetailSearch(detailsearch);
+			pagingVO.setCurrentPage(currentPage);
+			pagingVO.setSearchVO(searchVO);
+			totalRecord = service.getReviewerGroupCount(pagingVO);
+			pagingVO.setTotalPage(totalRecord);
+			List<ReviewerGroupVO> dataList = service.getReviewerGroup(pagingVO);
+			
+			for(ReviewerGroupVO data : dataList) {
+				AjaxdataApprLineVO vo = data.sendData();
+				sendDataList.add(vo);
+			}
+		}
+		
+		addData(currentPage, totalRecord, sendDataList,model);
+		
+		return goPage;
+	}
+	
+	@GetMapping("setting/{state}/add")
+	public String goAdd(@PathVariable(name = "state") String state, Model model)	{
+		
+		if("apprLine".equals(state)) {
+			model.addAttribute("title", "결재라인 그룹 추가");
+		}else if("rg1Line".equals(state)) {
+			model.addAttribute("title", "참조자 그룹 추가");
+		}else if("rg2Line".equals(state)) {
+			model.addAttribute("title", "열람권자 그룹 추가");
+		}
+		model.addAttribute("state", state);
+		return "addressList.approval";
+	}
+	
+	@GetMapping(value = "setting/{state}/modify/{lineCode}",produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public AjaxdataApprLineVO ajaxLinDataSend(@PathVariable(name = "state") String state,@PathVariable(name = "lineCode") String lineCode, Model model,HttpSession session){
+		goModify(state,lineCode,model,session);
+		return (AjaxdataApprLineVO) model.asMap().get("dataList");
+	}
+	
+	
+	@GetMapping("setting/{state}/modify/{lineCode}")
+	public String goModify(@PathVariable(name = "state") String state,@PathVariable(name = "lineCode") String lineCode, Model model,HttpSession session) {
+		EmployeeVO employeeVO = (EmployeeVO) session.getAttribute("authUser");
+		String emp_code = employeeVO.getEmp_code();
+		AjaxdataApprLineVO vo  = null;
+		String goPage = "addressList.approval";
+		if("apprLine".equals(state)) {
+			model.addAttribute("title", "결재라인 그룹 수정");
+			Approve_LineVO lineVO = new Approve_LineVO();
+			lineVO.setEmp_code(emp_code);
+			lineVO.setAppr_line_code(lineCode);
+			Approve_LineVO approve_LineVO = service.getModifyApprLineInfo(lineVO);
+			System.out.println(approve_LineVO);
+			vo = approve_LineVO.sendEmpData();
+		}else if("rg1Line".equals(state) ) {
+			model.addAttribute("title", "참조자 그룹 수정");
+			ReviewerGroupVO groupVO = new ReviewerGroupVO();
+			groupVO.setEmp_code(emp_code);
+			groupVO.setRg_code(lineCode);
+			ReviewerGroupVO reviewerGroupVO= service.getModifyReviewerLineInfo(groupVO);
+			vo = reviewerGroupVO.sendEmpData();
+		}else if("rg2Line".equals(state)) {
+			model.addAttribute("title", "열람권자 그룹 수정");
+			ReviewerGroupVO groupVO = new ReviewerGroupVO();
+			groupVO.setEmp_code(emp_code);
+			groupVO.setRg_code(lineCode);
+			ReviewerGroupVO reviewerGroupVO= service.getModifyReviewerLineInfo(groupVO);
+			vo = reviewerGroupVO.sendEmpData();
+		}
+		model.addAttribute("lineCode", lineCode);
+		model.addAttribute("state", state);
+		model.addAttribute("dataList", vo);
+		return goPage;
+	}
+	
+	
+	
+	
+	@GetMapping(value="setting/{state}/add", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public PagingVO<AjaxdataApprLineVO> ajaxForlist(
+			@PathVariable(name = "state") String state, Model model,HttpSession session
+			,@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,SearchVO searchVO
+		){
+		goSetting(state, model, session, currentPage,searchVO);
+		return (PagingVO<AjaxdataApprLineVO>) model.asMap().get("pagingVO");
+	}
+	
+	
+	
+	@PostMapping(value="setting/{state}/add", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public String addApprLine(HttpSession session,@PathVariable(name = "state") String state,
+			@RequestParam(required = true, defaultValue = "임시명그룹") String title,@RequestParam String dataList,Model model) {
+		String goPage = "lineSetting.approval";
+		model.addAttribute("state", state);
+		String message = null;
+		EmployeeVO employeeVO= (EmployeeVO) session.getAttribute("authUser");
+		ObjectMapper mapper = new ObjectMapper();
+		List<Map<String, String>> data;
+		try {
+			data = mapper.readValue(dataList, List.class);
+			String emp_codeStr = null;
+			List<EmployeeVO> empSortList = new ArrayList<EmployeeVO>();
+			for(Map<String,String>temp : data) {
+				EmployeeVO empVO  = new EmployeeVO();
+				empVO.setEmp_code( temp.get("key"));
+				empSortList.add(empVO);
+			}
+			
+			if("apprLine".equals(state)){
+				Approve_LineVO approve_LineVO = new Approve_LineVO();
+				approve_LineVO.setAppr_line(title);
+				approve_LineVO.setEmp_code(employeeVO.getEmp_code());
+				service.createApprLine(approve_LineVO);
+				int cnt = 1;
+				for(EmployeeVO temp : empSortList) {
+					Appr_OrderVO orderVO = new Appr_OrderVO();
+					orderVO.setEmp_code(temp.getEmp_code());
+					orderVO.setAppr_line_code(approve_LineVO.getAppr_line_code());
+					service.createApprEmpOrder(orderVO);
+				}
+			}else if("rg1Line".equals(state)) {
+				ReviewerGroupVO reviewerGroupVO = new ReviewerGroupVO();
+				reviewerGroupVO.setEmp_code(employeeVO.getEmp_code());
+				reviewerGroupVO.setRg_type("1");
+				reviewerGroupVO.setRg_name(title);
+				service.createReviewerGroup(reviewerGroupVO);
+				for(EmployeeVO temp : empSortList) {
+					ReviewerVO reviewerVO = new ReviewerVO();
+					reviewerVO.setEmp_code(temp.getEmp_code());
+					reviewerVO.setRg_code(reviewerGroupVO.getRg_code());
+					service.createReviewerLine(reviewerVO);
+				}
+			}else if("rg2Line".equals(state)) {
+				ReviewerGroupVO reviewerGroupVO = new ReviewerGroupVO();
+				reviewerGroupVO.setEmp_code(employeeVO.getEmp_code());
+				reviewerGroupVO.setRg_type("2");
+				reviewerGroupVO.setRg_name(title);
+				service.createReviewerGroup(reviewerGroupVO);
+				for(EmployeeVO temp : empSortList) {
+					ReviewerVO reviewerVO = new ReviewerVO();
+					reviewerVO.setEmp_code(temp.getEmp_code());
+					reviewerVO.setRg_code(reviewerGroupVO.getRg_code());
+					service.createReviewerLine(reviewerVO);
+				}
+			}else {
+				throw new DataNotFoundException("올바르지 않은 요청입니다."); 
+			}
+		} catch (Exception e) {
+			message = "잘못된 요청입니다.";
+		}
+		return message;
+	}
+
+	 private void addData(int currentPage, int totalRecord, List<AjaxdataApprLineVO> dataList,Model model ) {
+			PagingVO<AjaxdataApprLineVO> vo = new PagingVO<AjaxdataApprLineVO>();
+			vo.setCurrentPage(currentPage);
+			vo.setTotalRecord(totalRecord);
+			vo.setDataList(dataList);
+
+			model.addAttribute("pagingVO", vo);
+		}
+	
+	
+}

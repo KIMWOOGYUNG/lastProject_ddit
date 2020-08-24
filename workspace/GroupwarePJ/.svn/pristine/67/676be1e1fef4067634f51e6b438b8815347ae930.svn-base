@@ -1,0 +1,19 @@
+package kr.or.ddit.schedule.dao;
+
+import java.util.List;
+
+import org.springframework.stereotype.Repository;
+
+import kr.or.ddit.vo.Dept_ScheduleVO;
+import kr.or.ddit.vo.PagingVO;
+
+@Repository
+public interface Dep_IScheduleDAO {
+
+	public List<Dept_ScheduleVO> selectDeptScheduleList(PagingVO<Dept_ScheduleVO> pagingVO);
+
+	public Dept_ScheduleVO selectDeptSchedule(String ds_code);
+
+	public int selectDept_scheduleCount(PagingVO<Dept_ScheduleVO> pagingVO);
+
+}

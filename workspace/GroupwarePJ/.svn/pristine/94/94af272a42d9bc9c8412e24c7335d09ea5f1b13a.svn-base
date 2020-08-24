@@ -1,0 +1,85 @@
+package kr.or.ddit.addr.service;
+
+import java.util.List;
+
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.vo.AddressVO;
+import kr.or.ddit.vo.DepartmentVO;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.TeamVO;
+
+public interface IaddrService {
+
+/**
+ * 내주소록 사원 등록
+ */
+	public ResultState createAddress(AddressVO addr);
+	
+	
+	/**
+	 * 내 주소록 사원 상세조회
+	 * 
+	 */
+	public AddressVO readAddress(String add_name);
+	
+	/**
+	 * 검색 조건에 맞는 등록 내 주소록 사원수 
+	 * @param pagingVO
+	 * @return
+	 */
+	
+	public int readAddressCount(PagingVO<AddressVO> pagingVO);
+	
+	
+	/**
+	 * 검색 조건에 맞는 내 주소록 사원목록
+	 *
+	 */
+	public List<AddressVO> readAddressList(PagingVO<AddressVO> pagingVO);
+	
+	
+	
+	/**
+	 * 내 주소록 사원정보 수정
+	 */
+	public ResultState modifyAddress(AddressVO addr);
+	
+	
+	
+	/**
+	 * 내 주소록 사원 삭제
+	 */
+	public ResultState removeAddress(AddressVO addr);
+	
+	
+	////////////사내 주소록
+	/**
+	 * 사내 주소록 상세 조회 
+	 */
+	public AddressVO readAddr(String add_name);
+	/**
+	 * 사내 주소록 검색 조건에 맞는 등록 사내 주소록 사원수 
+	 * 
+	 */
+	public int readAddrCount(PagingVO pagingVO);
+	/**
+	 * 사내주소록 검색 조건에 맞는 사내 주소록 사원목록
+	 */
+	public List<EmployeeVO> readAddrList(PagingVO<EmployeeVO> pagingVO);
+	
+	
+	/**
+	 * 부서를 리스트로 출력
+	 * @return
+	 */
+	public List<DepartmentVO> readDepartmentList();
+	
+	
+	/**
+	 * 해당부서에 속해있는 팀을 리스트로 출력
+	 * @param dept_code 부서코드
+	 * @return
+	 */
+	public List<TeamVO> readTeamList(String dept_code);
+}

@@ -1,0 +1,54 @@
+package kr.or.ddit.login_logout.service;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+
+import exception.DataNotFoundException;
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.login_logout.dao.ILoginDAO;
+import kr.or.ddit.vo.EmployeeVO;
+
+@Service
+public class LoginServiceImpl implements ILoginService {
+	@Inject
+	ILoginDAO dao;
+	
+	@Override
+	public ResultState checkEmployeeCode(EmployeeVO employeeVO) {
+		ResultState state = ResultState.FAIL;
+		EmployeeVO searchVO = dao.selectEmployee(employeeVO.getEmp_code());
+		
+		if(searchVO.equals(employeeVO)) {
+			state = ResultState.SUCCESSES;
+		}
+		
+		return state;
+	}
+
+	@Override
+	public EmployeeVO checkEmpMail(String emp_code) {
+		EmployeeVO employeeVO = dao.selectEmpMail(emp_code);
+		if(employeeVO==null) {
+			throw new DataNotFoundException("이메일 불일치");
+		}
+		return employeeVO;
+	}
+
+	@Override 
+	public ResultState changeEmpPassword(EmployeeVO employeeVO) {
+		ResultState state = ResultState.FAIL;
+		int cnt = dao.updateEmpPassword(employeeVO);
+		if(cnt!=0) {
+			state = ResultState.SUCCESSES;
+		}
+		return state;
+	}
+
+	@Override
+	public EmployeeVO getEmpInfo(EmployeeVO employeeVO) {
+		return dao.selectEmployee(employeeVO.getEmp_code());
+	}
+
+
+}

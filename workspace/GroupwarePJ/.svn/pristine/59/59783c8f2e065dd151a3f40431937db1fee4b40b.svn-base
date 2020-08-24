@@ -1,0 +1,98 @@
+package kr.or.ddit.work.controller;
+
+import java.util.List;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import kr.or.ddit.approval.dao.IPublicFormBoxDAO;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.SearchVO;
+import kr.or.ddit.vo.WorkLogVO;
+import kr.or.ddit.work.service.IMyWorkLogService;
+
+@Controller
+public class MyDiaryReadController {
+	
+	@Inject
+	private IMyWorkLogService service;
+	
+	
+	
+	@GetMapping(value = "/work/mywork/{pos}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public PagingVO<WorkLogVO> ajaxForlistweek(SearchVO searchVO , @RequestParam(name="page", required = false, defaultValue = "1") int currentPage, Model model,  HttpSession session,@PathVariable(name = "pos") String pos){
+		weekdaiaryList(searchVO,currentPage, model,session,pos);
+		return (PagingVO<WorkLogVO>) model.asMap().get("pagingVO");
+	}
+	
+	@GetMapping("/work/mywork/{pos}")
+	public String weekdaiaryList(SearchVO searchVO , @RequestParam(name = "page", required = false, defaultValue = "1")int currentPage , Model model, HttpSession session, @PathVariable(name = "pos") String pos) {
+		String goPage = null;
+		EmployeeVO employeeVO =(EmployeeVO) session.getAttribute("authUser");
+		 PagingVO<WorkLogVO> pagingVO = new PagingVO<>();
+		 WorkLogVO worklog = new WorkLogVO();
+		 worklog.setEmp_code(employeeVO.getEmp_code());
+		 
+		
+		 if(pos.equals("daydiary")) {
+			 worklog.setWl_catag("WLC100");
+			 goPage ="mydaydiaryList.work";
+		 }else if(pos.equals("weekdiary")) {
+			 worklog.setWl_catag("WLC200");
+			 goPage = "myweekdiaryList.work";	
+		 }else if(pos.equals("trashbasket")) {
+			 worklog.setWl_del("Y");
+			 goPage = "mytrashbasket.work";
+		 }else {
+			 // 잘못된 요청
+		 }
+		 
+		pagingVO.setDetailSearch(worklog);
+		pagingVO.setCurrentPage(currentPage);
+		pagingVO.setSearchVO(searchVO);
+		int totalRecord = service.readWorkLogCountday(pagingVO);
+		pagingVO.setTotalRecord(totalRecord);
+		List<WorkLogVO> worklogListday = service.readWorkLogListday(pagingVO);
+		pagingVO.setDataList(worklogListday);
+
+		
+		model.addAttribute("pagingVO", pagingVO);
+		model.addAttribute("wl_catag", pos);
+		model.addAttribute("wl_team", "mywork");
+		return goPage;		
+	}
+
+	@GetMapping(value = "/work/mywork/{wl_catag}/{wl_code}")
+	public String daydaiaryView(@PathVariable String wl_catag, @PathVariable String wl_code, Model model) {
+		
+		WorkLogVO worklog = new WorkLogVO();
+		worklog.setWl_code(wl_code);
+		
+		if("weekdiaryview".equals(wl_catag)) {
+			worklog.setWl_catag("WLC200");
+		}else if("daydiaryview".equals(wl_catag)) {
+			worklog.setWl_catag("WLC100");
+		}
+				
+		worklog = service.readWorkLogday(worklog);
+		
+		model.addAttribute("worklog", worklog);
+	
+		
+		return "mydaydiaryView.work";
+	}
+	
+
+}

@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.community.dao.IBoardDAO">
+	<sql id="searchFrag">
+		<where>
+			<if test="searchVO!=null and @org.apache.commons.lang3.StringUtils@isNotBlank(searchVO.searchWord)">
+				<choose>
+					<when test="'board_title'.equals(searchVO.searchType)">
+						INSTR(BOARD_TITLE, #{searchVO.searchWord}) > 0
+					</when>
+					<when test="'board_writer'.equals(searchVO.searchType)">
+						INSTR(EMP_CODE, #{searchVO.searchWord}) > 0
+					</when>
+					<when test="'board_content'.equals(searchVO.searchType)">
+						INSTR(BOARD_CONTENT, #{searchVO.searchWord}) > 0
+					</when>
+					<otherwise>
+						INSTR(BOARD_TITLE, #{searchVO.searchWord}) > 0
+						OR INSTR(EMP_CODE, #{searchVO.searchWord}) > 0
+						OR INSTR(BOARD_CONTENT, #{searchVO.searchWord}) > 0
+					</otherwise>
+				</choose>
+			</if>
+		</where>
+	</sql>
+	<!-- 게시글 목록 조회 -->
+	<select id="selectAllBoardList" resultType="int" parameterType="kr.or.ddit.vo.PagingVO">
+		SELECT E.* 
+	    FROM(SELECT ROWNUM RNUM, D.* 
+			FROM(SELECT BOARD_CODE, C.STANDARD_CODE BOARD_CATAG, BOARD_TITLE, B.EMP_KOR EMP_CODE, BOARD_DATE, BOARD_HIT
+	            FROM BOARD A INNER JOIN EMPLOYEE B ON(A.EMP_CODE = B.EMP_CODE)
+	                         INNER JOIN STANDARD C ON(A.BOARD_CATAG = C.STANDARD_CODE)
+	            WHERE A.BOARD_CATAG = #{detailSearch.board_catag, jdbcType=VARCHAR}
+	            ORDER BY BOARD_CODE ASC
+			) D
+	    )E 
+		<![CDATA[
+			WHERE E.RNUM >= #{startRow} AND E.RNUM <= #{endRow}
+		]]>   
+		ORDER BY E.RNUM
+	</select>
+	<select id="selectBoardCount" resultType="int" parameterType="PagingVO">
+		SELECT COUNT (BOARD_CODE) FROM BOARD
+		<include refid="searchFrag" />
+	</select>
+	<select id="selectBoardList" resultType="BoardVO" parameterType="PagingVO">
+		SELECT E.* 
+	    FROM(SELECT ROWNUM RNUM, D.* 
+			FROM(SELECT BOARD_CODE, C.STANDARD_CODE BOARD_CATAG, BOARD_TITLE, B.EMP_KOR EMP_CODE, BOARD_DATE, BOARD_HIT
+	            FROM BOARD A INNER JOIN EMPLOYEE B ON(A.EMP_CODE = B.EMP_CODE)
+	                         INNER JOIN STANDARD C ON(A.BOARD_CATAG = C.STANDARD_CODE)
+	            WHERE A.BOARD_CATAG = #{detailSearch.board_catag, jdbcType=VARCHAR}
+	            ORDER BY BOARD_CODE ASC
+			) D
+	    )E 
+		<![CDATA[
+			WHERE E.RNUM >= #{startRow} AND E.RNUM <= #{endRow}
+		]]>   
+		ORDER BY E.RNUM
+	</select>
+	<!-- 게시글 상세 조회 -->
+	<resultMap type="BoardVO" id="boardMap" autoMapping="true">
+		<id property="board_code" column="BOARD_CODE" />
+		<collection property="attatchList" javaType="java.util.List" ofType="Board_AttatchVO" autoMapping="true" />
+	</resultMap>
+	<select id="selectBoard" parameterType="String" resultMap="boardMap">
+		SELECT  A.BOARD_CODE BOARD_CODE, D.STANDARD_CODE BOARD_CATAG, C.EMP_KOR EMP_CODE, A.BOARD_TITLE, TO_CHAR(A.BOARD_DATE, 'YYYY-MM-DD')BOARD_DATE, A.BOARD_HIT, A.BOARD_CONTENT, A.PARENT_BOARD, A.BOARD_DEL,
+        B.BOARD_ATTCODE, B.BOARD_CODE, B.FILE_PATH, B.FILE_SIZE, B.ORG_NAME, B.SAVE_NAME, A.BOARD_ADDRESS
+		FROM BOARD A LEFT OUTER JOIN BOARD_ATTATCH B ON (A.BOARD_CODE = B.BOARD_CODE)
+						  INNER JOIN EMPLOYEE C ON(A.EMP_CODE = C.EMP_CODE)
+						  INNER JOIN STANDARD D ON(A.BOARD_CATAG = D.STANDARD_CODE)
+		WHERE A.BOARD_CODE = #{board_code}
+	</select>
+	<select id = "selectReply" parameterType="String" resultType="BoardVO">
+		SELECT  BOARD_CONTENT
+        FROM BOARD
+        WHERE PARENT_BOARD = #{parent_board}
+	</select>
+	<update id="incrementHit" parameterType="String">
+		UPDATE BOARD
+		SET BOARD_HIT = BOARD_HIT+1
+		WHERE BOARD_CODE = #{board_code}
+	</update>
+	<!-- 게시글 추가 -->
+	<insert id ="insertBoard" parameterType="BoardVO">
+		<selectKey resultType="String" keyProperty="board_code" order="BEFORE">
+			SELECT 'BO' || LPAD(NVL(TO_NUMBER(SUBSTR(MAX(BOARD_CODE), 3)), 0)+1, 3, '0')
+			FROM BOARD
+		</selectKey>
+		INSERT INTO BOARD (
+		    BOARD_CODE, BOARD_CATAG, EMP_CODE, BOARD_TITLE,    
+		    BOARD_DATE, BOARD_HIT, BOARD_CONTENT, BOARD_DEL, BOARD_ADDRESS
+		    <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(parent_board)">
+		    	, PARENT_BOARD
+		    </if>
+		) VALUES (
+		    #{board_code}, #{board_catag,jdbcType=VARCHAR}, #{emp_code,jdbcType=VARCHAR}, #{board_title,jdbcType=VARCHAR},
+		    SYSDATE, 0, #{board_content,jdbcType=CLOB}, #{board_del,jdbcType=VARCHAR}, #{board_address, jdbcType=VARCHAR}
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(parent_board)">
+		    	, #{parent_board}
+		    </if>
+		)
+	</insert>
+	<!-- 게시글 수정 -->
+	<update id="updateBoard" parameterType="BoardVO">
+		UPDATE BOARD
+		SET
+		    BOARD_CATAG = #{board_catag,jdbcType=VARCHAR},
+		    BOARD_TITLE = #{board_title,jdbcType=VARCHAR},
+		    BOARD_CONTENT = #{board_content,jdbcType=CLOB},
+		    BOARD_ADDRESS = #{board_address, jdbcType=VARCHAR}
+		WHERE
+		    BOARD_CODE = #{board_code,jdbcType=VARCHAR}
+	</update>
+	<!--  게시글 삭제 -->
+	<delete id="deleteBoard" parameterType="String">
+		DELETE FROM BOARD
+	    WHERE BOARD_CODE IN (
+	        SELECT BOARD_CODE
+	        FROM BOARD
+	        START WITH BOARD_CODE = #{board_code}
+	        CONNECT BY PRIOR BOARD_CODE = PARENT_BOARD
+	    )
+	</delete>
+	<!-- 카테고리 리스트 -->
+	<select id = "selectCatagList" resultType="hashMap">
+		SELECT STANDARD_CODE "standard_code", STANDARD_NAME "standard_name"
+        FROM STANDARD
+        WHERE STANDARD_CODE like 'BOD%'
+	</select>
+	<!-- 댓글 -->
+	<select id = "selectReplyContent" resultType="hashMap">
+		SELECT PARENT_BOARD "parent_board", BOARD_CONTENT "board_content"
+    	FROM BOARD
+        WHERE PARENT_BOARD like 'BO%';
+	</select>
+</mapper>

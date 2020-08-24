@@ -1,0 +1,223 @@
+package kr.or.ddit.schedule.controller;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.schedule.dao.IMyStandardDAO;
+import kr.or.ddit.schedule.dao.IMy_ScheduleDAO;
+import kr.or.ddit.schedule.service.IMy_ScheduleService;
+import kr.or.ddit.vo.CalendarVO;
+import kr.or.ddit.vo.Dept_ScheduleVO;
+import kr.or.ddit.vo.DraftVO;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.My_ScheduleVO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.SearchVO;
+import kr.or.ddit.vo.StandardVO;
+
+@Controller
+public class My_ScheduleController {
+
+	@Inject
+	IMy_ScheduleService service;
+	
+	@Inject
+	IMy_ScheduleDAO dao;
+	
+	@Inject
+	IMyStandardDAO stdDAO;
+	
+	@GetMapping("/plan/myplancalendar/{type}")
+	public String myschedulecalendar(@PathVariable String type,Model model,HttpSession session) {
+		EmployeeVO empVO= (EmployeeVO) session.getAttribute("authUser");
+		My_ScheduleVO detailSearch = new My_ScheduleVO();
+		detailSearch.setMs_important("IMP100");
+		detailSearch.setEmp_code(empVO.getEmp_code());
+
+		if("import".equals(type)) {
+			List<My_ScheduleVO> mscode = dao.selectmyimport(detailSearch);
+			model.addAttribute("mscode", mscode);
+			model.addAttribute("type2","importantplan");
+		}else {
+			List<My_ScheduleVO> mscode = dao.selectmylist(empVO.getEmp_code());
+			model.addAttribute("mscode", mscode);
+			model.addAttribute("type2","myplan");
+		}
+		model.addAttribute("type", type);
+		
+		return "MyScheduleCalendar.plan";
+	}
+
+	
+	@PostMapping(value = "/plan/myplancalendar/{type}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public List<CalendarVO> myscheduleSetting(@PathVariable String type,Model model,HttpSession session){
+		myschedulecalendar(type,model,session);
+		return (List<CalendarVO>) model.asMap().get("mscode");
+	}
+	
+	
+	
+	
+	@ModelAttribute("currentAction")
+	private void attributeSetting(Model model) { //스탠다드 세팅 메서드
+		model.addAttribute("myimportantnm",stdDAO.selectimportant());
+	}
+	
+	@GetMapping(value="/plan/myplanbox/myplan" , produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public PagingVO<My_ScheduleVO> ajaxForlist(
+			@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+			SearchVO searchVO, Model model,HttpSession session
+			){
+			myplanList(currentPage, searchVO, model,session);
+			return (PagingVO<My_ScheduleVO>) model.asMap().get("pagingVO");
+		}
+	
+	//내 일정 목록
+	@GetMapping("/plan/myplanbox/myplan")
+	public String myplanList(@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+			SearchVO searchVO, Model model,HttpSession session) {
+		EmployeeVO empVO= (EmployeeVO) session.getAttribute("authUser");
+		My_ScheduleVO detailSearch = new My_ScheduleVO();
+		PagingVO<My_ScheduleVO> pagingVO = new PagingVO<>(8,3);
+		
+		detailSearch.setEmp_code(empVO.getEmp_code());
+		pagingVO.setDetailSearch(detailSearch);
+		pagingVO.setSearchVO(searchVO);
+		pagingVO.setCurrentPage(currentPage);
+		
+		int totalRecord = service.selectMyScheduleCount(pagingVO);
+		pagingVO.setTotalRecord(totalRecord);
+		
+		List<My_ScheduleVO> comList = service.selectMyScheduleList(pagingVO);
+		pagingVO.setDataList(comList);
+		
+		model.addAttribute("pagingVO", pagingVO);
+		
+		return "MySchedule.plan";
+	}
+	
+	//내 일정 상세 보기
+	@GetMapping("/plan/DetailMySchedule/{ms_code}")
+	public String detailmyplan(@PathVariable(name = "ms_code") String ms_code, Model model) {
+		
+	My_ScheduleVO myschedulevo = service.selectMySchedule(ms_code);
+	model.addAttribute("myschedule" , myschedulevo);
+	model.addAttribute("methodType","put");
+		
+	return "DetailMySchedule.plan";
+	}
+	
+	
+	@GetMapping(value="/plan/myplanbox/importantplan", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public PagingVO<My_ScheduleVO> ajaxFormylist(
+			@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+			SearchVO searchVO, Model model
+			){
+			MyImportSchedule(currentPage, searchVO, model);
+			return (PagingVO<My_ScheduleVO>) model.asMap().get("pagingVO");
+		}
+	//중요일정함
+	@GetMapping("/plan/myplanbox/importantplan")
+	public String MyImportSchedule(@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+			SearchVO searchVO, Model model) {
+		String goPage = "MyImportSchedule.plan";
+		
+		My_ScheduleVO detailSearch = new My_ScheduleVO();
+		detailSearch.setMs_important("IMP100");
+		
+		PagingVO<My_ScheduleVO> pagingVO = new PagingVO<>(10,5);
+		
+		pagingVO.setDetailSearch(detailSearch);
+		pagingVO.setSearchVO(searchVO);
+		pagingVO.setCurrentPage(currentPage);
+		
+		int totalRecord = service.selectMyScheduleCount(pagingVO);
+		pagingVO.setTotalRecord(totalRecord);
+		
+		List<My_ScheduleVO> comList = service.selectMyScheduleList(pagingVO);
+		pagingVO.setDataList(comList);
+		
+		model.addAttribute("pagingVO", pagingVO);
+		
+		return goPage;
+	}
+	
+	//내일정함 캘린더 새창
+	@GetMapping("/plan/msediter")
+	public String goPage() {
+		
+		return "plan/MsEnrollNewWindow";
+	}
+	
+	//내 일정 수정
+	@PutMapping(value = "/plan/DetailMySchedule/{ms_code}/msmodify")
+	public String update(
+			@PathVariable(name = "ms_code") String ms_code,
+		@ModelAttribute("myschedule") My_ScheduleVO myschedulevo, 
+		BindingResult errors, Model model,
+		RedirectAttributes redirectAttributes)
+	{
+		String goPage = null;
+		String message = null;
+		
+		
+		if (!errors.hasErrors()) {
+			ResultState result = service.updateMyschedule(myschedulevo);
+			switch (result) {
+			case FAIL:
+				message = "쫌따 다시 해보셈.";
+				redirectAttributes.addFlashAttribute("myschedule", myschedulevo);
+				goPage = "redirect:/plan/DetailMySchedule/{ms_code}";
+				break;
+			default: // OK
+				goPage = "redirect:/plan/DetailMySchedule/{ms_code}";
+				break;
+			}
+		} else {
+			goPage = "redirect:/plan/DetailMySchedule/{ms_code}";
+			redirectAttributes.addFlashAttribute("myschedule", myschedulevo);
+		}
+
+		model.addAttribute("message", message);
+
+		return goPage;
+		
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+}

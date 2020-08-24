@@ -1,0 +1,111 @@
+package kr.or.ddit.project.service;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import exception.DataNotFoundException;
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.project.dao.IProjectListDAO;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.PJ_MemberVO;
+import kr.or.ddit.vo.PJ_RgroupVO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.ProjectVO;
+import kr.or.ddit.vo.Project_roleVO;
+
+@Service
+public class ProjectListServiceImpl implements IProjectListService {
+	@Inject
+	IProjectListDAO dao;
+	
+	@Transactional
+	@Override
+	public ResultState insertProject(ProjectVO project) {
+		ResultState result = null;
+		
+		//pj_rgroup의 pk세팅
+		int prg_pk = dao.selectPRG_PK();		
+		System.out.println("@@@@@"+String.format("PJ%03d", prg_pk++));
+		List<PJ_RgroupVO> pj_rgroupList = project.getPj_rgroupList();	
+		for(int i = 0; i < pj_rgroupList.size(); i++) {
+			pj_rgroupList.get(i).setPrg_code(String.format("PJ%03d", prg_pk++));
+		}
+		
+		//프로젝트 insert
+		int cnt = dao.insertProject(project);
+		
+		if(cnt > 0) {
+			result = ResultState.OK;
+		}else {
+			result = ResultState.FAIL;
+		}
+		return result;
+	}
+
+	@Override
+	public int selectProjectCount(PagingVO<ProjectVO> pagingVO) {
+		return dao.selectProjectCount(pagingVO);
+	}
+
+	@Override
+	public List<ProjectVO> selectProjectList(PagingVO<ProjectVO> pagingVO) {
+		return dao.selectProjectList(pagingVO);
+	}
+
+	@Override
+	public ProjectVO selectProject(String project_code) {
+		ProjectVO vo = dao.selectProject(project_code);
+		if(vo == null) {
+			throw new DataNotFoundException(project_code + "에 해당하는 프로젝트는 없음");
+		}
+		return vo;
+	}
+
+	@Override
+	public ResultState updateProject(ProjectVO project) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public ResultState deleteProject(String project_code) {
+		ResultState result = null;
+		int cnt = dao.deleteProject(project_code);
+		if(cnt > 0) {
+			result = ResultState.OK;
+		}else {
+			result = ResultState.FAIL;
+		}
+		return result;
+	}
+
+	@Override
+	public List<ProjectVO> selectProjectListForTask(String emp_code) {
+		return dao.selectProjectListForTask(emp_code);
+	}
+
+	@Override
+	public List<EmployeeVO> selectEmpList(PagingVO<EmployeeVO> pagingVO) {
+		return dao.selectEmpList(pagingVO);
+	}
+
+	@Override
+	public int readEmpCount(PagingVO<EmployeeVO> pagingVO) {
+		return dao.selectEmpCount(pagingVO);
+	}
+
+	@Override
+	public List<Project_roleVO> selectRoleList() {
+		return dao.selectRoleList();
+	}
+
+	@Override
+	public List<PJ_RgroupVO> selectPJ_Rgroup(String project_code) {
+		return dao.selectPJ_Rgroup(project_code);
+	}
+
+}

@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.message.dao.IMessageDAO">
+<sql id="searchFrag">
+	
+	<trim prefix="where" prefixOverrides="and">
+		<if test="detailSearch!=null">
+			<choose>
+				<when test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.emp_receiver) and @org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.emp_sender)">
+				   EMP_RECEIVER = #{detailSearch.emp_receiver} OR EMP_SENDER = #{detailSearch.emp_sender}
+				</when>
+				<otherwise>
+					<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.emp_receiver)">
+						    AND EMP_RECEIVER = #{detailSearch.emp_receiver}
+					</if>
+					<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.emp_sender)">
+							AND EMP_SENDER = #{detailSearch.emp_sender}
+					</if>
+				</otherwise>
+			</choose>
+		</if>
+	</trim>
+</sql>
+
+
+<!-- 쪽지 리스트 -->
+<select id="MessageList" parameterType="kr.or.ddit.vo.PagingVO" resultType="kr.or.ddit.vo.MessageVO">
+SELECT A.*
+	FROM (
+		SELECT ROWNUM RNUM, B.EMP_KOR EMP_RECEIVER, C.EMP_KOR EMP_SENDER, MSG_CONTENT, TO_CHAR(MSG_DATE,'YYYY-MM-DD')MSG_DATE
+		FROM MESSAGE A LEFT OUTER JOIN EMPLOYEE B ON (A.EMP_RECEIVER = B.EMP_CODE)
+        	 LEFT OUTER JOIN EMPLOYEE C ON (A.EMP_SENDER = C.EMP_CODE)
+		<include refid="searchFrag"></include>
+		) A
+WHERE RNUM BETWEEN #{startRow} AND #{endRow}
+</select>
+
+
+
+<!-- 쪽지리스트카운트  -->
+<select id="selectMessageCount" resultType="int" parameterType="kr.or.ddit.vo.PagingVO">
+SELECT COUNT(MSG_CODE)
+FROM MESSAGE
+ <include refid="searchFrag"></include>
+</select>
+
+<!-- 쪽지쓰기 -->
+<insert id="insertMessage" parameterType="kr.or.ddit.vo.MessageVO">
+<selectKey keyProperty="msg_code" resultType="string" order="BEFORE" >
+	SELECT 'me'|| LPAD(TO_NUMBER(SUBSTR(MAX(CODE), 2))+1, 3, '0')
+	FROM MESSAGE 
+</selectKey>
+INSERT INTO MESSAGE (
+    MSG_CODE,
+    EMP_RECEIVER,
+    EMP_SENDER,
+    MSG_CONTENT,
+    MSG_DATE,
+    MSG_IMPORTANT,
+    MSG_DEL
+)VALUES(
+ #{msg_code,jdbcType=VARCHAR}, #{emp_receiver, jdbcType=VARCHAR},
+ #{emp_sender,jdbcType=VARCHAR},#{msg_content,jdbcType=CLOB},
+TO_DATE(#{msg_date,jdbcType=DATE},'YYYY-MM-DD'),#{msg_important,jdbcType=VARCHAR},
+ #{msg_del,jdbcType=VARCHAR}
+)
+</insert>
+<!--쪽지 상세보기  -->
+<select id="selectmsg" parameterType="String" resultType="MessageVO">
+SELECT MSG_CODE,EMP_KOR EMP_RECEIVER, EMP_KOR EMP_SENDER, MSG_CONTENT
+    FROM MESSAGE A LEFT OUTER JOIN EMPLOYEE B ON (A.EMP_RECEIVER = B.EMP_CODE)
+WHERE EMP_CODE= #{emp_code};
+
+</select>
+<update id="updateImportant" parameterType="kr.or.ddit.vo.MessageVO">
+UPDATE MESSAGE
+<trim prefix="SET" prefixOverrides=",">
+	<if test="emp_receiver!=null and @org.apache.commons.lang3.StringUtils@isNotBlank(emp_receiver)">
+		, EMP_RECEIVER 	=	#{emp_receiver,jdbcTyp=VARCHAR}
+	</if>
+	<if test="msg_del!=null and @org.apache.commons.lang3.StringUtils@isNotBlank(msg_del)">
+		, MSG_DEL 		=	#{msg_del,jdbcTyp=VARCHAR}
+	</if>
+</trim>
+WHERE msg_code = #{msg_code}
+</update>
+
+<!-- <delete id="deleteMessage" parameterType="string"> -->
+<!-- DELETE FROM MESSAGE -->
+<!-- WHERE MSG_CODE=#{msg_code} -->
+<!-- </delete> -->
+
+</mapper>

@@ -1,0 +1,32 @@
+package kr.or.ddit.message.service;
+
+import java.util.List;
+
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.MessageVO;
+import kr.or.ddit.vo.PagingVO;
+
+public interface IMessageService {
+
+	//쪽지쓰기 
+	public ResultState createmsg(MessageVO msgVO);
+	
+	//전체쪽지리스트 조회 
+	public List<MessageVO> msgList(PagingVO<MessageVO> pagingVO);
+		
+	//쪽지 상세보기 
+	public MessageVO selectmsg(String msg_code);
+	
+	//쪽지 이동 및 삭제 
+	public MessageVO movemsg(String msg_code);
+	
+	
+	//검색조건에 맞는 쪽지 수량 출력
+	public int selectMessageCount(PagingVO<MessageVO> pagingVO);
+	
+	//쪽지삭제 
+	public ResultState removemsg(String msgVO);
+	
+	
+}

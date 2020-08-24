@@ -1,0 +1,131 @@
+package kr.or.ddit.login_logout.controller;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpSession;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.sun.mail.handlers.text_plain;
+
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.login_logout.service.LoginServiceImpl;
+import kr.or.ddit.vo.EmployeeVO;
+
+/**
+ * 
+ * @author 박혜진
+ * @since 2020. 7. 23
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                          수정자               수정내용
+ * --------     --------    ----------------------
+ * 2020. 7. 23      박혜진       최초작성
+ * Copyright (c) 2020 by DDIT All right reserved
+ * </pre>
+ *    1) 클라언트로부터 촬영된 얼굴 이미지 수신.(50%)
+ * 	  2) 해당 이미지의 faceId 추출 (Face Detect API 사용)
+ *    3) 추출된 faceId 를 이용해 얼굴과 매칭되는 Person id 식별(Face Identify API 사용)
+ *    4) person id 를 이용해 DB 로부터 ID/PASSWORD 조회
+ *    5) 조회한 ID/PASSWORD 로 로그인 처리
+ */
+
+@Controller
+@RequestMapping("/")
+public class LoginController {
+	
+	@Inject
+	LoginServiceImpl service;
+	
+	@GetMapping
+    public String login(HttpSession session) {
+		Object empVO = session.getAttribute("authUser");
+		if(empVO != null) {
+			return "redirect:/index";
+		}else {
+			return "main/login";
+		}
+    }
+	@GetMapping("logout")
+	public String logout(HttpSession session) {
+		session.removeAttribute("authUser");
+		return "redirect:/";
+	}
+	
+	@PostMapping
+	public String loginCheck(RedirectAttributes redirectAttributes,
+			HttpSession session,
+			@RequestParam(required = false) String emp_code, 
+			@RequestParam(required = false) String emp_pw ) { //성공 실패 판별
+		String goPage = null;
+		String message = null;
+		
+		if(StringUtils.isBlank(emp_code) || StringUtils.isBlank(emp_pw) ) {
+			goPage = "redirect:/";
+			message = "사원번호,비밀번호 모두 입력해주세요.";
+		}else {
+			EmployeeVO employeeVO = new EmployeeVO(emp_code,emp_pw);
+			employeeVO = service.checkEmployeeCode(employeeVO); //이게 success를 반환하나?ㅇㅇ
+			if(employeeVO!=null) { //로그인 성공
+				session.setAttribute("authUser", employeeVO);
+				goPage = "redirect:/index";
+			}else {
+				goPage = "redirect:/";
+				message = "존재하지 않는 사원번호거나 비밀번호가 틀렸습니다.";
+			}
+		}
+		redirectAttributes.addFlashAttribute("message", message);
+		return goPage;
+	}
+	
+//	@PostMapping("faceidLogin")
+//	public String faceidLogin() {
+//		String goPage = "faceLogin";
+//		
+//		return goPage;
+//	}
+	@PostMapping(value = "getImage", produces = "text/plain;charset=UTF-8")
+	@ResponseBody
+	public String getImage(RedirectAttributes redirectAttributes,
+			HttpSession session, @RequestBody MultipartFile image) {
+		//받아온 이미지를 서비스로보내서, faceId추출하여 매칭된s personid식별해내고,
+		//personid로 회원정보 가져와서, @@@님이 맞으십니까? 물어보고 맞다고 하면 아래 메소드에서 아이디,비번으로 로그인 시켜주기!! 
+		MultipartFile img1 = image;
+		EmployeeVO empVO = new EmployeeVO();
+		empVO.setImg1(img1);
+		empVO = service.getEmpLoginInfo(empVO);
+		if(empVO==null) {
+			return "등록되지않은회원입니다";
+		}
+		String emp_code = empVO.getEmp_code();
+		String emp_kor = empVO.getEmp_kor();
+		String emp_pw = empVO.getEmp_pw();
+		//loginCheck(redirectAttributes,session,emp_code,emp_pw);
+		
+		//로그인시켜주기 
+		String message = null;
+		empVO.setEmp_code(emp_code);
+		empVO.setEmp_pw(emp_pw);
+		empVO = service.checkEmployeeCode(empVO); 
+		String check = empVO.getEmp_code();
+		if(check.isEmpty()) { //로그인 실패
+			message = "로그인실패, 다시시도해주세요";
+		}else {
+			session.setAttribute("authUser", empVO);
+			message = "로그인성공, 메인페이지로 이동합니다";
+		}
+		redirectAttributes.addFlashAttribute("message", message);
+		return message;
+	}
+}

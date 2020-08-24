@@ -1,0 +1,318 @@
+package kr.or.ddit.approval.controller;
+
+import java.beans.EventHandler;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.ibatis.annotations.Select;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import exception.DataNotFoundException;
+import kr.or.ddit.approval.service.ApprovalServiceImpl;
+import kr.or.ddit.approval.service.IApprovalService;
+import kr.or.ddit.approval.service.IPublicFormBoxService;
+import kr.or.ddit.login_logout.service.ILoginService;
+import kr.or.ddit.vo.AjaxdataApprLineVO;
+import kr.or.ddit.vo.Appr_StatVO;
+import kr.or.ddit.vo.Approve_LineVO;
+import kr.or.ddit.vo.DraftVO;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.FormVO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.ProjectVO;
+import kr.or.ddit.vo.ReviewerGroupVO;
+import kr.or.ddit.vo.Reviewer_StatVO;
+import kr.or.ddit.vo.SearchVO;
+
+@Controller
+@RequestMapping("approval")
+public class ApprovalController {
+	@Inject
+	IApprovalService service;
+	@Inject
+	ILoginService empService;
+	@Inject
+	IPublicFormBoxService formService;
+	
+	@GetMapping("publicformbox")
+	public String Depmanage() {
+		String goPage = "publicformList.approval";
+		return goPage;
+	}
+
+	@GetMapping("myapproval/{pos}")
+	public String printdriftList(@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+			@PathVariable(name = "pos") String draft_pos, SearchVO searchVO,Model model,HttpSession session) {
+		String goPage = "daftList.approval";
+		if(draft_pos.equals("all")) {
+			model.addAttribute("title", "내가 쓴 기안서");
+		}else if(draft_pos.equals("temp")){
+			model.addAttribute("title", "임시보관함");
+		}else if(draft_pos.equals("delete")){
+			model.addAttribute("title", "삭제함");
+		}else {
+			//아무것도 아닐경우
+		}
+		
+		
+		EmployeeVO employeeVO =(EmployeeVO) session.getAttribute("authUser");
+		DraftVO draftVO = makeDraftSearchVo(searchVO, draft_pos);
+		draftVO.setEmp_code(employeeVO.getEmp_code());
+		
+		PagingVO<DraftVO> pagingVO = new PagingVO<>();
+		pagingVO.setDetailSearch(draftVO);
+		pagingVO.setCurrentPage(currentPage);
+		int totalRecord = service.getApproveCount(pagingVO);
+		pagingVO.setTotalRecord(totalRecord);
+		
+		List<DraftVO> projectList = service.getTempFolder(pagingVO);
+		pagingVO.setDataList(projectList);
+		
+		model.addAttribute("draft_pos", draft_pos);
+		model.addAttribute("pagingVO", pagingVO);
+		
+		return goPage;
+	}
+	
+	@GetMapping(value="myapproval/{pos}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public PagingVO<DraftVO> ajaxForlist(
+			@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+			@PathVariable(name = "pos") String draft_pos,SearchVO searchVO,Model model,HttpSession session
+		){
+		printdriftList(currentPage, draft_pos, searchVO, model,session);
+		return (PagingVO<DraftVO>) model.asMap().get("pagingVO");
+	}
+	
+	
+	
+	@GetMapping("approvalwrite")
+	public String goWrite(Model model) {
+		String goPage = "approvalWrite.approval";
+		model.addAttribute("form_catag",formService.selectFormCatagList());
+		model.addAttribute("title", "보고서 작성");
+		return goPage;
+	}
+	
+	@PostMapping("/approvalmodify/{draft_code}")
+	public String goModify(Model model,@PathVariable String draft_code) {
+		String goPage = "approvalWrite.approval";
+		
+		List<Appr_StatVO>apprList = service.getApprLineStat(draft_code);
+		Reviewer_StatVO searchVO = new Reviewer_StatVO();
+		searchVO.setDraft_code(draft_code);
+		searchVO.setRs_type("1");
+		
+		List<Reviewer_StatVO> rg1List = service.getReviewerStatList(searchVO);
+		searchVO.setRs_type("2");
+		List<Reviewer_StatVO> rg2List = service.getReviewerStatList(searchVO);
+		
+		 DraftVO draftVO = service.getDraft(draft_code);
+		 EmployeeVO vo = new EmployeeVO();
+		 vo.setEmp_code(draftVO.getEmp_code());
+		 draftVO.setEmpVO(empService.getEmpInfo(vo));
+		
+		 if(draftVO.getDraft_instead_emp() != null) {
+			 EmployeeVO vo1 = new EmployeeVO();
+			 vo1.setEmp_code(draftVO.getDraft_instead_emp());
+			 draftVO.setInsteadEmpVO(empService.getEmpInfo(vo1));
+		 }
+		 
+		 if(apprList!= null && apprList.size() > 0) {
+			 draftVO.setApprList(apprList);
+		 }
+		 if(rg1List != null && rg1List.size() > 0) {
+			 draftVO.setRg1List(rg1List);
+		 }
+		 if(rg2List != null && rg2List.size() > 0) {
+			 draftVO.setRg2List(rg2List);
+		 }
+		 
+		PagingVO<FormVO>pagingVO = new PagingVO<FormVO>();
+		model.addAttribute("draftVO",draftVO);
+		model.addAttribute("title", "보고서 수정");
+		model.addAttribute("forminfo",  formService.selectFormList(pagingVO));
+		model.addAttribute("form_catag",formService.selectFormCatagList());
+		model.addAttribute("vctinfo", service.getVacationInfo());
+		model.addAttribute("vacation", service.getVacationList(draft_code));
+		
+		return goPage;
+	}
+	
+	@GetMapping(value="/approvalwrite/{pos}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public List<AjaxdataApprLineVO> addList(@PathVariable(name="pos") String pos, HttpSession session,Model model) {
+		EmployeeVO vo = (EmployeeVO) session.getAttribute("authUser");
+		String emp_code = vo.getEmp_code();
+	
+		List<AjaxdataApprLineVO> data = new ArrayList<AjaxdataApprLineVO>();
+		
+		if("apprLine".equals(pos)) {
+			for(Approve_LineVO temp:service.getMyApprGroup(emp_code)) {
+				data.add(temp.sendEmpData());
+			}
+			
+		}else if("rg1Line".equals(pos)) {
+			ReviewerGroupVO groupVO = new ReviewerGroupVO();
+			groupVO.setEmp_code(emp_code);
+			groupVO.setRg_type("1");
+			for(ReviewerGroupVO temp:service.getMyReviewerGroup(groupVO)) {
+				data.add(temp.sendEmpData());
+			}
+			
+		}else if("rg2Line".equals(pos)) {
+			ReviewerGroupVO groupVO = new ReviewerGroupVO();
+			groupVO.setEmp_code(emp_code);
+			groupVO.setRg_type("2");
+			service.getMyReviewerGroup(groupVO);
+			for(ReviewerGroupVO temp:service.getMyReviewerGroup(groupVO)) {
+				data.add(temp.sendEmpData());
+			}
+		}
+		return data;
+	}
+	
+	@GetMapping("/detail/{draft_code}")
+	public String showDetail(@PathVariable String draft_code, HttpSession session,Model model) {
+		EmployeeVO empVO = (EmployeeVO) session.getAttribute("authUser");
+		
+			List<Appr_StatVO>apprList = service.getApprLineStat(draft_code);
+			String appringInfoList = service.getAppringInfo(draft_code);
+			DraftVO tempVO = new DraftVO();
+			tempVO.setEmp_code(empVO.getEmp_code());
+			tempVO.setDraft_code(draft_code);
+			String insteadInfo = service.getInsteadInfo(tempVO);
+			
+			Reviewer_StatVO searchVO = new Reviewer_StatVO();
+			searchVO.setDraft_code(draft_code);
+			searchVO.setRs_type("1");
+			
+			List<Reviewer_StatVO> rg1List = service.getReviewerStatList(searchVO);
+			searchVO.setRs_type("2");
+			List<Reviewer_StatVO> rg2List = service.getReviewerStatList(searchVO);
+			
+			 DraftVO draftVO = service.getDraft(draft_code);
+			 
+			
+			 
+			 EmployeeVO vo = new EmployeeVO();
+			 vo.setEmp_code(draftVO.getEmp_code());
+			 draftVO.setEmpVO(empService.getEmpInfo(vo));
+			 
+			 if(draftVO.getDraft_instead_emp() != null) {
+				 EmployeeVO vo1 = new EmployeeVO();
+				 vo1.setEmp_code(draftVO.getDraft_instead_emp());
+				 draftVO.setInsteadEmpVO(empService.getEmpInfo(vo1));
+			 }
+			
+			 
+			 if(apprList!= null && apprList.size() > 0) {
+				 draftVO.setApprList(apprList);
+			 }
+			 if(rg1List != null && rg1List.size() > 0) {
+				 draftVO.setRg1List(rg1List);
+			 }
+			 if(rg2List != null && rg2List.size() > 0) {
+				 draftVO.setRg2List(rg2List);
+			 }
+
+			 model.addAttribute("vctinfo", service.getVacationInfo());
+			 model.addAttribute("vacation", service.getVacationList(draft_code));
+			 model.addAttribute("insteadCheck", insteadInfo);
+			 model.addAttribute("insteadList", service.getInsteadList(empVO.getEmp_code())); // 안쓰는거같음
+			 model.addAttribute("draftVO",draftVO);
+			 model.addAttribute("apprInfo",appringInfoList);
+			 
+		return "detailDraft.approval";
+	}
+	
+	
+	@PostMapping(value="delete/{pos}", produces = MediaType.TEXT_PLAIN_VALUE)
+	@ResponseBody
+	public String moveDeleteAppre(@PathVariable(name = "pos")String pos,@RequestBody String[] dataList,Model model) {
+		for(String data:dataList) {
+			DraftVO vo = new DraftVO();
+			vo.setDraft_code(data);
+			if("all".equals(pos)) vo.setDraft_pos("2");
+			else if("temp".equals(pos)) vo.setDraft_pos("3");
+			 service.setDraftDelete(vo);
+		}
+		return "success";
+	}
+	
+	@DeleteMapping(value="move/{pos}", produces = MediaType.TEXT_PLAIN_VALUE)
+	@ResponseBody
+	public String moveAppre(@PathVariable(name = "pos")String pos,@RequestBody String[] dataList,Model model) {
+		for(String data:dataList) {
+			DraftVO vo = new DraftVO();
+			vo.setDraft_code(data);
+			vo.setDraft_pos("2");
+			service.setDraftDelete(vo);
+		}
+		return "success";
+	}
+	
+	@DeleteMapping(value="delete/{pos}", produces = MediaType.TEXT_PLAIN_VALUE)
+	@ResponseBody
+	public String deleteAppre(@RequestBody String[] dataList,Model model) {
+		
+		for(String data:dataList) {
+			 service.removeAllDraftAttatch(data);
+			 service.deleteFiles(data);
+			 service.removeApproveStat(data);
+			 service.removeRevieweStat(data);
+			 service.removeDraft(data);
+		}
+		
+		return "success";
+	}
+	
+	private DraftVO makeDraftSearchVo(SearchVO searchVO, String draft_pos) {
+		DraftVO draftVO = new DraftVO();
+		String state = null;
+		if("all".equals(draft_pos)) {
+			state = "1";
+		}else if("temp".equals(draft_pos)) {
+			state = "2";
+		}else if("delete".equals(draft_pos)) {
+			state = "3";
+		}
+		
+		draftVO.setDraft_pos(state);
+		
+		String type = searchVO.getSearchType();
+		
+		if(!StringUtils.isBlank(type)) {
+			String data = searchVO.getSearchWord();
+			if("no".equals(type)) {
+				draftVO.setDraft_code(data);
+			}else if("emp".equals(type)){
+				draftVO.setEmp_code(data);
+			}else if("title".equals(type)){
+				draftVO.setDraft_title(data);
+			}else if("state".equals(type)){
+				draftVO.setDraft_stat(data);
+			}
+		}
+		
+		return draftVO;
+	}
+	
+}

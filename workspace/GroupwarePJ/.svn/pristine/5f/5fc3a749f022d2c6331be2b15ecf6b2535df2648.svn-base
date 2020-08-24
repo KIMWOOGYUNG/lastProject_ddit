@@ -1,0 +1,105 @@
+package kr.or.ddit.approval.controller;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import kr.or.ddit.approval.service.ApprovalServiceImpl;
+import kr.or.ddit.approval.service.IApprovalService;
+import kr.or.ddit.vo.DraftVO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.ProjectVO;
+import kr.or.ddit.vo.SearchVO;
+
+@Controller
+@RequestMapping("approval")
+public class ApprovalController {
+	@Inject
+	IApprovalService service;
+	
+	@GetMapping("publicformbox")
+	public String Depmanage() {
+		String goPage = "publicformList.approval";
+		return goPage;
+	}
+	
+	@GetMapping("myapproval")
+	public String printdriftList(@ModelAttribute(name = "draft_pos") String draft_pos,Model model) {
+		String goPage = "daftList.approval";
+			System.out.println("cate값"+draft_pos);
+		if(draft_pos.equals("1")) {
+			model.addAttribute("title", "내가 쓴 기안서");
+		}else if(draft_pos.equals("2")){
+			model.addAttribute("title", "임시보관함");
+		}else if(draft_pos.equals("3")){
+			model.addAttribute("title", "삭제함");
+		}else {
+			//아무것도 아닐경우
+		}
+		return goPage;
+	}
+	
+	@GetMapping(value="myapproval", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public PagingVO<DraftVO> ajaxForlist(
+		@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+		DraftVO draftVO, Model model
+		){
+		printList(currentPage, draftVO, model);
+		return (PagingVO<DraftVO>) model.asMap().get("pagingVO");
+	}
+	
+	
+	
+	@GetMapping("approvalwrite")
+	public String goWrite() {
+		String goPage = "approvalWrite.approval";
+		return goPage;
+	}
+	
+	private DraftVO makeDraftSearchVo(SearchVO searchVO, String draft_pos) {
+		DraftVO draftVO = new DraftVO();
+		draftVO.setDraft_pos(draft_pos);
+		String type = searchVO.getSearchType();
+		
+		if(!StringUtils.isBlank(type)) {
+			String data = searchVO.getSearchWord();
+			if("no".equals(type)) {
+				draftVO.setDraft_title(data);
+			}else if("emp".equals(type)){
+				draftVO.setEmp_code(data);
+			}else if("title".equals(type)){
+				draftVO.setDraft_title(data);
+			}else if("state".equals(type)){
+				draftVO.setDraft_stat(data);
+			}
+		}
+		
+		
+		
+		return draftVO;
+	}
+	
+	void printList(int currentPage,DraftVO detailSearch,Model model) {	
+		PagingVO<DraftVO> pagingVO = new PagingVO<>();
+		pagingVO.setDetailSearch(detailSearch);
+		pagingVO.setCurrentPage(currentPage);
+		int totalRecord = service.getApproveCount(pagingVO);
+		pagingVO.setTotalRecord(totalRecord);
+		
+		List<DraftVO> projectList = service.getTempFolder(pagingVO);
+		pagingVO.setDataList(projectList);
+		
+		model.addAttribute("pagingVO", pagingVO);
+	}
+}

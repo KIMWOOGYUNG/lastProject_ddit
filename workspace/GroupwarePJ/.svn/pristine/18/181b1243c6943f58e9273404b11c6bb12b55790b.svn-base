@@ -1,0 +1,34 @@
+package kr.or.ddit.project.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+
+@Controller
+public class ProjectTaskController {
+	  
+	
+	@GetMapping("/project/projectwork/mytask/block")
+	public String myProjecBlock() {
+		return "projectGantt.project";
+	}
+	
+	@GetMapping("/project/projectwork/mytask/list")
+	public String myProjecList() {
+		return "projectGantt.project";
+	}
+	
+	@GetMapping("/project/projectwork/alltask")
+	public String myProjectAllTask() {
+		return "myProjectAllTask.project";
+	}
+	
+	@GetMapping("/project/allprojectwork/mytask")
+	public String allProjectAllTas() {
+		return "allProjectAllTask.project";
+	}
+	
+	@GetMapping("/project/allprojectwork/alltask")
+	public String allProjectMyTask() {
+		return "allProjectMyTask.project";
+	}
+}

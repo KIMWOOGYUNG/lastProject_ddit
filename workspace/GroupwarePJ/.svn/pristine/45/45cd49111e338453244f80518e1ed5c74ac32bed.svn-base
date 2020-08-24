@@ -1,0 +1,247 @@
+package kr.or.ddit.work.controller;
+
+import java.util.List;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpSession;
+import javax.validation.Valid;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.SearchVO;
+import kr.or.ddit.vo.WorkLogVO;
+import kr.or.ddit.work.dao.IStandardDAO;
+import kr.or.ddit.work.service.IMyWorkLogService;
+
+@Controller
+public class MyDiaryModifyController {
+	
+	@Inject
+	private IMyWorkLogService service;
+	
+	@Inject
+	private IStandardDAO stdDao;
+	
+	@ModelAttribute("currentAction")
+	private void attributeSetting(Model model) {
+		model.addAttribute("typeList", stdDao.selectType());
+		model.addAttribute("deptList", stdDao.selectDept());
+		model.addAttribute("teamList", stdDao.selectTeam());
+	}
+	
+	@GetMapping("/work/mywork/mydiaryForm/{wl_code}/{wl_catag}")
+	public String editworklog(@PathVariable String wl_code,  @PathVariable String wl_catag, Model model) {
+		
+		WorkLogVO worklog = new WorkLogVO();
+		worklog.setWl_code(wl_code);
+		worklog.setWl_catag(wl_catag);
+		worklog = service.readWorkLogday(worklog);
+		
+		model.addAttribute("worklog", worklog);
+		
+		model.addAttribute("state", "updateWorklog");
+		model.addAttribute("wl_code", "/"+wl_code);
+		return "mydiaryForm.work";
+	}
+	
+	// 일지수정
+	@PostMapping("/work/mywork/updateWorklog/{wl_code}/{wl_catag}")
+	public String update(@Valid @ModelAttribute("worklog") WorkLogVO worklog, BindingResult errors, @RequestParam String wlcode, @PathVariable String wl_code,
+						 @PathVariable String wl_catag, Model model, RedirectAttributes redirectAttributes) {
+		String goPage = null;
+		String message = null;
+		
+		if(!errors.hasErrors()) {
+			ResultState result = service.modifyWorkLogday(worklog);
+			switch (result) {
+			case FAIL:
+				message = "잠시 후 다시 시도하세요.";
+				redirectAttributes.addFlashAttribute("worklog", worklog);
+					goPage = "redirect:/work/mywork/mydiaryForm/" + wl_code + "/" + wl_catag;
+				break;
+			default:
+				if(wl_catag.equals("WLC100")) {
+					goPage = "redirect:/work/mywork/daydiaryview/"+wl_code;
+				}else {
+					goPage = "redirect:/work/mywork/weekdiaryview/"+wl_code;
+				}
+				break;
+			}
+		}else {
+			goPage = "redirect:/work/mywork/mydiaryForm/" + wl_code + "/" + wl_catag;
+			redirectAttributes.addFlashAttribute("worklog", worklog);
+			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.worklog", errors);
+		}
+		
+		model.addAttribute("message", message);
+		
+		return goPage;
+	}
+	
+	// 내 일지 삭제
+	@PostMapping("/work/mywork/delworklog/{wl_catag}")
+	public String delete(@RequestParam String wl_code, Model model, HttpSession sessoin, @PathVariable String wl_catag) {
+		String goPage = null;
+		ResultState result = null;
+		
+		if(wl_code.contains(",")) {
+			String[] splited = wl_code.split(",");
+			for(int i = 0; i < splited.length; i++) {
+				result = service.removeWorkLogday(splited[i]);
+			}
+		}else {
+			result = service.removeWorkLogday(wl_code);
+		}
+		switch (result) {
+		case FAIL:
+			if(wl_catag.equals("daydiary")) {
+				goPage = "redirect:/work/mywork/daydiary";
+			}else {
+				goPage = "redirect:/work/mywork/weekdiary";				
+			}
+			break;
+		default:
+			if(wl_catag.equals("daydiary")) {
+				goPage = "redirect:/work/mywork/daydiary";
+			}else {	
+				goPage = "redirect:/work/mywork/weekdiary";				
+			}
+			break;
+		}
+		
+		return goPage;
+	}
+	
+	// 팀 일지삭제
+	@DeleteMapping("/work/teamwork/trashbasket")
+	public String mydiarydelete(@RequestParam(required=false) String[] code, Model model) {
+		String goPage = null;
+		ResultState result = null;
+		
+		for(String wl_code : code) {
+			result = service.removeWorkLogday(wl_code);
+		}
+	
+		switch (result) {
+		case FAIL:
+			goPage = "redirect:/work/teamwork/diary";
+			break;
+		default:
+			goPage = "redirect:/work/teamwork/diary";
+			break;
+		}
+		return goPage;
+	}
+	
+	//일지 복구
+	@PostMapping("/work/mywork/delworklog/back/{wl_team}")
+	public String mydiaryback(@ModelAttribute("worklog") WorkLogVO worklog, @RequestParam String wl_code, Model model, RedirectAttributes redirectAttributes
+								,@PathVariable String wl_team) {
+		
+		String goPage = null;
+		ResultState result = null;
+		
+		result = service.backWorkLogtrash(worklog);
+		
+		switch (result) {
+		case FAIL:
+			if(wl_team.equals("mywork")) {
+				goPage = "redirect:/work/mywork/trashbasket";
+			}else {
+				goPage = "redirect:/work/teamwork/teamtrashbasket";
+			}
+			break;
+
+		default:
+			if(wl_team.equals("mywork")) {
+				goPage = "redirect:/work/mywork/trashbasket";
+			}else {
+				goPage = "redirect:/work/teamwork/teamtrashbasket";
+			}
+			break;
+		}
+		
+		return goPage;
+	}
+	
+	// 일지영구삭제
+	@PostMapping("/work/mywork/realDelete/{wl_team}")
+	public String realDeleteDiary(@RequestParam String wl_code, @PathVariable String wl_team, Model model) {
+		String goPage = null;
+		ResultState result = null;
+		
+		if(wl_code.contains(",")) {
+			String[] splited = wl_code.split(",");
+			for(int i = 0; i < splited.length; i++) {
+				result = service.removeWorkLogtrash(splited[i]);
+			}
+		}else {
+			result = service.removeWorkLogtrash(wl_code);
+		}
+		
+		switch (result) {
+		case FAIL:
+			if(wl_team.equals("mywork")) {
+				goPage = "redirect:/work/mywork/trashbasket";
+			}else {
+				goPage = "redirect:/work/teamwork/teamtrashbasket";
+			};
+			break;
+		default:
+			if(wl_team.equals("mywork")) {
+				goPage = "redirect:/work/mywork/trashbasket";
+			}else {
+				goPage = "redirect:/work/teamwork/teamtrashbasket";
+			}
+			break;
+		}
+		return goPage;
+		
+	}
+	
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

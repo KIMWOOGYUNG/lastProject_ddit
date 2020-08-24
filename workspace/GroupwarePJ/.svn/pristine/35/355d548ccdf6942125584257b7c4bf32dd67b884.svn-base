@@ -1,0 +1,82 @@
+package kr.or.ddit.mypage.controller;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import kr.or.ddit.mypage.service.IMypageService;
+import kr.or.ddit.vo.CalendarVO;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.VacationVO;
+
+@Controller
+@RequestMapping("mypage/")
+public class VacationController {
+	
+	@Inject
+	IMypageService service;
+	
+	@GetMapping("myVacaCalendar")
+	public String myVacation(Model model) {
+		String goPage = "myAttCalendar.mypage";
+		model.addAttribute("title", "내 휴가현황");
+		model.addAttribute("state", "myVacaCalendar");
+		return goPage;
+		
+	}
+	
+	@PostMapping(value ="myVacaCalendar", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody 
+	public List<CalendarVO> myVacationCalendar(RedirectAttributes redirectAttributes,
+			HttpSession session) {
+		EmployeeVO empVO = (EmployeeVO) session.getAttribute("authUser");
+		String emp_code = empVO.getEmp_code();
+		List<CalendarVO> dataList = new ArrayList<CalendarVO>();
+		List<VacationVO> myvacaList= service.getMyVacation(emp_code);
+		for(VacationVO temp : myvacaList) {
+			dataList.add(temp.sendDate());
+		}
+		return dataList;
+	}
+	
+	
+	
+	@GetMapping("myTeamVacaCalendar")
+	public String teamVacation(Model model) {
+		String goPage = "myAttCalendar.mypage";
+		model.addAttribute("title", "부서 휴가현황");
+		model.addAttribute("state", "myTeamVacaCalendar");
+		return goPage;
+	}
+	
+	@PostMapping(value ="myTeamVacaCalendar", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody 
+	public List<CalendarVO> teamVacationCalendar(RedirectAttributes redirectAttributes,
+			HttpSession session) {
+		EmployeeVO empVO = (EmployeeVO) session.getAttribute("authUser");
+		String dept_code = empVO.getDept_code();
+		List<CalendarVO> dataList = new ArrayList<CalendarVO>();
+		
+		List<VacationVO> teamVacaList= service.getTeamVacation(dept_code);
+		for(VacationVO temp : teamVacaList) {
+			dataList.add(temp.sendDate());
+		}
+		return dataList;
+	}
+	
+	
+	
+}

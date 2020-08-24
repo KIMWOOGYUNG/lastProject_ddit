@@ -1,0 +1,62 @@
+package kr.or.ddit.schedule.controller;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import kr.or.ddit.schedule.service.ICom_ScheduleService;
+import kr.or.ddit.vo.Com_ScheduleVO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.ProjectVO;
+import kr.or.ddit.vo.SearchVO;
+
+@Controller
+public class Com_ScheduleController {
+	
+	@Inject
+	ICom_ScheduleService service;
+	
+	@GetMapping(value="/plan/companyplan", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public PagingVO<Com_ScheduleVO> ajaxForlist(
+		@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+		SearchVO searchVO, Model model
+		){
+		complanList(currentPage, searchVO, model);
+		return (PagingVO<Com_ScheduleVO>) model.asMap().get("pagingVO");
+	}
+
+	//회사 일정 목록
+	@GetMapping("/plan/companyplan")
+	public String complanList(@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+			SearchVO searchVO, Model model) {
+		PagingVO<Com_ScheduleVO> pagingVO = new PagingVO<>();
+		pagingVO.setSearchVO(searchVO);
+		pagingVO.setCurrentPage(currentPage);
+		int totalRecord = service.readCom_ScheduleCount(pagingVO);
+		pagingVO.setTotalRecord(totalRecord);
+		
+		List<Com_ScheduleVO> comList = service.readScheduleList(pagingVO);
+		pagingVO.setDataList(comList);
+		
+		model.addAttribute("pagingVO", pagingVO);
+		
+		return "ComSchedule.plan";
+	}
+	
+	@GetMapping("/plan/complancalendar")
+	public String complancalendar() {
+		String goPage="ComScheduleCalendar.plan";
+		return goPage;
+	}
+	
+	
+	
+}

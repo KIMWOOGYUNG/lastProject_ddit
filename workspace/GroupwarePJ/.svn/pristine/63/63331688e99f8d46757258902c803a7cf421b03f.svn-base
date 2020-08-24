@@ -1,0 +1,40 @@
+package kr.or.ddit.approval.service;
+
+import java.util.List;
+
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.vo.Appr_OrderVO;
+import kr.or.ddit.vo.Appr_StatVO;
+import kr.or.ddit.vo.Approve_LineVO;
+import kr.or.ddit.vo.DraftVO;
+import kr.or.ddit.vo.Draft_AttatchVO;
+import kr.or.ddit.vo.PagingVO;
+
+public interface IApprovalService {
+	List<DraftVO> getTempFolder(PagingVO<DraftVO> pagingVO);// 기안서를 상태에따라 읽어온다.
+	DraftVO getDraft(String draft_code);//기안서의 상세페이지를 읽어온다
+	List<Approve_LineVO> getApprLine(PagingVO<Approve_LineVO> pagingVO);//사원의 결제라인을 불러온다.
+	List<Appr_StatVO> getApprLineStat(String draft_code);//해당 결제라인의 사원이 결제를 진행했는지 확인
+	int getApproveCount(PagingVO<DraftVO> pagingVO);
+	int getApprLineCount(PagingVO<Approve_LineVO> pagingVO);
+	
+	ResultState createApprEmpStat(Appr_StatVO appr_StatVO);//결재진행시 생성됨
+	ResultState createApprLine(Approve_LineVO approve_LineVO);//결재 그룹생성
+	ResultState createApprEmpOrder(Appr_OrderVO appr_OrderVO);//결재 그룹에 사원 추가
+	ResultState createDraft(DraftVO draftVO);
+	ResultState createDraftAttatch(Draft_AttatchVO attatchVO);//////////////////
+	
+	
+	ResultState setDarft(DraftVO draftVO);
+	ResultState setApprLine(Approve_LineVO approve_LineVO);//결재 그룹수정
+	ResultState setApprEmpStat(Appr_StatVO appr_StatVO);//결재 상태 수정
+	
+	
+	ResultState removeDraft(DraftVO draftVO);
+	ResultState removeDraftAttatch(Draft_AttatchVO attatchVO);
+	ResultState removeAllDraftAttatch(DraftVO draftVO);
+	ResultState removeAllApprOrder(String appr_line_code);//결제라인의 순서 전체삭제
+	ResultState removeApprEmpOrder(String appr_order_code);//결제라인의 순서 부분삭제
+	ResultState removeApprLine(String appr_line_code);//결재라인 삭제
+	
+}

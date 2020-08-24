@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.approval.dao.IPublicFormBoxDAO">
+	<sql id = "searchFrag">
+		<trim prefix="WHERE" prefixOverrides="AND">
+		<if test="detailSearch != null and @org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.form_code)">
+			AND A.FORM_CODE = #{form_code}
+		</if>
+		<if test="detailSearch != null and @org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.fc_name)">
+			AND B.FC_NAME = #{detailSearch.fc_name}
+		</if>
+		<if test="detailSearch != null and @org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.form_name)">
+			AND A.FORM_NAME = #{detailSearch.form_name}
+		</if>
+		</trim>
+	</sql>
+	
+	<select id="selectFormCount" resultType="int" parameterType="kr.or.ddit.vo.PagingVO">
+		SELECT COUNT(FORM_CODE)
+		FROM FORM A INNER JOIN FORM_CATAG B ON(A.FC_CODE = B.FC_CODE)
+		<include refid="searchFrag" />
+	</select>
+	
+	<!-- 서식목록  -->
+	<select id="selectFormList" resultType="FormVO" parameterType="kr.or.ddit.vo.PagingVO">
+		SELECT FORM_CODE, B.FC_NAME FC_CODE, FORM_NAME, FORM_CONTENT
+		FROM FORM A INNER JOIN FORM_CATAG B ON(A.FC_CODE = B.FC_CODE)
+		<include refid="searchFrag" />
+	</select>
+	
+	<!-- 서식 상세보기 -->
+	<select id="selectForm" parameterType="String" resultType="kr.or.ddit.vo.FormVO">
+		SELECT FORM_CODE, B.FC_NAME FC_CODE, FORM_NAME, FORM_CONTENT
+		FROM FORM A INNER JOIN FORM_CATAG B ON(a.fc_code = b.fc_code)
+		WHERE FORM_CODE = #{form_code}
+	</select>
+	
+	<!-- 서식 등록 -->
+	<insert id = "insertForm" parameterType="FormVO">
+		
+	</insert>
+
+</mapper>

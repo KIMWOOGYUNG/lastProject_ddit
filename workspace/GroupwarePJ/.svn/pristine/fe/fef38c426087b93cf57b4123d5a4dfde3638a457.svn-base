@@ -1,0 +1,130 @@
+package kr.or.ddit.schedule.controller;
+
+import java.util.List;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import kr.or.ddit.schedule.service.IDep_ScheduleService;
+import kr.or.ddit.vo.Com_ScheduleVO;
+import kr.or.ddit.vo.Dept_ScheduleVO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.SearchVO;
+
+@Controller
+public class Dep_ScheduleController {
+	
+	@Inject
+	IDep_ScheduleService service;
+	
+	@GetMapping(value="/plan/departmentplanbox/departmentplan", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public PagingVO<Dept_ScheduleVO> ajaxForlist(
+			@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+			SearchVO searchVO, Model model
+			){
+			depplanList(currentPage, searchVO, model);
+			return (PagingVO<Dept_ScheduleVO>) model.asMap().get("pagingVO");
+		}
+	
+	//부서 일정 목록
+	@GetMapping("/plan/departmentplanbox/departmentplan")
+	public String depplanList(@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+			SearchVO searchVO, Model model) {
+		PagingVO<Dept_ScheduleVO> pagingVO = new PagingVO<>();
+		pagingVO.setSearchVO(searchVO);
+		pagingVO.setCurrentPage(currentPage);
+		int totalRecord = service.readdepScheduleCount(pagingVO);
+		pagingVO.setTotalRecord(totalRecord);
+		
+		List<Dept_ScheduleVO> comList = service.readdepScheduleList(pagingVO);
+		pagingVO.setDataList(comList);
+		
+		model.addAttribute("pagingVO", pagingVO);
+		
+		return "DepSchedule.plan";
+	}
+	
+	
+	//부서 내 일정
+	@GetMapping("/plan/departmentplanbox/departinnermyplan")
+	public String DepMySchedule() {
+		String goPage = "DepMySchedule.plan";
+		return goPage;
+	}
+	
+	//부서 내 일정 상세보기
+	@GetMapping("/plan/detaildepmyplan/{ds_code}")
+	public String detaildepmyplan(@PathVariable(name = "ds_code") String ds_code, Model model) {
+		
+		Dept_ScheduleVO deptschedulevo =service.readdepSchedule(ds_code);
+		model.addAttribute("deptschedule", deptschedulevo);
+		
+		return "DetailDepMySchedule.plan";
+	}
+	
+	
+	//부서 내 일정 등록
+	
+	//부서 일정 캘린더
+	@GetMapping("/plan/depplancalendar")
+	public String complancalendar() {
+		String goPage="DepScheduleCalendar.plan";
+		return goPage;
+	}
+	
+	//부서 일정 등록
+//	@GetMapping("/plan/depplanenroll")
+//	public String Depplanenroll() {
+//		String goPage="DepScheduleEnroll.plan";
+//		return goPage;
+//	}
+	
+	//부서 일정 상세 보기
+		@GetMapping("/plan/detaildepplan/{ds_code}")
+		public String detaildepplan(@PathVariable(name = "ds_code") String ds_code, Model model) {
+			
+			Dept_ScheduleVO deptschedulevo =service.readdepSchedule(ds_code);
+			model.addAttribute("deptschedule", deptschedulevo);
+			
+			return "DetailDepSchedule.plan";
+		}
+		
+		
+		//부서 일정 삭제(체크박스)
+		@PostMapping("/plan/departmentplanbox/departmentplan/deletedept")
+		public String deletedeptplan(@RequestParam String ds_code, Model model, HttpSession session) {
+		
+		if(ds_code.contains(",")) {
+			String[] splited = ds_code.split(",");
+			for(int i=0; i< splited.length; i++) {
+				service.deleteDeptschedule(splited[i]);
+			}
+		}else {
+			service.deleteDeptschedule(ds_code);
+		}
+		return "DepSchedule.plan";
+		}
+
+	
+
+}
+
+
+
+
+
+
+
+
+
+

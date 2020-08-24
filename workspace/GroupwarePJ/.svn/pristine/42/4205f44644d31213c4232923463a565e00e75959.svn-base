@@ -1,0 +1,129 @@
+package kr.or.ddit.addr.dao;
+
+import java.util.List;
+
+import org.springframework.stereotype.Repository;
+
+import kr.or.ddit.vo.AddressVO;
+import kr.or.ddit.vo.Address_groupVO;
+import kr.or.ddit.vo.DepartmentVO;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.PositionVO;
+import kr.or.ddit.vo.TeamVO;
+
+/**
+ * @author PC-09
+ *
+ */
+@Repository
+public interface IAddressDAO {
+	/**내 주소록-> 추가,삭제,상세조회,사원수 조회 
+	 * 사내 주소록->상세조회, 사원수 조회 ,
+	 * 내 주소록에는 신규등록 할수있음 
+	 ** @param addr
+	 * @return 등록된 사원
+	 * 
+	 */
+	/**
+	 * 내 주소록 리스트 
+	 * @param addr
+	 * @return
+	 */
+	
+	//public List<Address_groupVO> ();
+	
+	public int insertAddress(AddressVO addr); //내 주소록 신규등록
+	
+	
+	
+	/**
+	 * 내 주소록 상세 조회
+	 * @param add_name
+	 * @return 존재하지않으면, null반환
+	 */
+	public AddressVO selectAddress(String add_name );//내주소록 상세조회 
+	
+	
+	
+	/**
+	 * 검색 조건에 맞는 내 주소록 사원수 조회
+	 * 
+	 */
+	public int selectAddressCount(PagingVO<AddressVO> paginVO); // 내주소록 사원수 조회 
+	
+	
+	
+	/**
+	 * 검색 조건에 맞는 내 주소록 사원 목록 조회
+	 * @param pagingVO 
+	 * @return
+	 * 
+	 */
+	public List<AddressVO> selectAddressList(PagingVO<AddressVO> pagingVO); //내 주소록 사원목록 조회 검색은 이름,부서로조회
+	
+	
+	
+	/**
+	 * 내 주소록 사원 정보 수정
+	 * @param addr
+	 * @return
+	 * 
+	 */
+	public int updateAddress(AddressVO addr); //내 주소록 수정
+	
+	
+	
+	/**
+	 * 내 주소록 사원 정보 삭제
+	 * @param add_name
+	 * @return
+	 * 
+	 */
+	public int deleteAddress(String add_name);// 내 주소록 삭제
+	
+///////////////////////사내 주소록//////////////////////
+	/**
+	 * 사내 주소록 상세 조회
+	 * @param add_name
+	 * @return 존재하지않으면 , null반환
+	 * 
+	 */
+	public AddressVO selectAddr(String add_name); //이게 사내주소록 상세조회다 
+	
+	
+	
+	/**
+	 * 검색 조건에 맞는 사내 주소록 사원수 조회
+	 * @param pagingVO 
+	 * @return
+	 */
+	public int selectAddrCount(PagingVO pagingVO ); // 사내 주소록 사원수 조회 
+	
+	//사내주소록 리스트 보이기 
+	public List<AddressVO> addrList(PagingVO<AddressVO>pagingVO);
+	
+	
+	/**
+	 * 검색 조건에 맞는 사내 주소록 사원 목록 조회
+	 * @param pagingVO 
+	 * @return
+	 * 
+	 */
+	public List<AddressVO> selectAddrList(PagingVO<AddressVO> pagingVO);
+	
+	/**
+	 * 전체 부서 정보를 가져온다.
+	 * @return
+	 */
+	public List<DepartmentVO> selectDepartmentList();
+	
+	/**
+	 * 부서에 속해있는 팀의 전체 정보를 가져온다.
+	 * @param dept_code 부서코드
+	 * @return
+	 */
+	public List<TeamVO> selectTeamList(String dept_code);
+	
+	
+}

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.work.dao.IPublicWorkLogDAO">
+	<sql id="searchFrag">
+		<trim prefix="WHERE" prefixOverrides="AND">
+			<if test="searchVO!=null and @org.apache.commons.lang3.StringUtils@isNotBlank(searchVO.searchWord)">
+				WL_DATE = TO_DATE(#{searchVO.searchWord}, 'YYYY-MM-DD')
+			</if>
+			<if test="detailSearch.team_code != null and @org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.team_code)">
+			AND A.TEAM_CODE = #{detailSearch.team_code}
+			</if>
+			<if test="detailSearch != null and @org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.wl_catag)">
+			AND WL_CATAG = #{detailSearch.wl_catag}
+			</if>
+		</trim>
+	</sql>
+
+	<select id="selectWorkLogCountday" resultType="int" parameterType="PagingVO">
+		SELECT COUNT(*)
+		FROM (SELECT *
+			FROM WORKLOG A
+			<include refid="searchFrag" />
+	        AND WL_SHARE = 'Y')
+        
+	</select>
+<!-- 	<select id="selectWorkLogCountweek" resultType="int" parameterType="PagingVO"> -->
+<!-- 		SELECT COUNT(*) -->
+<!-- 		FROM (SELECT * -->
+<!-- 			FROM WORKLOG -->
+<!-- 	        WHERE WL_CATAG = 'WLC200' -->
+<!-- 	        AND WL_SHARE = 'Y')A -->
+<!--         <include refid="searchFrag" /> -->
+<!-- 	</select> -->
+	
+	
+	<select id="selectWorkLogListday" resultType="WorkLogVO" parameterType="PagingVO">
+		SELECT C.*
+			FROM (SELECT ROWNUM RNUM, A.WL_CODE, A.WL_CATAG, B.EMP_KOR EMP_CODE, C.TEAM_NAME TEAM_CODE, A.WL_TITLE, to_char(WL_DATE, 'YYYY.MM.DD') WL_DATE,
+   		   		 	A.WL_CONTENT, NVL(WL_SHARE, '미공유') WL_SHARE, A.WL_DEL, A.WL_REPORT, A.WL_TEAM
+		     		FROM WORKLOG A LEFT OUTER JOIN EMPLOYEE B ON (A.EMP_CODE = B.EMP_CODE)
+		     					   INNER JOIN TEAM C ON(A.TEAM_CODE = C.TEAM_CODE)
+			<include refid="searchFrag" />
+			AND WL_SHARE = 'Y'
+			AND WL_DEL IS NULL
+			ORDER BY A.WL_DATE DESC
+			) C
+	
+		  WHERE C.RNUM BETWEEN #{startRow} AND #{endRow}
+		  ORDER BY C.RNUM DESC
+	</select>
+<!-- 	<select id="selectWorkLogListweek" resultType="WorkLogVO" parameterType="PagingVO"> -->
+<!-- 		SELECT D.* -->
+<!-- 		FROM (SELECT ROWNUM RNUM, C.* -->
+<!-- 				FROM (SELECT A.WL_CODE, A.WL_CATAG, B.EMP_KOR EMP_CODE, C.TEAM_NAME TEAM_CODE, A.WL_TITLE, to_char(WL_DATE, 'YYYY.MM.DD') WL_DATE, -->
+<!-- 	   		   		 	A.WL_CONTENT, NVL(WL_SHARE, '미공유') WL_SHARE, A.WL_DEL, A.WL_REPORT, A.WL_TEAM -->
+<!-- 			     		FROM WORKLOG A LEFT OUTER JOIN EMPLOYEE B ON (A. EMP_CODE = B.EMP_CODE) -->
+<!-- 			     					   INNER JOIN TEAM C ON(A.TEAM_CODE = C.TEAM_CODE) -->
+<!-- 				WHERE WL_CATAG = 'WLC200' -->
+<!-- 				AND WL_SHARE = 'Y' -->
+<!-- 				AND WL_DEL IS NULL) C -->
+<!-- 		<include refid="searchFrag" />) D  -->
+<!-- 		  WHERE D.RNUM BETWEEN #{startRow} AND #{endRow} -->
+<!-- 	</select> -->
+	
+	
+<!-- 	<resultMap type="WorkLogVO" id="worklogMap" autoMapping="true"> -->
+<!-- 		<id property="wl_code" column="WL_CODE"/> -->
+<!-- 		<collection property="attatchList" javaType="java.util.List" ofType="WorkLog_AttatchVO" autoMapping="true" /> -->
+<!-- 	</resultMap> -->
+<!-- 	<select id="selectWorkLogday" parameterType="String" resultMap="worklogMap"> -->
+<!-- 		SELECT  -->
+<!-- 	        A.WL_CODE WL_CODE, D.STANDARD_NAME WL_CATAG, C.EMP_KOR EMP_CODE, E.TEAM_NAME TEAM_CODE, A.WL_TITLE, TO_CHAR(A.WL_DATE, 'YYYY.MM.DD') WL_DATE, A.WL_CONTENT, NVL(A.WL_SHARE, '미공유') WL_SHARE, -->
+<!-- 			    A.WL_DEL, A.WL_REPORT, A.WL_TEAM -->
+<!-- 			   , B.WL_ATTCODE, B.WL_CODE, B.FILE_PATH, B.FILE_SIZE, B.ORG_NAME, B.SAVE_NAME -->
+<!-- 	    FROM WORKLOG A LEFT OUTER JOIN WORKLOG_ATTATCH B ON(A.WL_CODE = B.WL_CODE) -->
+<!-- 	                        INNER JOIN EMPLOYEE C ON(A.EMP_CODE = C.EMP_CODE) -->
+<!-- 	                        INNER JOIN STANDARD D ON(A.WL_CATAG = D.STANDARD_CODE) -->
+<!-- 	                        INNER JOIN TEAM E ON(A.TEAM_CODE = E.TEAM_CODE) -->
+<!-- 	    WHERE A.WL_CODE = #{wl_code} -->
+<!-- 	    AND A.WL_CATAG = 'WLC100' -->
+<!-- 	</select> -->
+	
+<!-- 	<select id="selectWorkLogweek" parameterType="String" resultMap="worklogMap"> -->
+<!-- 		SELECT  -->
+<!-- 	        A.WL_CODE WL_CODE, D.STANDARD_NAME WL_CATAG, C.EMP_KOR EMP_CODE, E.TEAM_NAME TEAM_CODE, A.WL_TITLE, TO_CHAR(A.WL_DATE, 'YYYY.MM.DD') WL_DATE, A.WL_CONTENT, NVL(A.WL_SHARE, '미공유') WL_SHARE, -->
+<!-- 			    A.WL_DEL, A.WL_REPORT, A.WL_TEAM -->
+<!-- 			   , B.WL_ATTCODE, B.WL_CODE, B.FILE_PATH, B.FILE_SIZE, B.ORG_NAME, B.SAVE_NAME -->
+<!-- 	    FROM WORKLOG A LEFT OUTER JOIN WORKLOG_ATTATCH B ON(A.WL_CODE = B.WL_CODE) -->
+<!-- 	                        INNER JOIN EMPLOYEE C ON(A.EMP_CODE = C.EMP_CODE) -->
+<!-- 	                        INNER JOIN STANDARD D ON(A.WL_CATAG = D.STANDARD_CODE) -->
+<!-- 	                        INNER JOIN TEAM E ON(A.TEAM_CODE = E.TEAM_CODE) -->
+<!-- 	    WHERE A.WL_CODE = #{wl_code} -->
+<!-- 	    AND A.WL_CATAG = 'WLC200' -->
+<!-- 	</select> -->
+	
+
+</mapper>

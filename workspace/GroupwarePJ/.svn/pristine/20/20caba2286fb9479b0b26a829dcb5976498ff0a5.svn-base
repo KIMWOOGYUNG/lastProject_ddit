@@ -1,0 +1,14 @@
+package kr.or.ddit.schedule.dao;
+
+import java.util.List;
+
+import org.springframework.stereotype.Repository;
+
+import kr.or.ddit.vo.Com_ScheduleVO;
+import kr.or.ddit.vo.PagingVO;
+
+@Repository
+public interface Com_IScheduleDAO {
+	public List<Com_ScheduleVO> selectComScheduleList(PagingVO<Com_ScheduleVO>pagingVO);
+	public Com_ScheduleVO selectComSchedule(String cs_code);
+}

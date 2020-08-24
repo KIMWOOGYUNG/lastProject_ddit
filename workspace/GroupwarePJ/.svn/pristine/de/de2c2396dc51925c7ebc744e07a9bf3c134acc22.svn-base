@@ -1,0 +1,254 @@
+package kr.or.ddit.att_admin.service;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.microsoft.azure.storage.core.Logger;
+import com.sun.corba.se.spi.orbutil.fsm.Guard.Result;
+
+import kr.or.ddit.att_admin.dao.IAdminAttDAO;
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.login_logout.dao.ILoginDAO;
+import kr.or.ddit.login_logout.service.AzureFaceService;
+import kr.or.ddit.login_logout.service.AzurePersonService;
+import kr.or.ddit.vo.Com_PolicyVO;
+import kr.or.ddit.vo.Com_WorkStdVO;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.Time_AttendVO;
+
+@Service
+public class AdminAttServiceImpl implements IAdminAttService {
+	@Inject
+	IAdminAttDAO dao;
+	@Inject
+	ILoginDAO logindao;
+	@Inject
+	AzureFaceService faceService;
+	@Inject
+	AzurePersonService personService;
+	@Value("#{appInfo.personGroupId}")
+	String personGroupId;
+	
+	@Override //대체얼굴등록(DB에)
+	public ResultState UpdateSubFaceId(EmployeeVO empVO) {
+		ResultState result = ResultState.FAIL;
+		int sc = setFaceIdAzuerServer(empVO); //애저서버에서 처리가 성공하면 DB에도 저장할것이다~
+		if(sc==200) {
+			int cnt = dao.updateSubFaceId(empVO);
+			if(cnt>0) result = ResultState.OK;
+		}else{
+			result = ResultState.FAIL;
+		}
+		return result;
+	}
+	
+	private int setFaceIdAzuerServer(@Valid EmployeeVO empVO) {
+		Map<String, Object> responseBody = new HashMap<>();
+		MultipartFile multipartFile = empVO.getImg1(); //이미지 가져오고
+		if(multipartFile==null) return 400; //이미지없으면 오류
+		try {
+			byte[] imageByteArray = multipartFile.getBytes(); //바이트로 변형
+			String personId = empVO.getPersonid(); //personid에 faceid를 등록할수있도록
+			int sc = personService.addFaceToPersonInGroup(personGroupId, personId, imageByteArray, responseBody);
+			if(sc==200) {
+				String persistedFaceId= (String) responseBody.get("persistedFaceId");
+				empVO.setSubfaceid(persistedFaceId); //대체얼굴에 faceid저장
+				int cnt = personService.personGroupTrain(personGroupId, responseBody); //훈련시켜야 로그인가능
+				if(cnt==202) { //훈련성공이면
+					sc = 200;
+				}
+			}
+			System.err.println(responseBody);
+			return sc;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	
+	@Override
+	public List<EmployeeVO> getFaceIdList() {
+		List<EmployeeVO> list = dao.selectFaceIdList();
+		return list;
+	}
+	@Override
+	public List<Com_WorkStdVO> getComVacaList() {
+		List<Com_WorkStdVO> list = dao.selectComVacaList();
+		return list;
+	}
+	@Override
+	public List<Time_AttendVO> readAttDetail(Time_AttendVO timeAttVO) {
+		 List<Time_AttendVO> vo = dao.selectAttDetailList(timeAttVO);
+		if(vo==null)
+			throw new exception.DataNotFoundException("등록된 상세 근태현황이 없음");
+		return vo;
+	}
+//	@Override //회사 정책 확인 
+//	public Com_PolicyVO readComPolicy() {
+//		Com_PolicyVO vo = dao.selectCompanyPolicy();
+//		if(vo==null)
+//			throw new exception.DataNotFoundException("회사정책이 등록되어 있지 않음");
+//		return vo;
+//	}
+
+//--------------근태체크------------------	
+
+	@Override //출근여부를 확인함. 출근했으면 퇴근시간 update, 안했으면 insert
+	public Time_AttendVO readEmpAtt(Time_AttendVO timeAttVO,String checkTime) {
+		// 출근or퇴근 확인
+		Time_AttendVO vo = dao.selectAtt(timeAttVO);
+		if (vo == null) { // 출근insert
+			// 지각여부확인
+			timeAttVO = lateOrNormal(timeAttVO, checkTime);
+			ResultState result = createEmpAtt(timeAttVO);
+			if (result.equals(ResultState.OK)) {
+				return timeAttVO;
+			} else {
+				return null;
+			}
+		} else {  
+			// vo!=null (휴가 또는 휴무가 입력된 경우, 출근시간없이도 null이 아님 = CWS_CATAG_CODE는 건들이지말것
+			String comtime = vo.getTa_start();//출근시간
+			if (comtime == null) { // 출근시간이없네?출근이네요 
+			timeAttVO.setTa_start("출근");
+			}else {
+			timeAttVO.setTa_end("퇴근");
+			}
+			ResultState result = modifyEmpAtt(timeAttVO);
+			if (result.equals(ResultState.OK)) {
+				return vo;
+			} else { 
+				return null;
+			}
+		}
+	}
+	
+	//지각여부판단
+	public Time_AttendVO lateOrNormal(Time_AttendVO timeAttVO,String checkTime) {
+		 //사내 정책 - 출근시간확인 (지각체크)
+		 Com_PolicyVO policyVO = dao.selectCompanyPolicy();
+		 String policyTime =policyVO.getCome_time().replace(":", ""); //0900
+		 String leaveTime = policyVO.getLeave_time().replace(":", ""); //1800
+		 int policyComeTime = Integer.parseInt(policyTime);
+		 int checkedTime = Integer.parseInt(checkTime);
+		 //휴일인지아닌지 확인 
+		 String cws_code = timeAttVO.getCws_code();
+		 Com_WorkStdVO comWorkStdVO = dao.selectCompanyStandard(cws_code);
+		 String cwsCatag = comWorkStdVO.getCws_catag();
+		 	if("CWS100".equals(cwsCatag)) { // 회사 근무기준일 CWS_CATAG가 CWS100(정상출근일)인경우에
+		 		if(policyComeTime<checkedTime) { //지각임 ㅠㅠ 
+		 		    timeAttVO.setTa_catag_code("TC002");
+		 		    return timeAttVO;
+		 		}else if(policyComeTime >=checkedTime) { //정상출근 
+		 			timeAttVO.setTa_catag_code("TC001");
+		 			return timeAttVO;
+		 		}
+		 	}
+			return null;
+		
+	}
+	@Transactional
+	@Override //퇴근 업데이트 
+	public ResultState modifyEmpAtt(Time_AttendVO timeAttVO) {
+		int cnt = dao.updateAttendence(timeAttVO);
+		ResultState result = ResultState.FAIL;
+		if(cnt>0) {
+			result = ResultState.OK;
+		}
+		return result;
+	}
+	@Transactional
+	@Override //출근처리 
+	public ResultState createEmpAtt(Time_AttendVO timeAttVO) {
+		int cnt = dao.insertAttendence(timeAttVO);
+		ResultState result = ResultState.FAIL;
+		if(cnt>0) {
+			result = ResultState.OK;
+		}
+		return result;
+	}
+	
+	//근태에 휴가반영 프로시저
+	//@Scheduled(cron=' 0 0 12 * * * ')
+	@Transactional
+	public void setVacaAtt() {
+		dao.insertVacaAtt();
+	}
+	
+	//근태에 휴무반영 프로시저 
+	//@Scheduled(cron=' 0 0 12 * * * ')
+	@Transactional
+	public void setHoliAtt() {
+		dao.insertHoliAtt();
+	}
+	
+	@Override
+	public EmployeeVO readEmpIp(String emp_code) {
+		EmployeeVO empVO = dao.selectEmpIP(emp_code);
+		if(empVO==null)
+			throw new exception.DataNotFoundException(emp_code+" 회원이없음");
+		return empVO;
+	}
+	//사원IP목록
+	@Override
+	public int readEmpIpCount(PagingVO<EmployeeVO> pagingVO) {
+		return dao.selectEmpIpCount(pagingVO);
+	}
+	@Override
+	public List<EmployeeVO> readEmpIpList(PagingVO<EmployeeVO> pagingVO) {
+		return dao.selectEmpIpList(pagingVO);
+	}
+	//월별근태현황
+	@Override
+	public List<Time_AttendVO> readAttMonthlyList(Time_AttendVO timeAttVO) {
+		return dao.selectAttMonthlyList(timeAttVO);
+	}
+	
+	/**
+	 * 성공하면 ResultState를 Successes로 반환
+	 */
+	@Transactional
+	@Override
+	public ResultState modifyEmpIp(EmployeeVO empVO) {
+		//readEmpIp(empVO.getEmp_code());
+		int cnt = dao.updateEmpIp(empVO);
+		ResultState result = ResultState.FAIL;
+		if(cnt>0) result = ResultState.SUCCESSES;
+		return result;
+	}
+	@Transactional
+	@Override
+	public ResultState AddHoliday(Com_WorkStdVO workStdVO) {
+		int cnt = dao.updateHoliday(workStdVO);
+		ResultState result = ResultState.FAIL;
+		if(cnt>0) {
+			result = ResultState.OK;
+		}
+		return result;
+	}
+	@Transactional
+	@Override
+	public ResultState AddAttendence(Time_AttendVO timeVO) {
+		int cnt = dao.updateAtt(timeVO);
+		ResultState result = ResultState.FAIL;
+		if(cnt>0) {
+			result = ResultState.OK;
+		}
+		return result;
+	}
+
+
+
+}

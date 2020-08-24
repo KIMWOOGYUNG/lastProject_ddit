@@ -1,0 +1,58 @@
+package kr.or.ddit.mypage.controller;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpSession;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import kr.or.ddit.mypage.service.IMypageService;
+import kr.or.ddit.vo.CalendarVO;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.Time_AttendVO;
+@Controller
+@RequestMapping("/mypage/myAttCalendar")
+public class MyAttController {
+	@Inject
+	IMypageService service;
+	
+	
+	@GetMapping
+	public String goPage(Model model) {
+		model.addAttribute("title", "근태현황");
+		model.addAttribute("state", "myAttCalendar");
+		return "myAttCalendar.mypage";
+	}
+	
+	@PostMapping(produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody //마샬링을 위한 녀석..
+	public List<CalendarVO> myAttCalendar(RedirectAttributes redirectAttributes,
+			HttpSession session) {
+		EmployeeVO empVO = (EmployeeVO) session.getAttribute("authUser");
+		String emp_code = empVO.getEmp_code();
+		List<CalendarVO> dataList = new ArrayList<CalendarVO>();
+		
+		List<Time_AttendVO> attStartTimeList= service.getStartTime(emp_code);
+		if(!attStartTimeList.isEmpty()) {
+			for(Time_AttendVO temp : attStartTimeList) {
+				dataList.add(temp.sendDate());
+			}
+		}
+		List<Time_AttendVO> attEndTimeList = service.getEndTime(emp_code);
+		if(!attEndTimeList.isEmpty()) {
+		for(Time_AttendVO temp : attEndTimeList) {
+			dataList.add(temp.sendDate());
+		}
+		}
+		return dataList;
+	}
+	
+}

@@ -1,0 +1,81 @@
+package kr.or.ddit.work.controller;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.SearchVO;
+import kr.or.ddit.vo.WorkLogVO;
+import kr.or.ddit.work.service.IMyWorkLogService;
+
+@Controller
+public class MyDiaryReadController {
+	
+	@Inject
+	private IMyWorkLogService service;
+	
+	// 老老诀公老瘤
+	
+	@GetMapping(value = "/work/mywork/daydiary", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public PagingVO<WorkLogVO> ajaxForlistday(@RequestParam(name="page", required = false, defaultValue = "1") int currentPage, SearchVO searchVO, Model model){
+		daydaiaryList(currentPage, searchVO, model);
+		return (PagingVO<WorkLogVO>) model.asMap().get("pagingVO");
+	}
+	
+	@GetMapping("/work/mywork/daydiary")
+	public String daydaiaryList(@RequestParam(name = "page", required = false, defaultValue = "1")int currentPage, SearchVO searchVO, Model model) {
+		PagingVO<WorkLogVO> pagingVO = new PagingVO<>();
+		pagingVO.setSearchVO(searchVO);
+		pagingVO.setCurrentPage(currentPage);
+		int totalRecord = service.readWorkLogCountday(pagingVO);
+		pagingVO.setTotalRecord(totalRecord);
+		
+		List<WorkLogVO> worklogListday = service.readWorkLogListday(pagingVO);
+		pagingVO.setDataList(worklogListday);
+		
+		model.addAttribute("pagingVO", pagingVO);
+		
+		return "mydaydiaryList.work";		
+	}
+	
+//-----------------------------------------------------------------------------------------------------------------------------------------------------	
+	// 林埃诀公老瘤
+	
+	@GetMapping(value = "/work/mywork/weekdiary", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public PagingVO<WorkLogVO> ajaxForlistweek(@RequestParam(name="page", required = false, defaultValue = "1") int currentPage, SearchVO searchVO, Model model){
+		weekdaiaryList(currentPage, searchVO, model);
+		return (PagingVO<WorkLogVO>) model.asMap().get("pagingVO");
+	}
+	
+	@GetMapping("/work/mywork/weekdiary")
+	public String weekdaiaryList(@RequestParam(name = "page", required = false, defaultValue = "1")int currentPage, SearchVO searchVO, Model model) {
+		PagingVO<WorkLogVO> pagingVO = new PagingVO<>();
+		pagingVO.setSearchVO(searchVO);
+		pagingVO.setCurrentPage(currentPage);
+		int totalRecord = service.readWorkLogCountweek(pagingVO);
+		pagingVO.setTotalRecord(totalRecord);
+		
+		List<WorkLogVO> worklogListweek = service.readWorkLogListweek(pagingVO);
+		pagingVO.setDataList(worklogListweek);
+		
+		model.addAttribute("pagingVO", pagingVO);
+		
+		return "myweekdiaryList.work";		
+	}
+
+
+	
+	
+}

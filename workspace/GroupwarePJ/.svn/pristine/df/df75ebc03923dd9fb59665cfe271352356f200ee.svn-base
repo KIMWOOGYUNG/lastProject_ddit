@@ -1,0 +1,21 @@
+package kr.or.ddit.project.controller;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+
+import kr.or.ddit.project.service.IMyProjectListService;
+
+@Controller
+public class ProjectFormController {
+	
+	@Inject
+	IMyProjectListService service;
+	
+	@GetMapping("/project/newProject")
+	public String newProject() {
+		
+		return "newProject.project";
+	}
+}

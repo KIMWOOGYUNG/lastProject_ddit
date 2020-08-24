@@ -1,0 +1,69 @@
+package kr.or.ddit.vo;
+
+import java.util.List;
+
+import lombok.Data;
+import lombok.ToString;
+
+
+/**
+ * @author �ۼ��ڸ�
+ * @since 2020. 6. 29
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[�����̷�(Modification Information)]]
+ * ������                          ������               ��������
+ * --------     --------    ----------------------
+ * 2020. 6. 29      �ڼ���       �����ۼ�
+ * Copyright (c) 2020 by DDIT All right reserved
+ * </pre>
+ */
+@Data
+@ToString
+public class My_ScheduleVO {//������
+
+	private String ms_code;
+	private String ms_title;
+	private String ms_content;
+	private String emp_code;
+	private String ms_startdate;
+	private String ms_enddate;
+	private String ms_important;
+	
+	private String emp_kor;
+	
+	
+	List<ProjectVO> projectList;
+	
+
+
+	public CalendarVO sendDate() {
+		CalendarVO temp = new CalendarVO();
+		
+			temp.setTitle(ms_title);
+			temp.setId(emp_kor);
+			temp.setStart(ms_startdate);
+			temp.setEnd(ms_enddate.replace("00:00:00.0", "23:59:59.0"));
+			temp.setMs_important(ms_important);
+			temp.setContent(ms_content);
+			temp.setColor("yellow");
+			return temp;
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+}

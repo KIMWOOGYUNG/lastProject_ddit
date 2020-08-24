@@ -1,0 +1,123 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"  %>
+<%@ taglib uri="http://www.springframework.org/tags" prefix="spring" %>    
+
+
+
+ <!-- Main Sidebar Container -->
+  <aside class="main-sidebar sidebar-dark-primary elevation-4">
+    <!-- Brand Logo -->
+    <a href="index3.html" class="brand-link">
+      <span class="brand-text font-weight-light">AdminLTE 3</span>
+    </a>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <!-- Sidebar user panel (optional) -->
+      <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+        <div class="image">
+        </div>
+        <div class="info">
+          <a href="#" class="d-block">Alexander Pierce</a>
+        </div>
+      </div>
+	           
+	           
+
+      <!-- Sidebar Menu -->
+      <nav class="mt-2">
+        <ul class="nav nav-pills nav-sidebar flex-column"
+         data-widget="treeview" role="menu" data-accordion="false">
+          <!-- Add icons to the links using the .nav-icon class
+               with font-awesome or any other icon font library -->
+               
+               <!-- 주소록 -->
+	            <li class="nav-item">
+				<a href="${pageContext.request.contextPath }/address" class="nav-link">
+				<p>- <spring:message code="menu2"/> -</p></a>
+				</li>  
+				
+          <li class="nav-item has-treeview">
+            <a href="#" class="nav-link">
+           <!--사내주소록  -->  
+           <p><spring:message code="address.sideMenu1"/>
+           <i class="right fas fa-angle-left"></i>
+           </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+<!--                 <a href="./index.html" class="nav-link"> -->
+                 <a href="${cPath}/address/companyaddress/Business Management Department" class="nav-link">
+                  <p>경영관리부</p>
+                </a>
+                <a href="${cPath}/address/companyaddress/Business Management Department/PersonnelGeneral Affairs" class="nav-link">
+                	<p>인사/총무팀</p>
+                </a>
+              </li>
+              
+              <li class="nav-item">
+              
+              
+              
+              
+              
+              
+              
+              
+              
+                <a href="./index2.html" class="nav-link">
+                
+                  <p>개발팀</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="./index3.html" class="nav-link">
+                
+                  <p>디자인팀</p>
+                </a>
+              </li>
+              
+              </li>
+        </ul>   
+              <!-- 사내주소록 -->
+              
+              <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+          <!-- Add icons to the links using the .nav-icon class
+               with font-awesome or any other icon font library -->
+          <li class="nav-item has-treeview">
+               <a href="${cPath }/address/myaddressList" class="nav-link${cate eq 'myenjoy' or cate eq 'account'?'menu-open':'' } ">
+              <p><spring:message code="address.sideMenu2"/> <!--내 주소록  -->
+                <i class="right fas fa-angle-left"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="${cPath }/address/myaddressList" class="nav-link ${cate eq 'myenjoy'?'active':'' }">
+
+                  <p> <spring:message code="address.sideMenu2_1"/></p><!--나의 즐겨찾기 --> 
+
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="${cPath }/address/address?cate=account" class="nav-link ${cate eq 'account'?'actibe':'' }">
+                
+                  <p> <spring:message code="address.sideMenu2_2"/></p><!--거래처  --> 
+                </a>
+              </li>
+ 			 </ul>
+         
+         
+         
+          </li>
+        </ul>
+        
+        
+        
+        
+        
+      </nav>
+      <!-- /.sidebar-menu -->
+    </div>
+    <!-- /.sidebar -->
+  </aside>

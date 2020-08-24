@@ -1,0 +1,53 @@
+package kr.or.ddit.message.controller;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+
+import kr.or.ddit.message.service.IMessageService;
+
+@Controller
+public class MsgInsertController {//쪽지쓰기
+	@Inject
+	IMessageService service;
+	
+	@GetMapping("note/writenote")
+	public String writenote() {
+		String goPage="writenote.note";
+		return goPage;
+		
+	}
+	
+//	@PostMapping
+//	public String insertnote(
+//			@Validated @ModelAttribute("note") MessageVO msg,
+//			BindingResult errors,
+//			Model model,
+//			@RequestParam(required = false)String currentPage,
+//			RedirectAttributes redirectAttributes
+//			)throws IllegalStateException, IOException{
+//		model.addAttribute("currentAction","/note");
+//		String goPage = null;
+//		String message=null;
+//		if(!errors.hasErrors()) {
+//			ResultState result = service.createmsg(msg);
+//			switch(result) {
+//			case FAIL:
+//				message="내용을 작성해주세요";
+//				goPage = "note/writenote";
+//				break;
+//				default:
+//					goPage="redirect:/note/"+msg.getEmp_sender();
+//					redirectAttributes.addFlashAttribute("lastUpdateNote", msg);
+//					break;
+//			}
+//		}else{
+//				goPage="note/writenote";
+//			
+//		}
+//		model.addAttribute("message",message);
+//		return goPage;
+//
+//}
+}

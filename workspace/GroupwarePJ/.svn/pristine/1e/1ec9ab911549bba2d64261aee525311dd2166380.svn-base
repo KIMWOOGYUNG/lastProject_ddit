@@ -1,0 +1,26 @@
+package kr.or.ddit.att_admin.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+
+@Controller
+public class AdminAttController {
+
+
+	
+
+	
+	@GetMapping("/hr/att/Setting")
+	public String attSetting() {
+		String goPage = "attMonthlyList.hr";
+		return goPage;
+	}
+	
+	@GetMapping("/hr/att/holiday")
+	public String holidaySetting() {
+		String goPage = "attHolidayCalendar.hr";
+		return goPage;
+	}
+	
+
+}

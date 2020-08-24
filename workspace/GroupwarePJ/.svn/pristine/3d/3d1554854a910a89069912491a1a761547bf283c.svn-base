@@ -1,0 +1,31 @@
+package kr.or.ddit.login_logout.controller;
+
+import org.springframework.stereotype.Controller;
+
+/**
+ * 
+ * @author 박혜진
+ * @since 2020. 7. 23
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                          수정자               수정내용
+ * --------     --------    ----------------------
+ * 2020. 7. 23      작성자명       최초작성
+ * Copyright (c) 2020 by DDIT All right reserved
+ * </pre>
+ * 
+ *    1) 클라언트로부터 촬영된 얼굴 이미지 수신.(50%)
+ * 	  2) 해당 이미지의 faceId 추출 (Face Detect API 사용)
+ *    3) 추출된 faceId 를 이용해 얼굴과 매칭되는 Person id 식별(Face Identify API 사용)
+ *    4) person id 를 이용해 DB 로부터 ID/PASSWORD 조회
+ *    5) 조회한 ID/PASSWORD 로 로그인 처리
+ */
+@Controller
+public class FaceIdLoginController {
+
+	
+	
+	
+}

@@ -1,0 +1,77 @@
+package kr.or.ddit.main.controller;
+
+import java.util.Date;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.context.WebApplicationContext;
+
+import kr.or.ddit.event.MessageEvent;
+import kr.or.ddit.vo.PushMessageVO;
+
+@Controller
+@RequestMapping("/")
+public class HomeController {
+
+	
+		@GetMapping("index")
+		public String index() {
+			
+			return "index.index";
+		}
+		
+		@GetMapping("/mail/list")
+		public String mailList() {
+			return "mailList.mail";
+		}
+		
+	   @GetMapping("/address/list")
+	   public String addressList() {
+	      return "addressList.address";
+	   }
+	   @GetMapping("/address/regist")
+	   public String addressRegist() {
+	      return "addressRegist.address";
+	   }
+	   @GetMapping("/approval/list")
+	   public String approvalList() {
+	      return "approvalList.approval";
+	   }
+	   @GetMapping("/hr/list")
+	   public String hrList() {
+	      return "hrList.hr";
+	   }
+	   
+	   @GetMapping("/work/list")
+	   public String workList() {
+	      return "workList.work";
+	   }
+	   @GetMapping("/project/list")
+	   public String projectList() {
+	      return "projectList.project";
+	   }
+	   @GetMapping("/plan/list")
+	   public String planList() {
+	      return "planList.plan";
+	   }
+	   @GetMapping("/mypage/list")
+	   public String mypageList() {
+	      return "mypageList.mypage";
+	   }
+	   @GetMapping("/note/list")
+	   public String noteList() {
+	      return "noteList.note";
+	   }
+	   @GetMapping("/cloud/list")
+	   public String cloudList() {
+	      return "cloudList.cloud";
+	   }
+	   @GetMapping("/community/list")
+	   public String communityList() {
+	      return "commuList.community";
+	   }
+	   
+	}

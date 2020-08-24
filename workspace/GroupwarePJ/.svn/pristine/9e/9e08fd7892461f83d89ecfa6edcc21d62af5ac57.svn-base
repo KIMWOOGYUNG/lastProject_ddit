@@ -1,0 +1,57 @@
+package kr.or.ddit.work.service;
+
+import java.util.List;
+
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.WorkLogVO;
+import kr.or.ddit.vo.WorkLog_AttatchVO;
+
+public interface IMyWorkLogService {
+	//일일업무일지
+	
+	// 일지등록
+	public ResultState createWorkLogday(WorkLogVO worklogVO);
+	
+	// 일지 상세보기
+	public WorkLogVO readWorkLogday(String wl_code);
+	
+	// 일지 수 
+	public int readWorkLogCountday(PagingVO<WorkLogVO> pagingVO);
+	
+	// 일지목록
+	public List<WorkLogVO> readWorkLogListday(PagingVO<WorkLogVO> pagingVO);
+	
+	// 일지 수정
+	public ResultState modifyWorkLogday(WorkLogVO worklogVO);
+	
+	// 일지 삭제
+	public ResultState removeWorkLogday(WorkLogVO worklogVO);
+	
+	public WorkLog_AttatchVO downloadAttatch(String wl_attcode);
+
+//-------------------------------------------------------------------------------
+	//주간 업무일지
+	
+	// 일지등록
+//	public ResultState createWorkLogweek(WorkLogVO worklogVO);
+	
+	// 일지상세보기
+	public WorkLogVO readWorkLogweek(String wl_code);
+	
+	// 일지수정
+	public ResultState modifyWorkLogweek(WorkLogVO worklogVO);
+	
+	// 일지삭제 
+	public ResultState removeWorkLogweek(WorkLogVO worklogVO);
+	
+//------------------------------------------------------------------------------------------------
+	// 삭제함
+	
+	
+	// 일지영구삭제
+	public ResultState removeWorkLogtrash(WorkLogVO worklogVO);
+	
+	// 일지복구
+	public ResultState backWorkLogtrash(WorkLogVO worLogVO);
+}

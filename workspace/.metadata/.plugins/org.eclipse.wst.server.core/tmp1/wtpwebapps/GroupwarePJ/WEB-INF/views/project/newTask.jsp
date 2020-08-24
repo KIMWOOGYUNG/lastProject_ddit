@@ -1,0 +1,306 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib uri="http://www.springframework.org/tags" prefix="spring"%>
+<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form" %>
+
+<script src="${cPath }/resources/ckeditor/ckeditor.js"></script>
+
+<style>
+#content {
+	padding: 50px;
+}
+/* 	.chkBox{width:15px; height:15px;} */
+/*  	.icon{margin:0px 5px 10px 0px;}  */
+/* 	.button{background:none; border:0;} */
+.smallForm {
+	display: inline;
+	float: left;
+	margin-right: 50px;   
+}
+#progressDiv {
+	display : inline;
+	margin-right : 5px;
+}
+#icon_nothing {
+	margin-left : 22px;
+}
+#projectInput{
+	width : 300px;
+	background-color : white;
+}
+.card-body{width: 100%; padding: 20px 40px 20px 40px}
+</style>
+
+<div id="content">
+	
+	<div class="card card-primary">
+		<div class="card-header">
+			<c:if test="${empty task.task_name}">
+				<h3 class="card-title">새 일감</h3>
+			</c:if>
+			<c:if test="${not empty task.task_name}">
+				<h3 class="card-title">일감 수정</h3>
+			</c:if>
+			
+		</div>
+	<form:form id="taskForm" modelAttribute="task" method="post" enctype="multipart/form-data" class="w-100"
+	action="${pageContext.request.contextPath }/project/${state }">
+		<c:if test="${not empty methodType }">
+			<input type="hidden" name="_method" value="${methodType }" >
+		</c:if>   
+	
+		<div class="card-body">
+			<input type="hidden" name="task_code" value="${task.task_code }">
+			
+			<!-- 프로젝트명 -->
+			<label for="inputName">프로젝트명</label> 
+			<c:choose>
+				<c:when test="${not empty task.task_name}">
+					<div class="form-group">
+						<input type="text" class="form-control" id="projectInput" name="project_name" value="${task.project_name }" readonly>
+						<input type="hidden" class="form-control" name="project_code" value="${task.project_code }">
+					</div>
+				</c:when>
+				<c:when test="${empty task && not empty project}">
+					<div class="form-group">
+						<select class="form-control" style="width: 200px;" name="project_code">
+							<option selected disabled value="${project.project_code }">${project.project_name}</option>
+						</select>
+					</div>
+				</c:when>
+				<c:otherwise>
+					<div class="form-group">
+						<select class="form-control" style="width: 200px;" name="project_code">
+							<option selected disabled>프로젝트</option>
+								<c:forEach items="${projectListForTask }" var="map">
+									<c:set var="selected" value="${(map.project_code eq task.project_code) or (map.project_name eq task.project_name)? 'selected' : ''}" />
+									<option value="${map.project_code }" ${selected }>${map.project_name }</option>
+								</c:forEach>
+						</select>
+					</div>
+				</c:otherwise>
+			</c:choose>
+			
+			<!-- 유형 -->
+			<div class="form-group">
+				<label for="inputStatus">유형</label>
+				<div>
+					<select class="form-control" style="width: 200px;" name="task_type">
+						<option selected disabled>유형</option>
+						<c:if test="${not empty tskList }">
+							<c:forEach items="${tskList }" var="tsk">
+								<c:set var="selected" value="${(tsk.standard_code eq task.task_type) or (tsk.standard_name eq task.task_type)? 'selected' : ''}" />
+								<option value="${tsk.standard_code }" ${selected }>${tsk.standard_name }</option>
+							</c:forEach>
+						</c:if>
+					</select>
+				</div>
+			</div>
+			
+			
+			<!-- 상태 -->
+			<div class="form-group smallForm">
+				<label for="inputStatus">상태</label>
+				<div>
+					<select class="form-control" style="width: 200px;" name="task_stat">
+						<option selected disabled>상태</option>
+						<c:if test="${not empty sttList }">
+							<c:forEach items="${sttList }" var="map">
+								<c:set var="selected" value="${(map.standard_code eq task.task_stat) or (map.standard_name eq task.task_stat)? 'selected' : ''}" />
+								<option value="${map.standard_code }" ${selected }>${map.standard_name }</option>
+							</c:forEach>
+						</c:if>
+					</select>
+				</div>
+			</div>
+
+
+			<!-- 중요도 -->
+			<div class="form-group ">
+				<label for="inputStatus">중요도</label>
+				<div>
+					<select class="form-control" style="width: 200px;" name="task_important">
+						<option selected disabled>중요도</option>
+						<c:if test="${not empty impList }">
+							<c:forEach items="${impList }" var="map">
+								<c:set var="selected" value="${(map.standard_code eq task.task_important) or (map.standard_name eq task.task_important)? 'selected' : ''}" />
+								<option value="${map.standard_code }" ${selected }>${map.standard_name }</option>
+							</c:forEach>
+						</c:if>
+					</select>
+				</div>
+			</div>
+			
+			<!-- 일감명 -->
+			<div class="form-group">
+				<label for="inputName">일감명</label> 
+				<input type="text" id="inputName" name = "task_name" class="form-control" style="width: 60%;" value="${task.task_name }">
+			</div>
+
+			<!-- 담당자 -->
+			<c:if test="${empty task.task_name }">
+				<c:set var="empName" value="${authUser.emp_kor }"></c:set>
+			</c:if>
+			<c:if test="${not empty task.task_name }">
+				<c:set var="empName" value="${task.emp_kor }"></c:set>
+			</c:if>
+			
+			<div class="form-group">
+				<label for="inputName">담당자</label>
+				<c:if test="">
+					<input type="text" id="inputName" name = "emp_code_task" class="form-control" style="width: 60%;" value="${empName}">
+				</c:if>
+				
+				<div>
+					<select class="form-control" style="width: 200px;" name="prg_code">
+						<c:if test="${empty project.project_code }">
+							<option value="" selected>${authUser.emp_kor }</option>
+						</c:if>
+						<c:if test="${not empty project.project_code }">
+							<option selected disabled>담당자</option>
+							<c:if test="${not empty project.pj_rgroupList }">
+								<c:forEach items="${project.pj_rgroupList }" var="rgroup">
+									<c:forEach items="${rgroup.pj_memberList}" var="memberList">
+										<c:set var="selected" value="${(memberList.emp_kor eq task.emp_kor)? 'selected' : ''}" />
+										<option value="${memberList.prg_code }" ${selected }>${memberList.emp_kor }&nbsp;${rgroup.pr_name }</option>
+									</c:forEach>
+								</c:forEach>
+							</c:if>
+						</c:if>
+					</select>
+				</div>
+				
+			</div>
+			
+			<!-- 내용 -->
+			<div class="form-group">
+				<label for="inputDescription">내용</label>
+				
+				<textarea class="form-control" name="task_content" id="task_content" >
+					${task.task_content}
+				</textarea>
+			</div>
+
+			
+			<!-- 시작일 & 종료일 -->
+			<div style="display:block; height:90px;">
+				<div class="form-group smallForm">
+					<label for="inputStart">시작일</label>
+					<div class="input-group">
+						<input type="date" class="form-control" style="width:200px;" value="${task.task_start}" name="task_start">
+					</div>
+					<!-- /.input group -->
+				</div>
+				
+				<div class="form-group smallForm">
+					<label for="inputEnd">종료일</label>
+					<div class="input-group">
+						<input type="date" class="form-control" style="width:200px;" value="${task.task_end}" name="task_end">
+					</div>
+					<!-- /.input group -->
+				</div>
+			</div>
+
+			<!-- 진행률 -->
+			<div class="form-group">
+				<label>진행률</label>
+				<br>
+				<div id="progressDiv"></div>%
+				
+			</div>
+			
+			<!-- 첨부파일 -->
+			<div class="form-group">
+				<label>첨부파일</label>
+				<br>
+				<div class="input-group">
+						<input type="button" id="btnAttatch" class="btn btn-default" value="파일첨부" onclick="fileAttatch()">
+					<div id="attatchDiv"></div>
+				</div>
+				
+				<!-- 기존파일 -->
+				<c:if test="${not empty task.task_attList }">
+					<c:forEach items="${task.task_attList }" var="attatch" varStatus="vs">
+						<c:choose>
+							<c:when test="${not empty attatch.task_attcode}">
+								<span class="eachAttatch">${attatch.org_name }
+									<span class="delBtn" data-attno="${attatch.task_attcode }"><span class="oi oi-trash"></span></span>${not vs.last?"&nbsp;&nbsp;":"" }</span>
+							</c:when>
+						</c:choose>
+					</c:forEach>
+				</c:if>
+			</div>
+			
+			
+
+		</div>
+		<!-- /.card-body -->
+		<div class="card-footer">
+			<button type="submit" class="btn btn-default float-right">취소</button>
+			<c:if test="${empty task.task_name}">
+				<button type="submit" class="btn btn-primary float-right" style="margin-right: 10px;">등록</button>
+			</c:if>
+			<c:if test="${not empty task.task_name}">
+				<button type="submit" class="btn btn-primary float-right" style="margin-right: 10px;">수정</button>
+			</c:if>
+		</div>
+	</form:form>
+	</div>
+</div>
+
+<script src="../../plugins/summernote/summernote-bs4.min.js"></script>
+
+<!-- 첨부파일 -->
+<script>
+	function fileAttatch(){
+		$("#attatchDiv").append("<input type='file' name='task_files' style='margin:10px'/>");
+		
+	}
+</script>
+
+<!-- 진행률 -->
+<script>
+	let options = "";
+	let i = 10;
+	options += "<option value='0'>0</option>";
+	while(i <= 100){
+		let selected = "";
+		let progress = "${task.task_progress}";
+		if(progress != null && progress == i){
+			selected = "selected";
+		}
+		options += "<option value="+ i +" "+selected+">" + i + "</option>";
+		i += 10;
+	}
+	$("#progressDiv").append("<select name='task_progress'>"+options+"</select>");
+</script>
+
+
+<!-- 수정시 첨부파일 삭제 -->
+<script>
+var taskForm = $("#taskForm");
+	$(".delBtn").on("click", function(){
+		let att_no = $(this).data("attno");
+		taskForm.append(
+			$("<input>").attr({
+				type:"text"
+				, name:"deleteAttatches"
+				, value:att_no
+			})	
+		);
+		$(this).parent("span:first").remove();		
+	});
+</script>
+	
+<!-- ckEditor -->
+<script>
+	$()
+	CKEDITOR.replace('task_content',{
+		 // Adding drag and drop image upload.
+	      uploadUrl: '${pageContext.request.contextPath}/board/image?command=QuickUpload&type=Files&responseType=json',
+	
+	     // Configure your file manager integration. This example uses CKFinder 3 for PHP.
+	      filebrowserImageUploadUrl: '${pageContext.request.contextPath}/task/image?command=QuickUpload&type=Images',
+	});
+</script>

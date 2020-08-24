@@ -1,0 +1,59 @@
+package kr.or.ddit.project.service;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+
+import exception.DataNotFoundException;
+import kr.or.ddit.project.dao.IProjectListDAO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.ProjectVO;
+
+@Service
+public class ProjectListServiceImpl implements IProjectListService {
+	@Inject
+	IProjectListDAO dao;
+	
+	@Override
+	public int insertProject(ProjectVO project) {
+		return 0;
+	}
+
+	@Override
+	public int selectProjectCount(PagingVO<ProjectVO> pagingVO) {
+		return dao.selectProjectCount(pagingVO);
+	}
+
+	@Override
+	public List<ProjectVO> selectProjectList(PagingVO<ProjectVO> pagingVO) {
+		return dao.selectProjectList(pagingVO);
+	}
+
+	@Override
+	public ProjectVO selectProject(String project_code) {
+		ProjectVO vo = dao.selectProject(project_code);
+		if(vo == null) {
+			throw new DataNotFoundException(project_code + "에 해당하는 프로젝트는 없음");
+		}
+		return vo;
+	}
+
+	@Override
+	public int updateProject(ProjectVO project) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int deleteProject(String project_code) {
+		return dao.deleteProject(project_code);
+	}
+
+	@Override
+	public List<ProjectVO> selectProjectListForTask(String emp_code) {
+		return dao.selectProjectListForTask(emp_code);
+	}
+
+}

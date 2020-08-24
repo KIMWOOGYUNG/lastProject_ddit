@@ -1,0 +1,5 @@
+package kr.or.ddit.addr.controller;
+
+public class AddrInsertController {
+
+}

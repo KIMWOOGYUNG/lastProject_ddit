@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.hr_admin.dao.IAdminEmployDAO">
+	<!-- 상세정보 -->
+	<select id="selectEmpmanage" parameterType="kr.or.ddit.vo.EmployeeVO" resultType="kr.or.ddit.vo.EmployeeVO">
+	select A.EMP_CODE,EMP_PW,EMP_KOR,EMP_ENG,EMP_REG1,EMP_REG2,EMP_MAIL,EMP_HP,CO_PHONE,EMP_ZIP,EMP_ADD1,EMP_ADD2
+         ,TO_CHAR(EMP_STARTDATE,'YYYY-MM-DD') EMP_STARTDATE,C.TEAM_CODE,EMP_IP,EMP_IP2,EMP_SAL,LONG_VACATION,TO_CHAR(RETIRE_DATE,'YYYY-MM-DD') RETIRE_DATE,VACTION_CNT
+         ,B.DEPT_CODE, D.POSITION_CODE, E.JOBTITLE_CODE,EMP_ARBITRARY
+    from EMPLOYEE A INNER JOIN DEPARTMENT B ON (A.DEPT_CODE = B.DEPT_CODE)
+                    INNER JOIN TEAM C ON (A.TEAM_CODE = C.TEAM_CODE)
+                    INNER JOIN POSITION D ON (A.POSITION_CODE = D.POSITION_CODE)
+                    LEFT OUTER JOIN JOBTITLE E ON (A.JOBTITLE_CODE = E.JOBTITLE_CODE)
+    WHERE A.EMP_CODE = #{emp_code}
+	</select>
+
+	<!-- 테이블 리스트 -->
+	<select id="selectEmpmanageList" parameterType="kr.or.ddit.vo.PagingVO" resultType="kr.or.ddit.vo.EmployeeVO">
+		SELECT A.EMP_CODE ,A.EMP_KOR , B.DEPT_NAME AS DEPT_CODE, TEAM_NAME AS TEAM_CODE,C.POSITION_NAME AS POSITION_CODE,
+		A.EMP_MAIL, A.CO_PHONE, TO_CHAR(EMP_STARTDATE,'YYYY-MM-DD') EMP_STARTDATE, TO_CHAR(RETIRE_DATE,'YYYY-MM-DD') RETIRE_DATE
+		FROM EMPLOYEE A, DEPARTMENT B, POSITION C, TEAM D
+		WHERE A.DEPT_CODE = B.DEPT_CODE 
+		AND A.POSITION_CODE = C.POSITION_CODE
+		AND A.TEAM_CODE = D.TEAM_CODE
+	</select>
+	
+	
+	<!-- 페이지 카운트 -->
+	<select id="selectEmpmanageCount" parameterType="kr.or.ddit.vo.PagingVO" resultType="int">
+	SELECT COUNT(EMP_CODE)
+	FROM EMPLOYEE
+	</select>
+	
+	
+    <!--사원 정보 등록 -->
+	<insert id="insertEmp" parameterType="kr.or.ddit.vo.EmployeeVO">
+	<selectKey keyProperty="emp_code" resultType="string" order="BEFORE">
+	SELECT TO_CHAR(SYSDATE,'YYYYMMDD')||LPAD(NVL(TO_NUMBER(SUBSTR(MAX(EMP_CODE),9)),0)+1,2,'0')
+	FROM EMPLOYEE
+	</selectKey>
+	INSERT INTO EMPLOYEE(
+	EMP_CODE, EMP_PW,EMP_KOR,EMP_ENG,EMP_REG1,EMP_REG2, EMP_MAIL,
+    EMP_HP, CO_PHONE, EMP_ZIP, EMP_ADD1, EMP_ADD2,EMP_STARTDATE,TEAM_CODE,
+    EMP_IP, EMP_IP2,EMP_SAL, LONG_VACATION, RETIRE_DATE,VACTION_CNT,DEPT_CODE,
+    POSITION_CODE,JOBTITLE_CODE, EMP_ARBITRARY
+	) VALUES (
+	#{emp_code}, #{emp_pw,jdbcType=VARCHAR}, #{emp_kor,jdbcType=VARCHAR},
+	#{emp_eng,jdbcType=VARCHAR}, #{emp_reg1,jdbcType=CHAR}, #{emp_reg2,jdbcType=CHAR},
+	#{emp_mail,jdbcType=VARCHAR}, #{emp_hp,jdbcType=VARCHAR}, #{co_phone,jdbcType=VARCHAR},
+	#{emp_zip,jdbcType=VARCHAR}, #{emp_add1,jdbcType=VARCHAR}, #{emp_add2,jdbcType=VARCHAR},
+	TO_DATE(#{emp_startdate,jdbcType=DATE}, 'YYYY-MM-DD'), #{team_code,jdbcType=VARCHAR}, #{emp_ip,jdbcType=VARCHAR},#{emp_ip2,jdbcType=VARCHAR},
+	#{emp_sal,jdbcType=NUMERIC}, #{long_vacation,jdbcType=VARCHAR}, TO_DATE(#{retire_date,jdbcType=DATE}, 'YYYY-MM-DD'),
+	#{vaction_cnt,jdbcType=NUMERIC},#{dept_code,jdbcType=VARCHAR},#{position_code,jdbcType=VARCHAR},
+	#{jobtitle_code,jdbcType=VARCHAR},#{emp_arbitrary,jdbcType=VARCHAR}
+	)
+	</insert>
+	
+	
+	<delete id="deleteEmp" parameterType="string">
+	DELETE FROM EMPLOYEE
+	WHERE EMP_CODE=#{emp_code}
+	</delete>
+	
+	
+	<update id="updateEmp" parameterType="kr.or.ddit.vo.EmployeeVO">
+	UPDATE EMPLOYEE
+ 	 SET
+    EMP_PW = #{emp_pw,jdbcType=VARCHAR},
+    EMP_KOR = #{emp_kor,jdbcType=VARCHAR},
+    EMP_ENG = #{emp_eng,jdbcType=VARCHAR},
+    EMP_REG1 = #{emp_reg1,jdbcType=CHAR},
+    EMP_REG2 = #{emp_reg2,jdbcType=CHAR},
+    EMP_MAIL = #{emp_mail,jdbcType=VARCHAR},
+    EMP_HP = #{emp_hp,jdbcType=VARCHAR},
+    CO_PHONE = #{co_phone,jdbcType=VARCHAR},
+    EMP_ZIP = #{emp_zip,jdbcType=VARCHAR},
+    EMP_ADD1 = #{emp_add1,jdbcType=VARCHAR},
+    EMP_ADD2 = #{emp_add2,jdbcType=VARCHAR},
+    EMP_STARTDATE = TO_DATE(#{emp_startdate,jdbcType=DATE}, 'YYYY-MM-DD'),
+    TEAM_CODE = #{team_code,jdbcType=VARCHAR},
+    EMP_IP = #{emp_ip,jdbcType=VARCHAR},
+    EMP_IP2 = #{emp_ip2,jdbcType=VARCHAR},
+    EMP_SAL = #{emp_sal,jdbcType=NUMERIC},
+    LONG_VACATION = #{long_vacation,jdbcType=VARCHAR},
+    RETIRE_DATE = TO_DATE(#{retire_date,jdbcType=DATE}, 'YYYY-MM-DD'),
+    VACTION_CNT = #{vaction_cnt,jdbcType=NUMERIC},
+    DEPT_CODE = #{dept_code,jdbcType=VARCHAR},
+    POSITION_CODE = #{position_code,jdbcType=VARCHAR},
+    JOBTITLE_CODE = #{jobtitle_code,jdbcType=VARCHAR},
+    EMP_ARBITRARY = #{emp_arbitrary,jdbcType=VARCHAR}
+    where EMP_CODE = #{emp_code,jdbcType=VARCHAR} 
+	</update>
+	
+
+
+
+</mapper>

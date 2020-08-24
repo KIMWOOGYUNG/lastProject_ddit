@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.hr_admin.dao.IAdminDepartDAO">
+
+
+	<!-- 부서 테이블 리스트 -->
+	<select id="selectDepmanageList" parameterType="kr.or.ddit.vo.PagingVO" resultType="kr.or.ddit.vo.DepartmentVO">
+	SELECT
+	A.DEPT_CODE,
+	A.DEPT_NAME,
+	B.TEAM_CODE,
+	B.TEAM_NAME
+	FROM DEPARTMENT A, TEAM B
+    WHERE A.DEPT_CODE = B.DEPT_CODE
+	</select>
+	
+	<!-- 페이지 카운트 -->
+	<select id="selectDepmanageCount" parameterType="kr.or.ddit.vo.PagingVO" resultType="int">
+	SELECT COUNT(DEPT_CODE)
+	FROM DEPARTMENT
+	</select>
+
+	<!-- 부서 리스트 조회 (페이징x) -->
+	<select id="selectDeptList" resultType="kr.or.ddit.vo.DepartmentVO">
+		SELECT * FROM DEPARTMENT
+	</select>
+
+	
+
+
+
+</mapper>

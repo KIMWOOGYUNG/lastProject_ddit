@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.hr_admin.dao.IAdminEmployDAO">
+	<!-- 상세정보 -->
+	<select id="selectEmpmanage" parameterType="kr.or.ddit.vo.EmployeeVO" resultType="kr.or.ddit.vo.EmployeeVO">
+		SELECT
+	EMP_CODE,	<!-- 사원코드 -->
+	EMP_PW,	  <!-- 비밀번호 -->	
+	EMP_KOR,  <!-- 사원명 -->
+	EMP_ENG,  <!-- 사원명(영어) -->
+	EMP_REG1, <!-- 주민 앞 -->
+	EMP_REG2, <!-- 주민 뒤 -->
+	EMP_MAIL, <!-- 이메일 -->
+	EMP_HP,   <!-- 폰번호 -->
+	CO_PHONE, <!-- 내선전화 -->
+	EMP_ZIP,  <!-- 우편번호 -->
+	EMP_ADD1, <!-- 주소 -->
+	EMP_ADD2, <!-- 상세주소 -->
+	EMP_STARTDATE, <!-- 입사일 -->
+	TEAM_CODE, <!-- 팀코드 -->
+	EMP_IP,    <!-- IP -->
+	EMP_IP2,   <!-- 로그인허용IP -->
+	EMP_SAL,   <!-- 연봉 -->
+	LONG_VACATION, <!-- 휴직여부 -->
+	RETIRE_DATE,   <!-- 퇴사일 -->
+	VACTION_CNT,   <!-- 휴가일수 -->
+	DEPT_CODE,     <!-- 부서코드 -->
+	POSITION_CODE, <!-- 직책코드 -->
+	JOBTITLE_CODE, <!-- 직급코드 -->
+	EMP_ARBITRARY  <!-- 전결권한 -->
+	FROM EMPLOYEE
+	WHERE EMP_CODE = #{emp_code}
+	</select>
+
+	<!-- 테이블 리스트 -->
+	<select id="selectEmpmanageList" parameterType="kr.or.ddit.vo.PagingVO" resultType="kr.or.ddit.vo.EmployeeVO">
+		SELECT A.EMP_CODE ,A.EMP_KOR , B.DEPT_NAME AS DEPT_CODE, TEAM_NAME AS TEAM_CODE,C.POSITION_NAME AS POSITION_CODE, A.EMP_MAIL, A.CO_PHONE
+		FROM EMPLOYEE A, DEPARTMENT B, POSITION C, TEAM D
+		WHERE A.DEPT_CODE = B.DEPT_CODE 
+		AND A.POSITION_CODE = C.POSITION_CODE
+		AND A.TEAM_CODE = D.TEAM_CODE
+	</select>
+	
+	
+	<!-- 페이지 카운트 -->
+	<select id="selectEmpmanageCount" parameterType="kr.or.ddit.vo.PagingVO" resultType="int">
+	SELECT COUNT(EMP_CODE)
+	FROM EMPLOYEE
+	</select>
+	
+	
+    <!--사원 정보 등록 -->
+	<insert id="insertEmp" parameterType="kr.or.ddit.vo.EmployeeVO">
+	<selectKey keyProperty="emp_code" resultType="string" order="BEFORE">
+	SELECT TO_CHAR(SYSDATE,'YYYYMMDD')||LPAD(NVL(TO_NUMBER(SUBSTR(MAX(EMP_CODE),9)),0)+1,2,'0')
+	FROM EMPLOYEE
+	</selectKey>
+	INSERT INTO EMPLOYEE(
+	EMP_CODE, EMP_PW,EMP_KOR,EMP_ENG,EMP_REG1,EMP_REG2, EMP_MAIL,
+    EMP_HP, CO_PHONE, EMP_ZIP, EMP_ADD1, EMP_ADD2,EMP_STARTDATE,TEAM_CODE,
+    EMP_IP, EMP_IP2,EMP_SAL, LONG_VACATION, RETIRE_DATE,VACTION_CNT,DEPT_CODE,
+    POSITION_CODE,JOBTITLE_CODE, EMP_ARBITRARY
+	) VALUES (
+	#{emp_code,jdbcType=VARCHAR}, #{emp_pw,jdbcType=VARCHAR}, #{emp_kor,jdbcType=VARCHAR},
+	#{emp_eng,jdbcType=VARCHAR}, #{emp_reg1,jdbcType=CHAR}, #{emp_reg2,jdbcType=CHAR},
+	#{emp_mail,jdbcType=VARCHAR}, #{emp_hp,jdbcType=VARCHAR}, #{co_phone,jdbcType=VARCHAR},
+	#{emp_zip,jdbcType=VARCHAR}, #{emp_add1,jdbcType=VARCHAR}, #{emp_add2,jdbcType=VARCHAR},
+	SYSDATE, #{team_code,jdbcType=VARCHAR}, #{emp_ip,jdbcType=VARCHAR},#{emp_ip2,jdbcType=VARCHAR},
+	#{emp_sal,jdbcType=NUMERIC}, #{long_vacation,jdbcType=VARCHAR}, TO_DATE(#{retire_date,jdbcType=DATE}, 'YYYY-MM-DD'),
+	#{vacation_cnt,jdbcType=NUMERIC},#{dept_code,jdbcType=VARCHAR},#{position_code,jdbcType=VARCHAR},
+	#{jobtitle_code,jdbcType=VARCHAR},#{emp_arbitrary,jdbcType=VARCHAR}
+	)
+	</insert>
+	
+
+
+
+</mapper>

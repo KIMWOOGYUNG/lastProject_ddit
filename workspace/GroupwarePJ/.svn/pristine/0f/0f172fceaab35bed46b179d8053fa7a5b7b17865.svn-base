@@ -1,0 +1,204 @@
+package kr.or.ddit.schedule.controller;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.schedule.dao.IComStandardDAO;
+import kr.or.ddit.schedule.dao.ICom_ScheduleDAO;
+import kr.or.ddit.schedule.service.ICom_ScheduleService;
+import kr.or.ddit.vo.CalendarVO;
+import kr.or.ddit.vo.Com_ScheduleVO;
+import kr.or.ddit.vo.Com_WorkStdVO;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.Image_AttatchVO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.ProjectVO;
+import kr.or.ddit.vo.SearchVO;
+import kr.or.ddit.vo.StandardVO;
+
+@Controller
+public class Com_ScheduleController {
+	
+	@Inject
+	ICom_ScheduleService service;
+	
+	@Inject
+	ICom_ScheduleDAO dao;
+	
+	@Inject
+	IComStandardDAO stdDAO;
+	
+	@GetMapping("/plan/complancalendar")
+	public String comschedulecalendar(Model model) {
+		List<StandardVO> cscatag = stdDAO.selectcatag();
+		model.addAttribute("cscatag", cscatag);
+		return "ComScheduleCalendar.plan";
+	}
+	
+	
+	@PostMapping(value = "/plan/complancalendar", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public List<CalendarVO> comscheduleSetting(RedirectAttributes redirectAttributes){
+		List<Com_ScheduleVO> comList = service.getComList();
+
+		List<CalendarVO> dataList = new ArrayList<CalendarVO>();
+		for(Com_ScheduleVO temp : comList) {
+			dataList.add(temp.sendDate());
+		}
+		
+		return dataList;
+	}
+	
+	
+	
+	@ModelAttribute("currentAction")
+	private void attributeSetting(Model model) { //스탠다드 세팅 메서드
+		System.out.println(stdDAO.selectcatag().toString());
+		model.addAttribute("comschedulenm", stdDAO.selectcatag());
+		model.addAttribute("comimportantnm",stdDAO.selectimportant());
+	
+	}
+	
+	
+	@GetMapping(value="/plan/companyplan", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public PagingVO<Com_ScheduleVO> ajaxForlist(
+		@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+		SearchVO searchVO, Model model
+		){
+		complanList(currentPage, searchVO, model);
+		return (PagingVO<Com_ScheduleVO>) model.asMap().get("pagingVO");
+	}
+
+	//회사 일정 목록
+	@GetMapping("/plan/companyplan")
+	public String complanList(@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+			SearchVO searchVO, Model model) {
+		PagingVO<Com_ScheduleVO> pagingVO = new PagingVO<>(8,3);
+		pagingVO.setSearchVO(searchVO);
+		pagingVO.setCurrentPage(currentPage);
+		int totalRecord = service.readCom_ScheduleCount(pagingVO);
+		pagingVO.setTotalRecord(totalRecord);
+		
+		List<Com_ScheduleVO> comList = service.readScheduleList(pagingVO);
+		pagingVO.setDataList(comList);
+		
+		model.addAttribute("pagingVO", pagingVO);
+		
+		return "ComSchedule.plan";
+	}
+	
+	//회사 일정 삭제(체크박스)
+	@PostMapping("/plan/companyplan/deletecom")
+	public String deletecomplan(@RequestParam String cs_code, Model model, HttpSession session) {
+	
+	if(cs_code.contains(",")) {
+		String[] splited = cs_code.split(",");
+		for(int i=0; i< splited.length; i++) {
+			service.deleteCom(splited[i]);
+		}
+	}else {
+		service.deleteCom(cs_code);
+	}
+//	Com_ScheduleVO comschedulevo = (Com_ScheduleVO) session.getAttribute("authUser");
+//	model.addAttribute("who", comschedulevo.getCs_code());
+	return "ComSchedule.plan";
+	}
+	
+	
+	//회사일정캘린더
+//	@GetMapping("/plan/complancalendar")
+//	public String complancalendar(Model model) {
+//		return "ComScheduleCalendar.plan";
+//	}
+	
+	//회사 상세 일정
+	@GetMapping("/plan/DetailComSchedule/{cs_code}")
+	public String detailcomplan(@PathVariable(name = "cs_code") String cs_code, Model model) {
+		
+		Com_ScheduleVO comschedulevo = service.readSchedule(cs_code);
+		model.addAttribute("comschedule" , comschedulevo); 
+		model.addAttribute("methodType", "put");
+		
+		return "DetailComSchedule.plan";
+	}
+	
+	//회사 일정 등록
+	@GetMapping("/plan/ComScheduleEnroll")
+	public String complanenroll() {
+		String goPage="ComScheduleEnroll.plan";
+		return goPage;
+	}
+	
+	
+	//캘린더에서 새창 띄우기
+	@GetMapping("/plan/editer")
+	public String goPage() {
+		return "plan/CsEnrollNewWindow";
+	}
+	
+	
+	//회사 일정 수정
+		@PutMapping(value = "/plan/DetailComSchedule/{cs_code}/csmodify")
+		public String update(
+				@PathVariable(name = "cs_code") String cs_code,
+			@ModelAttribute("comschedule") Com_ScheduleVO comschedulevo, 
+			BindingResult errors, Model model,
+			RedirectAttributes redirectAttributes)
+		{
+			String goPage = null;
+			String message = null;
+			
+			
+			if (!errors.hasErrors()) {
+				ResultState result = service.updateCom(comschedulevo);
+				switch (result) {
+				case FAIL:
+					message = "쫌따 다시 해보셈.";
+					redirectAttributes.addFlashAttribute("comschedule", comschedulevo);
+					goPage = "redirect:/plan/DetailComSchedule/{cs_code}";
+					break;
+				default: // OK
+					goPage = "redirect:/plan/DetailComSchedule/{cs_code}";
+					break;
+				}
+			} else {
+				goPage = "redirect:/plan/DetailComSchedule/{cs_code}";
+				redirectAttributes.addFlashAttribute("comschedule", comschedulevo);
+			}
+
+			model.addAttribute("message", message);
+
+			return goPage;
+			
+		}
+	
+}
+
+
+
+
+
+
+

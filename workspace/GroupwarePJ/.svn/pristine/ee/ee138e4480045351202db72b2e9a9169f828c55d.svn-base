@@ -1,0 +1,65 @@
+package kr.or.ddit.hr_admin.controller;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import kr.or.ddit.hr_admin.service.IAdminDepartService;
+import kr.or.ddit.vo.DepartmentVO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.SearchVO;
+
+@Controller
+public class AdminDepController {
+	
+	@Inject
+	IAdminDepartService service;
+	
+	@GetMapping(value="/hr/departmentmanage", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public PagingVO<DepartmentVO> ajaxForlist(
+		@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+		SearchVO searchVO, Model model
+		){
+		admindepartList(currentPage, searchVO, model);
+		return (PagingVO<DepartmentVO>) model.asMap().get("pagingVO");
+	}
+	
+	
+	@GetMapping("/hr/departmentmanage")
+	public String admindepartList(@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+			SearchVO searchVO, Model model) {
+		PagingVO<DepartmentVO> pagingVO = new PagingVO<>();
+		pagingVO.setSearchVO(searchVO);
+		pagingVO.setCurrentPage(currentPage);
+		int totalRecord = service.selectDepmanageCount(pagingVO);
+		pagingVO.setTotalRecord(totalRecord);
+		
+		List<DepartmentVO> departList = service.selectDepmanageList(pagingVO);
+		pagingVO.setDataList(departList);
+		
+		model.addAttribute("pagingVO", pagingVO);
+		
+		return "AdminDepManage.hr";
+	}
+	
+	@GetMapping("/hr/employer/depenroll")
+	public String empenroll() {
+		String goPage = "AdminDepEnroll.hr";
+		return goPage;
+	}
+	
+	
+	
+	
+	
+	
+
+}

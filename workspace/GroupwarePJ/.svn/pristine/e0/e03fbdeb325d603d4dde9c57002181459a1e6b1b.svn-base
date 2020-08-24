@@ -1,0 +1,14 @@
+
+package kr.or.ddit.work.dao;
+
+import org.springframework.stereotype.Repository;
+
+import kr.or.ddit.vo.WorkLogVO;
+import kr.or.ddit.vo.WorkLog_AttatchVO;
+
+@Repository
+public interface IAttatchDAO {
+	public int insertAttatchs(WorkLog_AttatchVO log_AttatchVO);
+	public WorkLog_AttatchVO selectAttatch(String wl_attcode);
+	public int deleteAttatchs(WorkLogVO worklog);
+}

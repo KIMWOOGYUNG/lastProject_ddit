@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.mypage.dao.IMypageDAO">
+
+<!-- 나의 출근시간 캘린더   -->
+<select id="selectStartTime" parameterType="String" resultType="Time_AttendVO">
+select A.EMP_CODE,
+CWS_CODE,
+TO_CHAR(TA_START,'yyyy-MM-dd HH24:mi') TA_START,
+TO_CHAR(TA_START, 'HH24:mi') cometime,
+B.TA_CATAG_NAME,C.EMP_KOR
+from time_attend A INNER JOIN TA_CATAG B ON(A.TA_CATAG_CODE = B.TA_CATAG_CODE)
+     LEFT OUTER JOIN EMPLOYEE C ON(A.EMP_CODE = C.EMP_CODE)
+where A.emp_code=#{emp_code,jdbcType=VARCHAR}
+</select>
+
+<!-- 나의 퇴근시간 캘린더 -->
+<select id="selectEndTime"  parameterType="String" resultType="Time_AttendVO">
+select A.EMP_CODE,
+CWS_CODE,
+TO_CHAR(TA_END,'yyyy-MM-dd HH24:mi') TA_END,
+TO_CHAR(TA_END, 'HH24:mi') gotime,
+B.TA_CATAG_NAME,C.EMP_KOR
+from time_attend A INNER JOIN TA_CATAG B ON(A.TA_CATAG_CODE = B.TA_CATAG_CODE)
+     LEFT OUTER JOIN EMPLOYEE C ON(A.EMP_CODE = C.EMP_CODE)
+where A.emp_code=#{emp_code,jdbcType=VARCHAR}
+</select>
+<!-- 부서별 휴가 캘린더 -->
+<select id="selectTeamVacation"  parameterType="String" resultType="VacationVO">
+SELECT VC_CATAG,A.EMP_CODE, TO_DATE(CWS_CODE,'YYYY-MM-DD') CWS_CODE,
+B.EMP_KOR, B.DEPT_CODE, C.DEPT_NAME, B.POSITION_CODE, E.POSITION_NAME
+from VACATION A INNER JOIN EMPLOYEE B ON (A.EMP_CODE = B.EMP_CODE)
+INNER JOIN DEPARTMENT C ON (B.DEPT_CODE = C.DEPT_CODE)
+INNER JOIN POSITION E ON (B.POSITION_CODE = E.POSITION_CODE)
+WHERE C.DEPT_CODE = #{dept_code,jdbcType=VARCHAR}
+</select>
+<!-- 나의 휴가 현황 -->
+<select id="selectMyVacation" parameterType="String" resultType="VacationVO">
+SELECT A.VC_CATAG,A.EMP_CODE,TO_DATE(CWS_CODE,'YYYY-MM-DD') CWS_CODE,B.EMP_KOR
+FROM VACATION A INNER JOIN EMPLOYEE B ON (A.EMP_CODE = B.EMP_CODE)
+WHERE A.EMP_CODE = #{emp_code,jdbcType=VARCHAR}
+</select>
+
+
+
+</mapper>

@@ -1,0 +1,53 @@
+package kr.or.ddit.project.service;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+
+import exception.DataNotFoundException;
+import kr.or.ddit.project.dao.ITaskListDAO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.TaskVO;
+
+@Service
+public class TaskListServiceImpl implements ITaskListService {
+	@Inject
+	ITaskListDAO dao;
+	
+	@Override
+	public int insertTask(TaskVO task) {
+		return 0;
+	}
+
+	@Override
+	public int selectTaskCount(PagingVO<TaskVO> pagingVO) {
+		return dao.selectTaskCount(pagingVO);
+	}
+
+	@Override
+	public List<TaskVO> selectTaskList(PagingVO<TaskVO> pagingVO) {
+		return dao.selectTaskList(pagingVO);
+	}
+
+	@Override
+	public TaskVO selectTask(String task_code) {
+		TaskVO vo = dao.selectTask(task_code);
+		if(vo == null) {
+			throw new DataNotFoundException(task_code + "에 해당하는 일감은 없음");
+		}
+		return vo;
+	}
+
+	@Override
+	public int updateTask(TaskVO task) {
+		return 0;
+	}
+
+	@Override
+	public int deleteTask(TaskVO task) {
+		return 0;
+	}
+
+}

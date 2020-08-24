@@ -1,0 +1,78 @@
+package kr.or.ddit.community.service;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+
+import kr.or.ddit.community.dao.INoticeDAO;
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.vo.BoardVO;
+import kr.or.ddit.vo.PagingVO;
+
+@Service
+public class NoticeServiceImpl implements INoticeService {
+	
+	@Inject
+	INoticeDAO dao;
+
+	@Override
+	public ResultState insertBoard(BoardVO board) {
+		ResultState result = null;
+		int cnt = dao.insertBoard(board);
+		if(cnt > 0) {
+			result = ResultState.OK;
+		}else {
+			result = ResultState.FAIL;
+		}
+		return result;
+	}
+
+	@Override
+	public int selectBoardCount(PagingVO<BoardVO> pagingVO) {
+		return dao.selectBoardCount(pagingVO);
+	}
+
+	@Override
+	public List<BoardVO> selectBoardList(PagingVO<BoardVO> pagingVO) {
+		return dao.selectBoardList(pagingVO);
+	}
+
+	@Override
+	public BoardVO selectBoard(int bo_no) {
+		return dao.selectBoard(bo_no);
+	}
+
+	@Override
+	public void incrementHit(int bo_no) {
+		
+	}
+
+	@Override
+	public ResultState updateBoard(BoardVO board) {
+		ResultState result = null;
+		int cnt = dao.updateBoard(board);
+		if(cnt>0) {
+			result = ResultState.OK;
+		}else {
+			result = ResultState.FAIL;
+		}
+		
+		return result;
+	}
+
+	@Override
+	public ResultState deleteBoard(String board_code) {
+		ResultState result = null;
+		int cnt = dao.deleteBoard(board_code);
+		if(cnt>0) {
+			result = ResultState.OK;
+		}else {
+			result = ResultState.FAIL;
+		}
+		return result;
+	}
+
+	
+}

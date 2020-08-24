@@ -1,0 +1,32 @@
+package kr.or.ddit.vo;
+
+import lombok.Data;
+import lombok.ToString;
+
+/**
+ * @author �ۼ��ڸ�
+ * @since 2020. 6. 29
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[�����̷�(Modification Information)]]
+ * ������                          ������               ��������
+ * --------     --------    ----------------------
+ * 2020. 6. 29      �ڼ���       �����ۼ�
+ * Copyright (c) 2020 by DDIT All right reserved
+ * </pre>
+ */
+@Data
+@ToString
+public class MessageVO {//����
+
+	private String msg_code; //�����ڵ�
+	private String emp_receiver; //������
+	private String emp_sender; //�߽���
+	private String msg_content; //����
+	private String msg_date; //��¥
+	private String msg_important; //�߿俩��
+ 	private String msg_del; //����
+ 	
+    
+}

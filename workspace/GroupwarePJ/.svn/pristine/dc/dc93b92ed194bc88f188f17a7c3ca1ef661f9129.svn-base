@@ -1,0 +1,162 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>    
+<%@ taglib uri="http://www.springframework.org/tags" prefix="spring" %>    
+
+<body>
+
+</body>
+ <div class="col-md-6">
+                <!-- USERS LIST -->
+                <div class="card">
+                  <div class="card-header">
+                    <h3 class="card-title">사내 주소록</h3>
+                    <div class="card-tools">
+<!--                       <span class="badge badge-danger">8 New Members</span> -->
+                      <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i>
+                      </button>
+                      <button type="button" class="btn btn-tool" data-card-widget="remove"><i class="fas fa-times"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <!-- /.card-header -->
+                  <div class="card-tools" >
+									<div class="input-group input-group-sm" style="width: 300px; float: right;">
+										<select name="searchType" class="custom-select">
+                         				 <option value="no">이름</option>
+                         				 <option value="emp">부서 </option>
+                      					  </select>
+										<input type="text" name="searchWord" class="form-control float-right" placeholder="Search">
+										<div class="input-group-append">
+											<button type="submit" class="btn btn-default">
+												<i class="fas fa-search"></i>
+											</button>
+										</div>
+									</div>
+								</div>
+                  
+                  
+                  
+
+                  
+                  
+                  <div class="card-body p-0" >
+                    <ul class="users-list clearfix">
+                      <li>
+                        <img src="dist/img/user1-128x128.jpg" alt="User Image">
+                        <a class="users-list-name" href="#">김우빈 대표이사</a>
+                        <span class="users-list-date">CEO</span>
+                        <span class="users-list-date">IT회사/CEO</span>
+                        <span class="users-list-date">sss@naver.com</span>
+                        <span class="users-list-date">010-1111-1111</span>
+                        <span class="users-list-date">042-222-2222</span>
+                        
+                      </li>
+                      <li>
+                        <img src="dist/img/user8-128x128.jpg" alt="User Image">
+                        <a class="users-list-name" href="#">강현철 부장</a>
+                        <span class="users-list-date">부장</span>
+                        <span class="users-list-date">개발팀</span>
+                        <span class="users-list-date">aaa@naver.com</span>
+                        <span class="users-list-date">010-2222-2222</span>
+                        <span class="users-list-date">042-111-1111</span>
+                      </li>
+                      
+                      <li>
+                        <img src="dist/img/user8-128x128.jpg" alt="User Image">
+                        <a class="users-list-name" href="#">강현철 부장</a>
+                        <span class="users-list-date">부장</span>
+                        <span class="users-list-date">개발팀</span>
+                        <span class="users-list-date">aaa@naver.com</span>
+                        <span class="users-list-date">010-2222-2222</span>
+                        <span class="users-list-date">042-111-1111</span>
+                      </li>
+                      
+                      <li>
+                        <img src="dist/img/user8-128x128.jpg" alt="User Image">
+                        <a class="users-list-name" href="#">강현철 부장</a>
+                        <span class="users-list-date">부장</span>
+                        <span class="users-list-date">개발팀</span>
+                        <span class="users-list-date">aaa@naver.com</span>
+                        <span class="users-list-date">010-2222-2222</span>
+                        <span class="users-list-date">042-111-1111</span>
+                      </li>
+                      
+                      <li>
+                        <img src="dist/img/user8-128x128.jpg" alt="User Image">
+                        <a class="users-list-name" href="#">강현철 부장</a>
+                        <span class="users-list-date">부장</span>
+                        <span class="users-list-date">개발팀</span>
+                        <span class="users-list-date">aaa@naver.com</span>
+                        <span class="users-list-date">010-2222-2222</span>
+                        <span class="users-list-date">042-111-1111</span>
+                      </li>
+                      
+                      <li>
+                        <img src="dist/img/user8-128x128.jpg" alt="User Image">
+                        <a class="users-list-name" href="#">강현철 부장</a>
+                        <span class="users-list-date">부장</span>
+                        <span class="users-list-date">개발팀</span>
+                        <span class="users-list-date">aaa@naver.com</span>
+                        <span class="users-list-date">010-2222-2222</span>
+                        <span class="users-list-date">042-111-1111</span>
+                      </li>
+                      
+                      <li>
+                        <img src="dist/img/user8-128x128.jpg" alt="User Image">
+                        <a class="users-list-name" href="#">강현철 부장</a>
+                        <span class="users-list-date">부장</span>
+                        <span class="users-list-date">개발팀</span>
+                        <span class="users-list-date">aaa@naver.com</span>
+                        <span class="users-list-date">010-2222-2222</span>
+                        <span class="users-list-date">042-111-1111</span>
+                      </li>
+                      
+                      <li>
+                        <img src="dist/img/user8-128x128.jpg" alt="User Image">
+                        <a class="users-list-name" href="#">강현철 부장</a>
+                        <span class="users-list-date">부장</span>
+                        <span class="users-list-date">개발팀</span>
+                        <span class="users-list-date">aaa@naver.com</span>
+                        <span class="users-list-date">010-2222-2222</span>
+                        <span class="users-list-date">042-111-1111</span>
+                      </li>
+                      
+                    </ul>
+                    <!-- /.users-list -->
+                  </div>
+                  <!-- /.card-body -->
+
+		<div class="col-sm-12 col-md-8" >
+			<div class="dataTables_paginate paging_simple_numbers"
+				id="example2_paginate" >
+				<ul class="pagination" style="float:right;">
+					<li class="paginate_button page-item previous disabled"
+						id="example2_previous"><a href="#" aria-controls="example2"
+						data-dt-idx="0" tabindex="0" class="page-link">Previous</a></li>
+					<li class="paginate_button page-item active"><a href="#"
+						aria-controls="example2" data-dt-idx="1" tabindex="0"
+						class="page-link">1</a></li>
+					<li class="paginate_button page-item "><a href="#"
+						aria-controls="example2" data-dt-idx="2" tabindex="0"
+						class="page-link">2</a></li>
+					<li class="paginate_button page-item "><a href="#"
+						aria-controls="example2" data-dt-idx="3" tabindex="0"
+						class="page-link">3</a></li>
+					<li class="paginate_button page-item "><a href="#"
+						aria-controls="example2" data-dt-idx="4" tabindex="0"
+						class="page-link">4</a></li>
+					<li class="paginate_button page-item "><a href="#"
+						aria-controls="example2" data-dt-idx="5" tabindex="0"
+						class="page-link">5</a></li>
+					<li class="paginate_button page-item "><a href="#"
+						aria-controls="example2" data-dt-idx="6" tabindex="0"
+						class="page-link">6</a></li>
+					<li class="paginate_button page-item next" id="example2_next"><a
+						href="#" aria-controls="example2" data-dt-idx="7" tabindex="0"
+						class="page-link">Next</a></li>
+				</ul>
+			</div>
+		</div>
+
+

@@ -1,0 +1,23 @@
+package kr.or.ddit.mypage.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+@Controller
+@RequestMapping("mypage/")
+public class VacationController {
+	
+	@GetMapping("myVacaCalendar")
+	public String myVacation() {
+		String goPage = "myVacaCalendar.mypage";
+		return goPage;
+		
+	}
+	
+	@GetMapping("myTeamVacaCalendar")
+	public String teamVacation() {
+		String goPage = "myTeamVacaCalendar.mypage";
+		return goPage;
+	}
+}

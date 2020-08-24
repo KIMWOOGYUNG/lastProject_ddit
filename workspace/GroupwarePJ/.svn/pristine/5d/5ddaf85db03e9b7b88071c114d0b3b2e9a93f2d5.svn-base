@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.project.dao.ITaskAttatchDAO">
+	<insert id="insertAttatchs" parameterType="Task_AttVO">
+		<selectKey keyProperty="task_attcode" resultType="String" order="BEFORE">
+			SELECT 'TA' || LPAD(NVL(TO_NUMBER(SUBSTR(MAX(TASK_ATTCODE), 3)), 0)+1, 3, '0') 
+			FROM TASK_ATT
+		</selectKey>
+			INSERT INTO TASK_ATT (
+			    TASK_ATTCODE, TASK_CODE, FILE_PATH, FILE_SIZE, ORG_NAME, SAVE_NAME, MIME, FANCY_SIZE
+			) VALUES (
+				#{task_attcode}, #{task_code}, 'D:\A_TeachingMaterial\7.LastProject\other\attatch', #{file_size, jdbcType=NUMERIC}
+				, #{org_name,jdbcType=VARCHAR}, #{save_name, jdbcType=VARCHAR}, #{mime, jdbcType=VARCHAR}
+				, #{fancy_size, jdbcType=VARCHAR}
+			)
+	
+	</insert>
+	
+	<select id="selectAttatch" resultType="TASK_ATTVO" parameterType="String">
+		
+		SELECT TASK_ATTCODE, TASK_CODE, FILE_PATH, FILE_SIZE, ORG_NAME, SAVE_NAME, MIME, FANCY_SIZE
+		  FROM TASK_ATT
+		 WHERE TASK_ATTCODE = #{task_attcode}
+	</select>
+	
+	<delete id="deleteAttatches" parameterType="Task_AttVO">
+		DELETE FROM TASK_ATT 
+		WHERE TASK_ATTCODE IN 
+		<foreach collection="deleteAttatches" item="delNo" open="(" separator="," close=")">
+			#{delNo}
+		</foreach>
+	</delete>
+</mapper>

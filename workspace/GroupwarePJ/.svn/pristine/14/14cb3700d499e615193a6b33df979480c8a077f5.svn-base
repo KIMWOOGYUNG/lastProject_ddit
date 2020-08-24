@@ -1,0 +1,26 @@
+package kr.or.ddit.mypage.service;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.mypage.dao.IMypageDAO;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.Time_AttendVO;
+
+@Service
+public class MypageServiceImpl implements IMypageService {
+	
+	@Inject
+	IMypageDAO dao;
+	
+	@Override
+	public List<Time_AttendVO> getMyAttendance(String emp_code) {
+		List<Time_AttendVO> attList = dao.selectEmpAttendance(emp_code);
+		return attList;
+	}
+
+}

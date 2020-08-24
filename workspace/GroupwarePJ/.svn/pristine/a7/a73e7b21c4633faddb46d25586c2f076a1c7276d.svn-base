@@ -1,0 +1,21 @@
+package kr.or.ddit.vo;
+
+import lombok.Data;
+
+@Data
+public class AjaxdataAddressLineVO {
+
+	private String add_code; //코드
+	private String addr_name; //이름
+	private String addr_phone; //폰번호
+	private String addr_tel; //내선
+	private String addr_dept; //부서명
+	private String addr_team; //팀명
+	private String addr_email; //이메일
+	private String addr_etc; //비고
+	private String addr_address; //주소
+	private String addr_job; //직책
+	private String addr_position; //직급
+	private String agname;//소속
+
+}

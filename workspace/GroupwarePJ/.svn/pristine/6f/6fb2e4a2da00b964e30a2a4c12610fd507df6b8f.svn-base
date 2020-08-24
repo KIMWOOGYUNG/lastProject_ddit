@@ -1,0 +1,125 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>    
+<%@ taglib uri="http://www.springframework.org/tags" prefix="spring" %>    
+
+  <!-- fullCalendar -->
+  <link rel="stylesheet" href="${cPath }/resources/plugins/fullcalendar/main.min.css">
+  <link rel="stylesheet" href="${cPath }/resources/plugins/fullcalendar-daygrid/main.min.css">
+  <link rel="stylesheet" href="${cPath }/resources/plugins/fullcalendar-timegrid/main.min.css">
+  <link rel="stylesheet" href="${cPath }/resources/plugins/fullcalendar-bootstrap/main.min.css">
+
+
+<style>
+
+  #calendar {
+    max-width: auto;
+    margin: 0 auto;
+  } 
+
+</style>
+
+
+   <section class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <h1>근태현황</h1>
+          </div>
+        </div>
+      </div><!-- /.container-fluid -->
+    </section>
+
+
+
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-md-3">
+            <div class="sticky-top mb-3">
+             
+              <!-- /.card -->
+              </div>
+            </div>
+          </div>
+          <!-- /.col -->
+          <div class="col-md-14">
+            <div class="card card-primary">
+              <div class="card-body p-0">
+                <!-- THE CALENDAR -->
+                <div id="calendar"></div>
+              </div>
+              <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+          </div>
+          <!-- /.col -->
+        </div>
+        <!-- /.row -->
+    </section>
+
+
+
+<section class="content">
+      <div class="container-fluid">
+  <div id='calendar'></div>
+</div>
+</section>
+
+
+
+	<!-- fullCalendar 2.2.5 -->
+	<script src="${cPath }/resources/plugins/moment/moment.min.js"></script>
+	<script src="${cPath }/resources/plugins/fullcalendar/main.min.js"></script>
+	<script src="${cPath }/resources/plugins/fullcalendar-daygrid/main.min.js"></script>
+	<script src="${cPath }/resources/plugins/fullcalendar-timegrid/main.min.js"></script>
+	<script src="${cPath }/resources/plugins/fullcalendar-interaction/main.min.js"></script>
+	<script src="${cPath }/resources/plugins/fullcalendar-bootstrap/main.min.js"></script>
+	
+	
+	<script>
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
+    
+    
+	//캘린더생성
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+      plugins: [ 'interaction', 'dayGrid', 'timeGrid', 'list' ],
+      header: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth'
+      },
+      navLinks: true, // can click day/week names to navigate views
+      businessHours: true, // display business hours
+      selectMirror: true,
+
+      eventLimit: true,
+      navLinks: true,
+      
+      eventRender: function(info) {
+    	  
+    	    if(info.event.extendedProps.comeTime){
+    	    let b = $("<div style='background-color:red'>").html(info.event.extendedProps.comeTime);
+    	    $(info.el).html(b);
+    	    } //출근시간VO에서받아옴
+     	    if(info.event.extendedProps.goTime){
+    	    let a = $("<div>").html(info.event.extendedProps.goTime);
+         	$(info.el).append(a);
+     	    } //퇴근시간VO에서받아옴
+    	  },
+
+      //캘린더에 이벤트 담아주기 
+      events:  '${cPath}/mypage/myAttCalendar/events'
+      
+    });
+
+    calendar.render();
+  });
+    
+    
+    
+   
+
+</script>

@@ -1,0 +1,423 @@
+package kr.or.ddit.approval.service;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Service;
+
+import kr.or.ddit.approval.dao.IApprovalDAO;
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.vo.Appr_OrderVO;
+import kr.or.ddit.vo.Appr_StatVO;
+import kr.or.ddit.vo.Approve_LineVO;
+import kr.or.ddit.vo.DraftVO;
+import kr.or.ddit.vo.Draft_AttatchVO;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.ReviewerGroupVO;
+import kr.or.ddit.vo.ReviewerVO;
+import kr.or.ddit.vo.Reviewer_StatVO;
+
+@Service
+public class ApprovalServiceImpl implements IApprovalService {
+	@Inject
+	IApprovalDAO dao;
+
+	@Override
+	public List<DraftVO> getTempFolder(PagingVO<DraftVO> pagingVO) {
+		return dao.selectTempFolder(pagingVO);
+	}
+
+	@Override
+	public DraftVO getDraft(String draft_code) {
+		return dao.selectDraft(draft_code);
+	}
+
+	@Override
+	public List<Approve_LineVO> getApprLine(PagingVO<Approve_LineVO> pagingVO) {
+		return dao.selectApproveLine(pagingVO);
+	}
+	
+	@Override
+	public List<Appr_OrderVO> getApprOrder(String appr_line_code){
+		return dao.selectApprOrder(appr_line_code);
+	}
+	@Override
+	public List<Appr_StatVO> getApprLineStat(String draft_code) {
+		return dao.selectApproveStat(draft_code);
+	}
+
+	@Override
+	public int getApproveCount(PagingVO<DraftVO> pagingVO) {
+		return dao.selectApproveCount(pagingVO);
+	}
+
+	@Override
+	public ResultState createApprEmpStat(Appr_StatVO appr_StatVO) {
+		ResultState state = ResultState.FAIL;
+
+		int cnt = dao.insertApproveStat(appr_StatVO);
+		if (cnt > 0) {
+			state = ResultState.SUCCESSES;
+		}
+
+		return state;
+	}
+
+	@Override
+	public ResultState createApprLine(Approve_LineVO approve_LineVO) {
+		ResultState state = ResultState.FAIL;
+
+		int cnt = dao.insertApproveLine(approve_LineVO);
+		if (cnt > 0) {
+			state = ResultState.SUCCESSES;
+		}
+
+		return state;
+	}
+
+	@Override
+	public ResultState createApprEmpOrder(Appr_OrderVO appr_OrderVO) {
+		ResultState state = ResultState.FAIL;
+
+		int cnt = dao.insertApproveOrder(appr_OrderVO);
+		if (cnt > 0) {
+			state = ResultState.SUCCESSES;
+		}
+
+		return state;
+	}
+
+	@Override
+	public ResultState createDraft(DraftVO draftVO) {
+		ResultState state = ResultState.FAIL;
+
+		int cnt = dao.insertDraft(draftVO);
+		if (cnt > 0) {
+			state = ResultState.SUCCESSES;
+		}
+
+		return state;
+	}
+
+	@Override
+	public ResultState createDraftAttatch(Draft_AttatchVO attatchVO) {
+		ResultState state = ResultState.FAIL;
+
+		int cnt = dao.insertDraftAttatch(attatchVO);
+		if (cnt > 0) {
+			state = ResultState.SUCCESSES;
+		}
+
+		return state;
+	}
+
+	@Override
+	public ResultState setDarft(DraftVO draftVO) {
+		ResultState state = ResultState.FAIL;
+
+		int cnt = dao.updateDraft(draftVO);
+		if (cnt > 0) {
+			state = ResultState.SUCCESSES;
+		}
+
+		return state;
+	}
+
+	
+
+	@Override
+	public ResultState setApprEmpStat(Appr_StatVO appr_StatVO) {
+		ResultState state = ResultState.FAIL;
+
+		int cnt = dao.updateApproveStat(appr_StatVO);
+		if (cnt > 0) {
+			state = ResultState.SUCCESSES;
+		}
+
+		return state;
+	}
+	
+	@Override
+	public ResultState setApproveGroup(Approve_LineVO approve_LineVO) {
+		ResultState state = ResultState.FAIL;
+
+		int cnt = dao.updateApproveGroup(approve_LineVO);
+		if (cnt > 0) {
+			state = ResultState.SUCCESSES;
+		}
+		return state;
+	}
+	
+
+	@Override
+	public ResultState removeDraft(DraftVO draftVO) {
+		ResultState state = ResultState.FAIL;
+
+		int cnt = dao.deleteDraft(draftVO);
+		if (cnt > 0) {
+			state = ResultState.SUCCESSES;
+		}
+
+		return state;
+	}
+
+	@Override
+	public ResultState removeDraftAttatch(Draft_AttatchVO attatchVO) {
+		ResultState state = ResultState.FAIL;
+
+		int cnt = dao.deleteDraftAttatch(attatchVO);
+		if (cnt > 0) {
+			state = ResultState.SUCCESSES;
+		}
+
+		return state;
+	}
+
+	@Override
+	public ResultState removeAllDraftAttatch(DraftVO draftVO) {
+		ResultState state = ResultState.FAIL;
+
+		int cnt = dao.deleteAllDraftAttatch(draftVO);
+		if (cnt > 0) {
+			state = ResultState.SUCCESSES;
+		}
+
+		return state;
+	}
+
+//	@Override
+//	public ResultState removeAllApprOrder(String appr_line_code) {
+//		ResultState state = ResultState.FAIL;
+//
+//		int cnt = dao.deleteAllApproveOrder(appr_line_code);
+//		if (cnt > 0) {
+//			state = ResultState.SUCCESSES;
+//		}
+//
+//		return state;
+//	}
+
+//	@Override
+//	public ResultState removeApprEmpOrder(String appr_order_code) {
+//		ResultState state = ResultState.FAIL;
+//
+//		int cnt = dao.delteApproveOrder(appr_order_code);
+//		if (cnt > 0) {
+//			state = ResultState.SUCCESSES;
+//		}
+//
+//		return state;
+//	}
+
+//	@Override
+//	public ResultState removeApprLine(String appr_line_code) {
+//		ResultState state = ResultState.FAIL;
+//
+//		int cnt = dao.deleteApproveLine(appr_line_code);
+//		if (cnt > 0) {
+//			state = ResultState.SUCCESSES;
+//		}
+//
+//		return state;
+//	}
+
+	@Override
+	public int getApprLineCount(PagingVO<Approve_LineVO> pagingVO) {
+		return dao.selectApprLineCount(pagingVO);
+	}
+
+	@Override
+	public List<ReviewerGroupVO> getReviewerGroup(PagingVO<ReviewerGroupVO> pagingVO) {
+		return dao.selectReviewerGroup(pagingVO);
+	}
+
+	@Override
+	public int getReviewerGroupCount(PagingVO<ReviewerGroupVO> pagingVO) {
+		return dao.selectReviewerGroupCount(pagingVO);
+	}
+	
+	@Override
+	public List<ReviewerVO> getReviewer(String rg_code) {
+		return dao.selectReviewer(rg_code);
+	}
+
+
+//	@Override
+//	public List<EmployeeVO> getEmpSortList(String emp_codeStr) {
+//		return dao.selectEmpSortList(emp_codeStr);
+//	}
+
+	@Override
+	public ResultState createReviewerGroup(ReviewerGroupVO reviewerGroupVO) {
+		ResultState state = ResultState.FAIL;
+
+		int cnt = dao.insertReviewerGroup(reviewerGroupVO);
+		if (cnt > 0) {
+			state = ResultState.SUCCESSES;
+		}
+
+		return state;
+	}
+
+	@Override
+	public ResultState createReviewerLine(ReviewerVO reviewerVO) {
+		ResultState state = ResultState.FAIL;
+
+		int cnt = dao.insertReviewerLine(reviewerVO);
+		if (cnt > 0) {
+			state = ResultState.SUCCESSES;
+		}
+
+		return state;
+	}
+
+	@Override
+	public ResultState createReviewerStat(Reviewer_StatVO reviewer_StatVO) {
+		ResultState state = ResultState.FAIL;
+
+		int cnt = dao.insertReviewerStat(reviewer_StatVO);
+		if (cnt > 0) {
+			state = ResultState.SUCCESSES;
+		}
+
+		return state;
+	}
+
+	@Override
+	public ResultState setReviewerGroup(ReviewerGroupVO reviewerGroupVO) {
+		ResultState state = ResultState.FAIL;
+
+		int cnt = dao.updateReviewerGroup(reviewerGroupVO);
+		if (cnt > 0) {
+			state = ResultState.SUCCESSES;
+		}
+
+		return state;
+	}
+
+	
+
+	@Override
+	public ResultState setReviewerStat(Reviewer_StatVO reviewer_StatVO) {
+		ResultState state = ResultState.FAIL;
+
+		int cnt = dao.updateReviewerStat(reviewer_StatVO);
+		if (cnt > 0) {
+			state = ResultState.SUCCESSES;
+		}
+
+		return state;
+	}
+
+	@Override
+	public List<DraftVO> getMyDraftList(PagingVO<DraftVO> pagingVO) {
+		return dao.selectMyDraftList(pagingVO);
+	}
+
+	@Override
+	public int getMyDraftCount(PagingVO<DraftVO> pagingVO) {
+		return dao.selectMyDraftCount(pagingVO);
+	}
+
+	@Override
+	public Approve_LineVO getModifyApprLineInfo(Approve_LineVO approve_LineVO) {
+		return dao.selectModifyApprLineInfo(approve_LineVO);
+	}
+
+	@Override
+	public ReviewerGroupVO getModifyReviewerLineInfo(ReviewerGroupVO reviewerGroupVO) {
+		return dao.selectModifyReviewerLineInfo(reviewerGroupVO);
+	}
+
+	
+	@Override
+	public List<Approve_LineVO> getMyApprGroup(String emp_code) {
+		return dao.selectMyApprGroup(emp_code);
+	}
+
+	@Override
+	public List<ReviewerGroupVO> getMyReviewerGroup(ReviewerGroupVO groupVO) {
+		return dao.selectMyReviewerGroup(groupVO);
+	}
+
+	@Override
+	public ResultState removeAllApproveOrder(String appr_line_code) {
+		ResultState state = ResultState.FAIL;
+
+		int cnt = dao.deleteAllApproveOrder(appr_line_code);
+		if (cnt > 0) {
+			state = ResultState.SUCCESSES;
+		}
+
+		return state;
+	}
+
+	@Override
+	public ResultState removeApproveOrder(Appr_OrderVO appr_OrderVO) {
+		ResultState state = ResultState.FAIL;
+
+		int cnt = dao.deleteApproveOrder(appr_OrderVO);
+		if (cnt > 0) {
+			state = ResultState.SUCCESSES;
+		}
+
+		return state;
+	}
+
+	@Override
+	public ResultState removeApproveLine(String appr_line_code) {
+		ResultState state = ResultState.FAIL;
+
+		int cnt = dao.deleteApproveLine(appr_line_code);
+		if (cnt > 0) {
+			state = ResultState.SUCCESSES;
+		}
+
+		return state;
+	}
+
+	@Override
+	public ResultState removeReviewerGroup(String rg_code) {
+		ResultState state = ResultState.FAIL;
+
+		int cnt = dao.deleteReviewerGroup(rg_code);
+		if (cnt > 0) {
+			state = ResultState.SUCCESSES;
+		}
+
+		return state;
+	}
+
+	@Override
+	public ResultState removeAllReviewerOrder(String rg_code) {
+		ResultState state = ResultState.FAIL;
+
+		int cnt = dao.deleteAllReviewerOrder(rg_code);
+		if (cnt > 0) {
+			state = ResultState.SUCCESSES;
+		}
+
+		return state;
+	}
+
+	@Override
+	public ResultState removeReviewerOrder(ReviewerVO reviewerVO) {
+		ResultState state = ResultState.FAIL;
+
+		int cnt = dao.deleteReviewerOrder(reviewerVO);
+		if (cnt > 0) {
+			state = ResultState.SUCCESSES;
+		}
+
+		return state;
+	}
+
+
+	
+	
+	
+
+}

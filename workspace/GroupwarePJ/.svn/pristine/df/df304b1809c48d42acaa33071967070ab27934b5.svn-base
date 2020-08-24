@@ -1,0 +1,41 @@
+package kr.or.ddit.vo;
+
+import java.util.List;
+
+import lombok.Data;
+import lombok.ToString;
+
+/**
+ * @author 작성자명
+ * @since 2020. 6. 29
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                          수정자               수정내용
+ * --------     --------    ----------------------
+ * 2020. 6. 29      박선정       최초작성
+ * Copyright (c) 2020 by DDIT All right reserved
+ * </pre>
+ */
+@Data
+@ToString
+public class ProjectVO { //프로젝트
+
+	private String project_code;
+	private String dept_code;
+	private String project_name;
+	private String project_content;
+	private String project_sum;
+	private String project_start;
+	private String project_end;
+	private Integer project_progress;
+	private String project_stat;
+	private String project_important;
+	
+	List<PJ_RgroupVO> pj_rgroupList; //프로젝트 역할구성
+	List<Dept_ScheduleVO> dept_scheduleList;
+	String pr_name;
+	
+	
+}

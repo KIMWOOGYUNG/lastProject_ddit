@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.addr.dao.IAddressDAO">
+
+<sql id="searchFrag">
+ FROM ADDRESS
+<where>
+	<if test="searchVO!=null and @org.apache.commons.lang3.StringUtils@isNotBlank(searchVO.searchWord)">
+	
+		<choose>
+			<when test="'department'.equals(searchVO.searchType)">
+			WHERE DEPT_NAME LIKE '%' || #{searchVO.searchWord} || '%'
+			</when>
+			<when test="'name'.equals(searchVO.searchType)">
+			WHERE INSTR(EMP_KOR, #{searchVO.searchWord}) > 0
+			EMP_KOR
+			</when>
+		</choose>
+	</if>
+</where>
+</sql>
+<!-- 사내주소록 리스트 출력 -->
+<select id="addrList" parameterType="PagingVO" resultType="EmployeeVO">
+SELECT A.*
+FROM(
+SELECT ROWNUM RNUM, EMP_CODE,EMP_KOR, B.DEPT_NAME, EMP_HP, A.EMP_MAIL,CO_PHONE
+FROM EMPLOYEE A INNER JOIN DEPARTMENT B ON (A.DEPT_CODE = B.DEPT_CODE)
+)A
+WHERE A.RNUM BETWEEN #{startRow} AND #{endRow}
+</select>
+
+<!-- 주소록 상세주소  내가만듬 -->
+<select id="readAddressList" parameterType="string" resultType="kr.or.ddit.vo.EmployeeVO">
+SELECT A.EMP_CODE, EMP_KOR,EMP_HP, CO_PHONE, EMP_MAIL,
+	   B.DEPT_NAME AS DEPT_CODE, C.POSITION_NAME AS POSITION_CODE,
+	   D.JOBTITLE_NAME AS JOBTITLE_CODE, E.TEAM_NAME AS TEAM_CODE
+        FROM EMPLOYEE A INNER JOIN DEPARTMENT B ON(A.DEPT_CODE = B.DEPT_CODE)
+                        INNER JOIN TEAM E ON(A.TEAM_CODE = E.TEAM_CODE)
+                        INNER JOIN POSITION C ON(A.POSITION_CODE = C.POSITION_CODE)
+                        LEFT OUTER JOIN JOBTITLE D ON(A.JOBTITLE_CODE = D.JOBTITLE_CODE)
+        WHERE A.EMP_CODE = #{emp_code}
+</select>
+<!-- 부서 리스트  -->
+<select id="deptAddress" parameterType="PagingVO" resultType="EmployeeVO">
+<!-- SELECT A.*               -->
+<!-- FROM                 -->
+<!--     (SELECT ROWNUM RNUM, EMP_KOR, B.DEPT_NAME, EMP_MAIL, CO_PHONE -->
+<!--     FROM EMPLOYEE A INNER JOIN DEPARTMENT B ON(A.DEPT_CODE = B.DEPT_CODE) -->
+<!--     WHERE A.DEPT_CODE= #{detailSearch.dept_code})A -->
+<!-- WHERE A.RNUM BETWEEN ${startRow} AND #{endRow}; -->
+</select>
+<!-- 부서 인원수  -->
+<select id="selectDeptCount" resultType="int">
+<!-- SELECT DEPT_CODE, COUNT(*) -->
+<!-- FROM EMPLOYEE -->
+<!-- GROUP BY DEPT_CODE; -->
+</select>
+
+<!-- 팀 리스트  -->
+<select id="teamAddress" parameterType="PagingVO" resultType="EmployeeVO">
+SELECT A.*              
+FROM                
+    (SELECT ROWNUM RNUM, EMP_KOR, B.DEPT_NAME, C.TEAM_NAME,EMP_HP, EMP_MAIL, CO_PHONE
+    FROM EMPLOYEE A INNER JOIN DEPARTMENT B ON(A.DEPT_CODE = B.DEPT_CODE)
+                    INNER JOIN TEAM C ON (A.TEAM_CODE = C.TEAM_CODE)
+             <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.team_code)">
+    WHERE A.TEAM_CODE= #{detailSearch.team_code}
+             </if>
+    )A
+WHERE A.RNUM BETWEEN #{startRow} AND #{endRow}
+
+</select>
+<!-- 팀 인원 수  -->
+<select id="selectTeamCount" resultType="int"><!-- 조건에 따른 사원 주소록 수 -->
+	SELECT COUNT(*)
+		FROM employee
+		WHERE 1 = 1
+	<include refid="empSearch" />	
+</select>
+
+
+
+
+
+
+
+
+<!-- 사내 주소록 수  --><!--            건들지 말자                             -->
+	<sql id="empSearch">
+			<if test="detailSearch!=null">	
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.emp_code)">
+					AND EMP_CODE = #{detailSearch.emp_code}
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.dept_code)">
+					AND DEPT_CODE = #{detailSearch.dept_code}
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.team_code)">
+					AND TEAM_CODE = #{detailSearch.team_code}
+				</if>
+			</if>	
+	</sql>
+    
+		
+<select id="selectAddress" parameterType="String" resultType="EmployeeVO"><!-- 사원 상세주소록 -->
+ SELECT  EMP_KOR, EMP_ENG, EMP_MAIL, EMP_HP,
+    EMP_ZIP, EMP_STARTDATE, TEAM_NAME, DEPT_NAME,
+    POSITION_NAME, JOBTITLE_NAME
+	FROM EMPLOYEE A, POSITION B, DEPARTMENT C,JOBTITLE D, TEAM E
+	WHERE EMP_CODE = #{emp_code}  
+	AND A.TEAM_CODE = E.TEAM_CODE
+    AND A.POSITION_CODE = B.POSITION_CODE
+	AND A.DEPT_CODE = C.DEPT_CODE
+	AND A.JOBTITLE_CODE = D.JOBTITLE_CODE;
+</select>
+
+<select id="selectaddrCount" resultType="int"><!-- 조건에 따른 사원 주소록 수 -->
+	SELECT COUNT(*)
+		FROM employee
+		WHERE 1 = 1
+	<include refid="empSearch" />	
+</select>
+
+<select id="selectAddrList" parameterType="PagingVO" resultType="EmployeeVO"><!-- 조건에 따른 사원 주소록 -->
+	SELECT  EMP_CODE ,EMP_KOR, EMP_ENG,
+    EMP_MAIL,EMP_HP,
+    EMP_ZIP, DEPT_NAME,
+    POSITION_NAME POSITION_CODE
+	FROM EMPLOYEE A, POSITION B, DEPARTMENT C
+	WHERE  A.POSITION_CODE = B.POSITION_CODE
+	AND A.DEPT_CODE = C.DEPT_CODE
+	<include refid="empSearch" />
+	ORDER BY A.POSITION_CODE DESC
+</select>
+
+<select id="selectDepartmentList" resultType="DepartmentVO"><!-- 전체 부서코드 -->
+	SELECT B.DEPT_CODE, B.DEPT_NAME, COUNT(A.EMP_CODE) DEPT_CNT
+  	FROM EMPLOYEE A RIGHT OUTER JOIN DEPARTMENT B ON (A.DEPT_CODE = B.DEPT_CODE)
+ 	GROUP BY B.DEPT_CODE, B.DEPT_NAME 
+    ORDER BY 1
+</select>
+
+<select id="selectTeamList" resultType="TeamVO"><!-- 부서코드에 속한 팀코드 -->
+ SELECT B.TEAM_CODE, B.TEAM_NAME, COUNT(A.EMP_CODE) TEAM_CNT
+FROM EMPLOYEE A RIGHT OUTER JOIN TEAM B ON (A.TEAM_CODE = B.TEAM_CODE)
+WHERE B.DEPT_CODE = #{dept_code}
+GROUP BY B.TEAM_CODE, B.TEAM_NAME
+ORDER BY 1
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</mapper>

@@ -1,0 +1,24 @@
+package kr.or.ddit.schedule.dao;
+
+import java.util.List;
+
+import org.springframework.stereotype.Repository;
+
+import kr.or.ddit.vo.Com_ScheduleVO;
+import kr.or.ddit.vo.PagingVO;
+
+@Repository
+public interface ICom_ScheduleDAO {
+	public List<Com_ScheduleVO> selectComScheduleList(PagingVO<Com_ScheduleVO>pagingVO);
+	
+	public Com_ScheduleVO selectComSchedule(String cs_code);
+	
+	public int selectCom_scheduleCount(PagingVO<Com_ScheduleVO> pagingVO);
+
+	public int insertCom(Com_ScheduleVO comschedule);
+	
+	public int deleteCom(String cs_code);
+	
+	public int updateCom(Com_ScheduleVO comschedule);
+
+}

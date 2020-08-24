@@ -1,0 +1,113 @@
+
+
+
+package kr.or.ddit.addr.service;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+
+import kr.or.ddit.addr.dao.IAddressDAO;
+import kr.or.ddit.vo.DepartmentVO;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.TeamVO;
+
+@Service("AddrService")
+public class AddrServiceImpl implements IaddrService {
+ @Inject
+ private IAddressDAO dao;
+	@Override///사내주소록 리스트
+	public List<EmployeeVO> readAddrList(PagingVO<EmployeeVO> pagingVO) {
+		return dao.addrList(pagingVO);
+	}
+
+//	@Override//주소록 수량
+//	public int selectaddrCount(PagingVO<AddressVO> pagingVO) {
+//		return dao.selectaddrCount(pagingVO);
+//	}
+	
+	@Override//주소록 수량
+	public int selectaddrCount(PagingVO<EmployeeVO> pagingVO) {
+		return dao.selectaddrCount(pagingVO);
+	}
+	
+	@Override///상세보기 내가한거
+	public EmployeeVO selectAddress(String emp_code) {
+		return dao.readAddressList(emp_code);
+	}
+	//부서 리스트 
+	@Override
+	public List<EmployeeVO> deptList(PagingVO<EmployeeVO> pagingVO) {
+		return dao.deptAddress(pagingVO);
+	}
+
+	//부서 인원 수 조회 
+	@Override
+	public int selectDeptCount(PagingVO<EmployeeVO> pagingVO) {
+		return dao.selectDeptCount(pagingVO);
+	}
+	
+	////팀 리스트 
+	@Override
+	public List<EmployeeVO> teamList(PagingVO<EmployeeVO> pagingVO) {
+		return dao.teamAddress(pagingVO);
+	}
+//	@Override
+//	public List<TeamVO> readTeam(String team_code) {
+//		return dao.teamAddress(team_code);
+//	}
+
+	//팀 인원 수 조회
+	@Override
+	public int selectTeamCount(PagingVO<EmployeeVO> pagingVO) {
+		return dao.selectTeamCount(pagingVO);
+	}
+
+	
+	
+	   //주소록 상세보기
+	   @Override
+	   public EmployeeVO selectaddr(String emp_code) {
+	      return dao.selectAddress(emp_code);
+	   }
+
+
+	
+	
+	
+	
+	   
+	   
+	   
+	   
+	   
+	   
+	   
+	   
+	   
+	   
+/////////////////////////////////////dynaTree///////////////////////////
+	@Override//전체 부서 반환
+	public List<DepartmentVO> readDepartmentList() {
+		return dao.selectDepartmentList();
+	}
+
+	@Override //부서에 속해있는 팀 반환
+	public List<TeamVO> readTeamList(String dept_code) {
+		return dao.selectTeamList(dept_code);
+	}
+	
+	
+	@Override//부서에 속해있는 사원 반환
+	public List<EmployeeVO> addrList(PagingVO<EmployeeVO> pagingVO) {
+		return dao.selectAddrList(pagingVO);
+	}
+///////////////////////////////////////////////////////////////////////
+
+	
+
+
+}

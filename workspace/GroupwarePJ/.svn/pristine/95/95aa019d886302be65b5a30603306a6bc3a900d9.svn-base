@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.project.dao.IProjectListDAO">
+	<sql id="searchFrag">
+	
+			<trim prefix="where" prefixOverrides="and">
+				<if test="detailSearch!=null">
+					<if test="detailSearch.emp_code!=null and @org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.emp_code)">
+						AND PROJECT_CODE IN (
+							SELECT PROJECT_CODE
+							  FROM PJ_RGROUP
+							 WHERE PRG_CODE IN (
+								SELECT PRG_CODE
+								  FROM PJ_MEMBER
+								 WHERE EMP_CODE = #{detailSearch.emp_code}))
+					</if>
+				</if>	
+				
+				<if test="searchVO!=null and @org.apache.commons.lang3.StringUtils@isNotBlank(searchVO.searchWord)">
+					<choose>
+						<when test="'name'.equals(searchVO.searchType)">
+							AND PROJECT_CODE = (SELECT PROJECT_CODE
+							                        FROM PJ_RGROUP
+							                        WHERE PRG_CODE =(SELECT PRG_CODE
+							                                        FROM PJ_MEMBER
+							                                        WHERE EMP_CODE = (SELECT EMP_CODE
+							                                                            FROM EMPLOYEE
+							                                                            WHERE EMP_KOR LIKE '%' || #{searchVO.searchWord} || '%')))
+						</when>
+						<when test="'pjName'.equals(searchVO.searchType)">
+								AND INSTR(PROJECT_NAME, #{searchVO.searchWord}) > 0
+						</when>
+						<when test="'dept'.equals(searchVO.searchType)">
+								AND B.DEPT_NAME LIKE '%' || #{searchVO.searchWord} || '%'
+						</when>
+					</choose>
+					
+				</if>	
+			</trim>
+	</sql>
+	
+	<select id="selectProjectCount" resultType="int" parameterType="kr.or.ddit.vo.PagingVO">
+		SELECT COUNT(PROJECT_CODE)
+		FROM PROJECT A INNER JOIN DEPARTMENT B ON (A.DEPT_CODE = B.DEPT_CODE)
+			<include refid="searchFrag" />
+	</select>
+	
+	
+	<resultMap type="kr.or.ddit.vo.ProjectVO" id="projectListMap" autoMapping="true">
+		<id property="project_code" column="PROJECT_CODE"/>
+		<collection property="pj_rgroupList" javaType="java.util.List" ofType="PJ_RgroupVO" >
+			<id property="pr_code" column="PR_NAME"/>
+			<id property="emp_name" column="EMP_CODE"/>
+		</collection>
+	</resultMap>
+	
+	<select id="selectProjectList" resultMap="projectListMap" parameterType="kr.or.ddit.vo.PagingVO">
+		SELECT A.*, PR_NAME, H.EMP_KOR AS EMP_CODE
+		FROM (
+			SELECT ROWNUM RNUM, PROJECT_CODE, DEPT_NAME, PROJECT_NAME, 
+				   PROJECT_PROGRESS, C.STANDARD_NAME AS PROJECT_IMPORTANT, D.STANDARD_NAME AS PROJECT_STAT, PROJECT_SUM, PROJECT_HIDE
+			  FROM  PROJECT A INNER JOIN DEPARTMENT B ON (A.DEPT_CODE = B.DEPT_CODE)
+			  		LEFT OUTER JOIN STANDARD C ON (PROJECT_IMPORTANT = C.STANDARD_CODE)
+			  		LEFT OUTER JOIN STANDARD D ON (PROJECT_STAT = D.STANDARD_CODE)
+			  		
+			  
+			<include refid="searchFrag" />
+			ORDER BY PROJECT_CODE ASC
+		) A
+			LEFT OUTER JOIN PJ_RGROUP E ON (A.PROJECT_CODE = E.PROJECT_CODE)
+			LEFT OUTER JOIN PROJECT_ROLE F ON (E.PR_CODE = F.PR_CODE)
+			LEFT OUTER JOIN PJ_MEMBER G ON (E.PRG_CODE = G.PRG_CODE)
+			LEFT OUTER JOIN EMPLOYEE H ON (G.EMP_CODE = H.EMP_CODE)
+		<![CDATA[
+			WHERE RNUM >= #{startRow} AND RNUM <= #{endRow}
+		]]>
+	</select>
+	
+	<resultMap type="kr.or.ddit.vo.ProjectVO" id="projectMap" autoMapping="true">
+		<id property="project_code" column="PROJECT_CODE"/>
+		<collection property="pj_rgroupList" javaType="java.util.List" ofType="PJ_RgroupVO" >
+			<id property="pr_code" column="PR_NAME"/>
+			<id property="emp_name" column="EMP_NAME"/>
+		</collection>
+	</resultMap>
+	
+	<select id="selectProject" parameterType="String" resultMap="projectMap">
+		SELECT G.PROJECT_CODE, PROJECT_NAME, PROJECT_CONTENT, PROJECT_SUM, TO_CHAR(PROJECT_START,'YYYY-MM-DD') PROJECT_START, TO_CHAR(PROJECT_END,'YYYY-MM-DD') PROJECT_END, PROJECT_PROGRESS,
+		    H.PR_NAME, EMP_KOR AS EMP_NAME, 
+		    DEPT_NAME, J.STANDARD_NAME AS PROJECT_IMPORTANT, K.STANDARD_NAME AS PROJECT_STAT
+		FROM PROJECT G LEFT OUTER JOIN (
+		    SELECT PROJECT_CODE, E.PRG_CODE, PR_NAME, PJ_MEMCODE, EMP_KOR
+		    FROM(
+		        SELECT PROJECT_CODE, PRG_CODE,  A.PR_CODE, PR_NAME
+		        FROM PJ_RGROUP A INNER JOIN PROJECT_ROLE B ON ( A.PR_CODE = B.PR_CODE)) E
+		    INNER JOIN (
+		        SELECT C.PRG_CODE, C.PJ_MEMCODE, C.EMP_CODE, D.EMP_KOR
+		        FROM PJ_MEMBER C INNER JOIN EMPLOYEE D ON (C.EMP_CODE = D.EMP_CODE)) F ON(E.PRG_CODE = F.PRG_CODE)
+		    ) H ON (G.PROJECT_CODE = H.PROJECT_CODE)
+			INNER JOIN DEPARTMENT I ON (G.DEPT_CODE = I.DEPT_CODE)
+			INNER JOIN STANDARD J ON (G.PROJECT_IMPORTANT = J.STANDARD_CODE)
+			INNER JOIN STANDARD K ON (G.PROJECT_STAT = K.STANDARD_CODE)
+		WHERE G.PROJECT_CODE = #{project_code}
+	</select>
+	
+	
+	<delete id="deleteProject" parameterType="String">
+		DELETE FROM PROJECT
+		WHERE PROJECT_CODE = #{project_code}
+	</delete>
+	
+	<select id="selectProjectListForTask" parameterType="String" resultType="ProjectVO">
+		SELECT A.PROJECT_CODE, PROJECT_NAME
+		  FROM PROJECT A INNER JOIN PJ_RGROUP B ON (A.PROJECT_CODE = B.PROJECT_CODE)
+		       INNER JOIN PJ_MEMBER C ON (B.PRG_CODE = C.PRG_CODE)
+		  WHERE C.EMP_CODE = #{emp_code}
+	</select>
+	
+</mapper>

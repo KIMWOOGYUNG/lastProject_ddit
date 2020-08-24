@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.hr_admin.dao.IAdminEmployDAO">
+	<!-- 상세정보 -->
+	<select id="selectEmpmanage" parameterType="kr.or.ddit.vo.EmployeeVO" resultType="kr.or.ddit.vo.EmployeeVO">
+	select A.EMP_CODE,EMP_PW,EMP_KOR,EMP_ENG,EMP_REG1,EMP_REG2,EMP_MAIL,EMP_HP,CO_PHONE,EMP_ZIP,EMP_ADD1,EMP_ADD2
+         ,TO_CHAR(EMP_STARTDATE,'YYYY-MM-DD') EMP_STARTDATE,C.TEAM_CODE,EMP_IP,EMP_IP2,EMP_SAL,LONG_VACATION,TO_CHAR(RETIRE_DATE,'YYYY-MM-DD') RETIRE_DATE,VACTION_CNT
+         ,B.DEPT_CODE, D.POSITION_CODE, E.JOBTITLE_CODE,EMP_ARBITRARY
+    from EMPLOYEE A INNER JOIN DEPARTMENT B ON (A.DEPT_CODE = B.DEPT_CODE)
+                    INNER JOIN TEAM C ON (A.TEAM_CODE = C.TEAM_CODE)
+                    INNER JOIN POSITION D ON (A.POSITION_CODE = D.POSITION_CODE)
+                    LEFT OUTER JOIN JOBTITLE E ON (A.JOBTITLE_CODE = E.JOBTITLE_CODE)                   
+    WHERE A.EMP_CODE = #{emp_code}
+	</select>
+
+	<!-- 테이블 리스트 -->
+	<select id="selectEmpmanageList" parameterType="kr.or.ddit.vo.PagingVO" resultType="kr.or.ddit.vo.EmployeeVO">
+		SELECT A.EMP_CODE ,A.EMP_KOR , B.DEPT_NAME AS DEPT_CODE, TEAM_NAME AS TEAM_CODE,C.POSITION_NAME AS POSITION_CODE,
+		A.EMP_MAIL, A.CO_PHONE, TO_CHAR(EMP_STARTDATE,'YYYY-MM-DD') EMP_STARTDATE, TO_CHAR(RETIRE_DATE,'YYYY-MM-DD') RETIRE_DATE
+		FROM EMPLOYEE A, DEPARTMENT B, POSITION C, TEAM D
+		WHERE A.DEPT_CODE = B.DEPT_CODE 
+		AND A.POSITION_CODE = C.POSITION_CODE
+		AND A.TEAM_CODE = D.TEAM_CODE
+	</select>
+	
+	
+	<!-- 페이지 카운트 -->
+	<select id="selectEmpmanageCount" parameterType="kr.or.ddit.vo.PagingVO" resultType="int">
+	SELECT COUNT(EMP_CODE)
+	FROM EMPLOYEE
+	</select>
+	
+	<select id="selectEmpImg" parameterType="String" resultType="Image_AttatchVO">
+		SELECT EMP_ATTCODE, IMG_CATAG
+		FROM IMAGE_ATTATCH
+		WHERE EMP_CODE = #{emp_code}
+	</select>
+	
+	
+    <!--사원 정보 등록 -->
+	<insert id="insertEmp" parameterType="kr.or.ddit.vo.EmployeeVO">
+	<selectKey keyProperty="emp_code" resultType="string" order="BEFORE">
+	SELECT TO_CHAR(SYSDATE,'YYYYMMDD')||LPAD(NVL(TO_NUMBER(SUBSTR(MAX(EMP_CODE),9)),0)+1,2,'0')
+	FROM EMPLOYEE
+	</selectKey>
+	INSERT INTO EMPLOYEE(
+	EMP_CODE, EMP_PW,EMP_KOR,EMP_ENG,EMP_REG1,EMP_REG2, EM P_MAIL,
+    EMP_HP, CO_PHONE, EMP_ZIP, EMP_ADD1, EMP_ADD2,EMP_STARTDATE,TEAM_CODE,
+    EMP_IP, EMP_IP2,EMP_SAL, LONG_VACATION, RETIRE_DATE,VACTION_CNT,DEPT_CODE,
+    POSITION_CODE,JOBTITLE_CODE, EMP_ARBITRARY, PERSONID
+	) VALUES (
+	#{emp_code}, #{emp_pw,jdbcType=VARCHAR}, #{emp_kor,jdbcType=VARCHAR},
+	#{emp_eng,jdbcType=VARCHAR}, #{emp_reg1,jdbcType=CHAR}, #{emp_reg2,jdbcType=CHAR},
+	#{emp_mail,jdbcType=VARCHAR}, #{emp_hp,jdbcType=VARCHAR}, #{co_phone,jdbcType=VARCHAR},
+	#{emp_zip,jdbcType=VARCHAR}, #{emp_add1,jdbcType=VARCHAR}, #{emp_add2,jdbcType=VARCHAR},
+	TO_DATE(#{emp_startdate,jdbcType=DATE}, 'YYYY-MM-DD'), #{team_code,jdbcType=VARCHAR}, #{emp_ip,jdbcType=VARCHAR},#{emp_ip2,jdbcType=VARCHAR},
+	#{emp_sal,jdbcType=NUMERIC}, #{long_vacation,jdbcType=VARCHAR}, TO_DATE(#{retire_date,jdbcType=DATE}, 'YYYY-MM-DD'),
+	#{vaction_cnt,jdbcType=NUMERIC},#{dept_code,jdbcType=VARCHAR},#{position_code,jdbcType=VARCHAR},
+	#{jobtitle_code,jdbcType=VARCHAR},#{emp_arbitrary,jdbcType=VARCHAR},#{personid,jdbcType=VARCHAR}
+	)
+	</insert>
+	
+	<insert id="insertEmpImage" parameterType="Image_AttatchVO">
+		<selectKey keyProperty="emp_attcode" resultType="string" order="BEFORE">
+		SELECT 'IM'||LPAD(NVL(TO_NUMBER(SUBSTR(MAX(EMP_ATTCODE),3)),0)+1,3,'0')
+		FROM IMAGE_ATTATCH
+		</selectKey>
+		INSERT INTO IMAGE_ATTATCH (EMP_ATTCODE, EMP_CODE,
+	    IMG_CATAG, FILE_PATH, FILE_SIZE,ORG_NAME,
+	    SAVE_NAME,MIME, FANCY_SIZE) 
+	    VALUES(#{emp_attcode}, #{emp_code},
+	    #{img_catag}, #{file_path}, #{file_size},#{org_name},
+	    #{save_name},#{mime}, #{fancy_size})
+	</insert>
+	
+	<!--사원코드 보이기 -->
+	<select id="selectCode" resultType="string">
+	SELECT TO_CHAR(SYSDATE,'YYYYMMDD')||LPAD(NVL(TO_NUMBER(SUBSTR(MAX(EMP_CODE),9)),0)+1,2,'0')
+	FROM EMPLOYEE 
+	</select>
+	
+	<!--사원 삭제 -->
+	<delete id="deleteEmp" parameterType="string">
+	DELETE FROM EMPLOYEE
+	WHERE EMP_CODE=#{emp_code}
+	</delete>
+	
+	
+	<!--사원 수정 -->
+	<update id="updateEmp" parameterType="kr.or.ddit.vo.EmployeeVO">
+	UPDATE EMPLOYEE
+ 	 <trim prefix="SET" prefixOverrides=",">
+ 	<if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(emp_pw)">
+    ,EMP_PW = #{emp_pw,jdbcType=VARCHAR}
+    </if>
+ 	<if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(emp_kor)">
+    ,EMP_KOR = #{emp_kor,jdbcType=VARCHAR}
+    </if>
+ 	<if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(emp_eng)">
+    ,EMP_ENG = #{emp_eng,jdbcType=VARCHAR}
+    </if>
+ 	<if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(emp_reg1)">
+    ,EMP_REG1 = #{emp_reg1,jdbcType=CHAR}
+    </if>
+ 	<if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(emp_reg2)">
+    ,EMP_REG2 = #{emp_reg2,jdbcType=CHAR}
+    </if>
+ 	<if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(emp_mail)">
+    ,EMP_MAIL = #{emp_mail,jdbcType=VARCHAR}
+    </if>
+ 	<if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(emp_hp)">
+    ,EMP_HP = #{emp_hp,jdbcType=VARCHAR}
+    </if>
+ 	<if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(co_phone)">
+    ,CO_PHONE = #{co_phone,jdbcType=VARCHAR}
+    </if>
+ 	<if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(emp_zip)">
+    ,EMP_ZIP = #{emp_zip,jdbcType=VARCHAR}
+    </if>
+ 	<if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(emp_add1)">
+    ,EMP_ADD1 = #{emp_add1,jdbcType=VARCHAR}
+    </if>
+ 	<if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(emp_add2)">
+    ,EMP_ADD2 = #{emp_add2,jdbcType=VARCHAR}
+    </if>
+    <if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(emp_startdate)">
+    ,EMP_STARTDATE = TO_DATE(#{emp_startdate,jdbcType=DATE}, 'YYYY-MM-DD')
+    </if>
+    <if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(team_code)">
+    ,TEAM_CODE = #{team_code,jdbcType=VARCHAR}
+    </if>
+    <if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(emp_ip)">
+    ,EMP_IP = #{emp_ip,jdbcType=VARCHAR}
+    </if>
+    <if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(emp_ip2)">
+    ,EMP_IP2 = #{emp_ip2,jdbcType=VARCHAR}
+    </if>
+    <if test=" emp_sal != null">
+    ,EMP_SAL = #{emp_sal,jdbcType=NUMERIC}
+    </if>
+    <if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(long_vacation)">
+    ,LONG_VACATION = #{long_vacation,jdbcType=VARCHAR}
+    </if>
+    <if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(retire_date)">
+    ,RETIRE_DATE = TO_DATE(#{retire_date,jdbcType=DATE}, 'YYYY-MM-DD')
+    </if>
+    <if test=" vaction_cnt != null">
+    ,VACTION_CNT = #{vaction_cnt,jdbcType=NUMERIC}
+    </if>
+    <if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(dept_code)">
+    ,DEPT_CODE = #{dept_code,jdbcType=VARCHAR}
+    </if>
+    <if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(position_code)">
+    ,POSITION_CODE = #{position_code,jdbcType=VARCHAR}
+    </if>
+    <if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(jobtitle_code)">
+    ,JOBTITLE_CODE = #{jobtitle_code,jdbcType=VARCHAR}
+    </if>
+    <if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(emp_arbitrary)">
+    ,EMP_ARBITRARY = #{emp_arbitrary,jdbcType=VARCHAR}
+    </if>
+    <if test=" @org.apache.commons.lang3.StringUtils@isNotBlank(emp_code)">
+    where EMP_CODE = #{emp_code,jdbcType=VARCHAR} 
+    </if>
+    </trim>
+	</update>
+	
+
+	<update id="updateEmpImage" parameterType="Image_AttatchVO">
+		UPDATE IMAGE_ATTATCH
+		SET
+		 FILE_PATH = #{file_path}
+		 ,FILE_SIZE = #{file_size}
+		 ,ORG_NAME = #{org_name}
+		 ,SAVE_NAME = #{save_name}
+		 ,MIME = #{mime}
+		 ,FANCY_SIZE = #{fancy_size}
+		WHERE
+		 EMP_ATTCODE = #{emp_attcode}
+	</update>
+	
+	<delete id="deleteEmpImage" parameterType="String">
+		DELETE FROM IMAGE_ATTATCH
+		WHERE EMP_ATTCODE = #{emp_attcode} 
+	</delete>
+	
+	<select id="selectImage" parameterType="String" resultType="Image_AttatchVO">
+	SELECT *
+	FROM IMAGE_ATTATCH
+	WHERE EMP_ATTCODE = #{emp_attcode}
+	</select>
+
+</mapper>

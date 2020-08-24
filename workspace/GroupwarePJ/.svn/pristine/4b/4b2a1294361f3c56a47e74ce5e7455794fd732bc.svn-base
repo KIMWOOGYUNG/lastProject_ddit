@@ -1,0 +1,19 @@
+package kr.or.ddit.login_logout.dao;
+
+import org.springframework.stereotype.Repository;
+
+import kr.or.ddit.vo.EmployeeVO;
+
+
+@Repository
+public interface ILoginDAO {
+	public EmployeeVO selectEmployee(String emp_code); //넘겨줄것
+
+	public EmployeeVO selectEmpMail(String emp_code); //비밀번호찾기 
+	
+	public int updateEmpPassword(EmployeeVO employeeVO); //임시비밀번호로 변경해주기
+	
+
+	
+
+}

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.hr_admin.dao.IEmpinfoStandardDAO">
+	<select id="selectDepartname" resultType="kr.or.ddit.vo.DepartmentVO">
+		SELECT * FROM DEPARTMENT
+		WHERE DEPT_CODE LIKE 'DE' || '%'
+	</select>
+	
+	<select id="selectTeamname" resultType="kr.or.ddit.vo.TeamVO">
+		SELECT * FROM TEAM
+		WHERE TEAM_CODE LIKE 'TE' || '%'
+	</select>
+	
+	<select id="selectPosition" resultType="kr.or.ddit.vo.PositionVO">
+		SELECT * FROM POSITION
+		WHERE POSITION_CODE LIKE 'PO' || '%'
+	</select>
+	
+	<select id="selectJobtitle" resultType="kr.or.ddit.vo.JobtitleVO">
+		SELECT * FROM JOBTITLE
+		WHERE JOBTITLE_CODE LIKE 'JT' || '%'
+	</select>
+	
+</mapper>

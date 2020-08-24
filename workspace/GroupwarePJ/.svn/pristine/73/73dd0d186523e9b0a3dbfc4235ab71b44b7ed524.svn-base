@@ -1,0 +1,49 @@
+package kr.or.ddit.addr.controller;
+
+import java.util.List;
+
+import javax.servlet.http.HttpSession;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import kr.or.ddit.addr.service.IaddrService;
+import kr.or.ddit.vo.AddressVO;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.SearchVO;
+
+@Controller
+public class MyaddressController {
+
+	IaddrService service;
+	
+	@GetMapping(value = "/address/myaddress/myaddrfavorites", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public PagingVO<AddressVO> myaddajaxForlist(@RequestParam(name = "page",required = false, defaultValue = "1")
+		int currentPage, SearchVO searchVO, Model model, HttpSession session
+			){
+		myaddajaxForlist(currentPage,searchVO,model,session);
+		return (PagingVO<AddressVO>) model.asMap().get("pagingVO");
+	}
+	@GetMapping("/address/myaddress/myaddrfavorites")
+	public String myaddressList(@RequestParam(name = "page", required = false, defaultValue = "1")
+	int currentPage, SearchVO searchVO, Model model, HttpSession session
+			){
+		EmployeeVO empVO = (EmployeeVO) session.getAttribute("authUser");
+		PagingVO<EmployeeVO> pagingVO = new PagingVO<>();
+		pagingVO.setSearchVO(searchVO);
+		pagingVO.setCurrentPage(currentPage);
+		int totalRecord = service.selectmyaddCount(pagingVO);
+		pagingVO.setTotalRecord(totalRecord);
+		List<EmployeeVO> myaddList=service.myaddressList(pagingVO);
+		pagingVO.setDataList(myaddList);
+		model.addAttribute("pagingVO",pagingVO);
+		return "myaddressList.address";
+		
+	}
+}

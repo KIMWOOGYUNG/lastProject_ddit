@@ -1,0 +1,50 @@
+package kr.or.ddit.message.dao;
+
+import java.util.List;
+
+import org.springframework.stereotype.Repository;
+
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.MessageVO;
+import kr.or.ddit.vo.PagingVO;
+
+@Repository
+public interface IMessageDAO {
+
+	//쪽지쓰기
+	public int insertMessage(MessageVO msgVO); 
+	
+	
+	//전체쪽지리스트 조회(본인)
+	public List<MessageVO> MessageList(PagingVO<MessageVO> pagingVO);
+	
+	//수신 쪽지 리스트 조회
+	public List<MessageVO> ReceiverList(PagingVO<MessageVO> pagingVO);
+	//발신쪽지 리스트 조회 
+	public List<MessageVO> SendList(PagingVO<MessageVO> pagingVO);
+	
+	//상세보기
+	public MessageVO selectmsg(String msg_code);
+
+	//쪽지 이동 중요보관함 삭제 등
+	public int movemsg(MessageVO msgVO);
+	
+	
+	//검색조건에 맞는 쪽지 수량 출력
+	public int selectMessageCount(PagingVO<MessageVO> pagingVO);
+	
+	
+	//쪽지삭제
+	public int deleteMessage(String msgVO);
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+}

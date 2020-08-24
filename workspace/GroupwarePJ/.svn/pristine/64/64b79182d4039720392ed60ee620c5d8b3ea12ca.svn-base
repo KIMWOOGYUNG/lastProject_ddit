@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	<mapper namespace="kr.or.ddit.work.dao.IMyReportDAO">
+	<sql id="searchFrag">
+			<if test="searchVO!=null and @org.apache.commons.lang3.StringUtils@isNotBlank(searchVO.searchWord)">
+					<if test="'date'.equals(searchVO.searchType)">
+					AND	REPORT_DATE = TO_DATE(#{searchVO.searchWord}, 'YYYY-MM-DD')
+					</if>
+			</if>
+			
+			<if test="detailSearch != null">
+				<if test="detailSearch.emp_reporter!=null and @org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.emp_reporter)">
+					AND	A.EMP_REPORTER = #{detailSearch.emp_reporter}
+				</if>
+			</if>
+			
+			<if test="detailSearch != null">
+				<if test="detailSearch.emp_target!=null and @org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.emp_target)">
+					AND A.EMP_TARGET = #{detailSearch.emp_target}
+				</if>
+			</if>
+	</sql>
+
+<!-- 	내 업무보고 수 -->
+	<select id="selectReportCount" resultType="int" parameterType="PagingVO">
+		SELECT COUNT(*)
+		FROM WORK_REPORT A
+       	WHERE 1=1		
+        <include refid="searchFrag" />
+	</select>
+
+	
+	
+<!-- 	내 업무보고 목록 -->
+	<select id="selectReportList" resultType="Work_ReportVO" parameterType="PagingVO">
+		
+		   SELECT  C.* 
+		    FROM (
+		        SELECT ROWNUM RNUM, A.REPORT_CODE, A.REPORT_TITLE, B.EMP_KOR EMP_REPORTER, C.EMP_KOR EMP_TARGET, TO_CHAR(A.REPORT_DATE, 'YYYY.MM.DD') REPORT_DATE, 
+		                WL_CODE, D.TEAM_NAME TEAM_CODE, E.STANDARD_NAME REPORT_STAT
+		        FROM WORK_REPORT A , EMPLOYEE B, EMPLOYEE C, TEAM D, STANDARD E
+		        WHERE A.EMP_REPORTER = B.EMP_CODE
+		        AND A.EMP_TARGET = C.EMP_CODE
+		        AND A.TEAM_CODE = D.TEAM_CODE
+		        AND A.REPORT_STAT = E.STANDARD_CODE
+		        <include refid="searchFrag" />
+		        ORDER BY A.REPORT_DATE DESC
+		       ) C 
+		  WHERE C.RNUM BETWEEN #{startRow} AND #{endRow}
+	</select>
+
+	<!-- 	업무보고 상세조회 -->
+	<resultMap type="Work_ReportVO" id="reportMap" autoMapping="true">
+		<id property="report_code" column="REPORT_CODE"/>
+		<collection property="report_attList" javaType="java.util.List" ofType="Report_AttVO" autoMapping="true" />
+	</resultMap>
+	<select id="selectReport" parameterType="String" resultMap="reportMap">
+		WITH REPORT AS (
+			SELECT ROWNUM, A.*
+			FROM(SELECT C.EMP_CODE, C.EMP_ATTCODE, B.EMP_KOR, C.IMG_CATAG
+			       FROM WORK_REPORT A INNER JOIN EMPLOYEE B ON (A.EMP_REPORTER = B.EMP_CODE)
+			                          LEFT OUTER JOIN IMAGE_ATTATCH C ON (B.EMP_CODE = C.EMP_CODE)
+			      where img_catag IN('IMG100', 'IMG200') 
+			        AND REPORT_CODE = #{report_code}
+			      ORDER BY IMG_CATAG) A
+			WHERE ROWNUM = 1
+		),
+		TARGET AS(
+			SELECT ROWNUM, A.*
+			FROM(SELECT C.EMP_CODE, C.EMP_ATTCODE, B.EMP_KOR, C.IMG_CATAG
+			       FROM WORK_REPORT A INNER JOIN EMPLOYEE B ON (A.EMP_TARGET = B.EMP_CODE)
+			                          LEFT OUTER JOIN IMAGE_ATTATCH C ON (B.EMP_CODE = C.EMP_CODE)
+			      where img_catag IN('IMG100', 'IMG200') 
+			        AND REPORT_CODE = #{report_code}
+			      ORDER BY IMG_CATAG) A
+			WHERE ROWNUM = 1
+		)
+		SELECT
+		    A.REPORT_CODE REPORT_CODE, A.REPORT_TITLE, TO_CHAR(A.REPORT_DATE, 'YYYY.MM.DD') REPORT_DATE,
+		    A.WL_CODE, E.TEAM_NAME TEAM_CODE, F.STANDARD_NAME REPORT_STAT, A.REPORT_CONTENT
+		    , B.REPORT_ATTCODE, B.REPORT_CODE, B.FILE_PATH, B.FILE_SIZE, B.ORG_NAME, B.SAVE_NAME , C.EMP_KOR EMP_REPORTER, D.EMP_KOR EMP_TARGET , C.EMP_ATTCODE REPORT_SIGN, D.EMP_ATTCODE TARGET_SIGN
+		FROM WORK_REPORT A LEFT OUTER JOIN REPORT_ATT B ON(A.REPORT_CODE = B.REPORT_CODE)
+		                    	INNER JOIN TEAM E ON (A.TEAM_CODE = E.TEAM_CODE)
+		                    	INNER JOIN STANDARD F ON(A.REPORT_STAT = F.STANDARD_CODE)
+		                    	LEFT OUTER JOIN REPORT C ON (A.EMP_REPORTER = C.EMP_CODE)
+		                    	LEFT OUTER JOIN TARGET D ON (A.EMP_TARGET = D. EMP_CODE)
+		                    	
+		WHERE A.REPORT_CODE = #{report_code}
+	</select>
+	
+	<!-- 업무보고 등록 -->
+	<insert id="insertReport" parameterType="Work_ReportVO">
+		<selectKey resultType="String" keyProperty="report_code" order="BEFORE">
+			SELECT 'WR' || LPAD(NVL(TO_NUMBER(SUBSTR(MAX(REPORT_CODE), 3)), 0)+1, 3, '0') 
+			FROM WORK_REPORT
+		</selectKey>
+		INSERT INTO work_report (
+		    report_code, report_title, emp_reporter, emp_target, report_date,
+		    wl_code, team_code, report_stat, report_content
+		) VALUES (
+		   #{report_code}, #{report_title,jdbcType=VARCHAR}, #{emp_reporter,jdbcType=VARCHAR}
+		   , #{emp_target,jdbcType=VARCHAR}, #{report_date,jdbcType=VARCHAR}, #{wl_code,jdbcType=VARCHAR}
+		   , #{team_code,jdbcType=VARCHAR}, 'REP100', #{report_content,jdbcType=CLOB}
+		)
+		
+	</insert>
+
+	<select id="selectWorkLogList" parameterType="PagingVO" resultType="WorkLogVO">
+		SELECT
+		    ROWNUM RNUM, WL_CODE, WL_CATAG, EMP_CODE, TEAM_CODE, WL_TITLE,
+		    TO_CHAR(WL_DATE, 'YYYY-MM-DD') WL_DATE, WL_CONTENT, WL_SHARE, WL_DEL, WL_REPORT, WL_TEAM
+		FROM
+		    WORKLOG 
+		WHERE WL_TEAM = 'Y'
+	</select>
+	
+	<resultMap type="WorkLogVO" id="worklogMap" autoMapping="true">
+		<id property="wl_code" column="WL_CODE"/>
+		<collection property="attatchList" javaType="java.util.List" ofType="WorkLog_AttatchVO" autoMapping="true" />
+	</resultMap>
+	
+	<select id="selectWorkLog" parameterType="String" resultMap="worklogMap">
+		SELECT
+		    ROWNUM RNUM, A.WL_CODE, A.WL_CATAG, A.EMP_CODE, A.TEAM_CODE, A.WL_TITLE,
+		    TO_CHAR(A.WL_DATE, 'YYYY-MM-DD') WL_DATE, A.WL_CONTENT, A.WL_SHARE,A. WL_DEL, A.WL_REPORT, A.WL_TEAM,
+		    B.WL_ATTCODE, B.WL_CODE, B.FILE_PATH, B.FILE_SIZE, B.ORG_NAME, B.SAVE_NAME, B.MIME, B.FANCY_SIZE ,C.DEPT_CODE
+		FROM
+		    WORKLOG A LEFT OUTER JOIN WORKLOG_ATTATCH B ON (A.WL_CODE = B.WL_CODE)
+		              LEFT OUTER JOIN TEAM C ON (A.TEAM_CODE = C.TEAM_CODE)
+		WHERE WL_TEAM = 'Y'
+		 AND A.WL_CODE = #{wl_code}
+	</select>
+
+	<select id="selectWorkLogCount" resultType="int" parameterType="PagingVO">
+		SELECT COUNT(*)
+		FROM WORKLOG
+		WHERE WL_TEAM='Y'
+	</select>
+	
+	<select id="selectWlAtt" parameterType="String" resultType="WorkLog_AttatchVO">
+		SELECT *
+		FROM WORKLOG_ATTATCH
+		WHERE WL_ATTCODE = #{wl_attcode}
+	
+	</select>
+	
+	<update id="completeReceiveReport" parameterType="Work_ReportVO">
+		UPDATE WORK_REPORT
+		    SET
+		    REPORT_STAT = 'REP200'
+		WHERE
+		    REPORT_CODE = #{report_code}
+		
+	</update>
+
+</mapper>

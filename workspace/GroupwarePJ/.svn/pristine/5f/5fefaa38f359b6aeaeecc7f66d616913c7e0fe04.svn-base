@@ -1,0 +1,71 @@
+package kr.or.ddit.work.service;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+import org.springframework.web.context.WebApplicationContext;
+
+import exception.DataNotFoundException;
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.Report_AttVO;
+import kr.or.ddit.vo.WorkLogVO;
+import kr.or.ddit.vo.Work_ReportVO;
+import kr.or.ddit.work.dao.IReceiveReportDAO;
+import kr.or.ddit.work.dao.IWorkAttatchDAO;
+
+@Service
+public class ReceiveReportServiceImpl implements IReceiveReportService {
+
+	@Inject
+	private IReceiveReportDAO dao;
+	
+	@Inject
+	private IWorkAttatchDAO attatchDao;
+	
+	@Inject
+	WebApplicationContext context;
+	
+	
+	
+	
+	@Override
+	public Work_ReportVO readReport(String report_code) {
+		return dao.selectReport(report_code);
+	}
+
+	@Override
+	public int readReportCount(PagingVO<Work_ReportVO> pagingVO) {
+		return dao.selectReportCount(pagingVO);
+	}
+
+	@Override
+	public List<Work_ReportVO> readReportList(PagingVO<Work_ReportVO> pagingVO) {
+		return dao.selectReportList(pagingVO);
+	}
+
+	@Override
+	public ResultState completeReport(Work_ReportVO reportVO) {
+		ResultState result = null;
+		int cnt = dao.completeReport(reportVO);
+		if(cnt > 0) {
+			result = ResultState.OK;
+		}else {
+			result = ResultState.FAIL;
+		}
+		return result;
+	}
+
+	@Override
+	public Report_AttVO downloadAttatch(String report_attcode) {
+		Report_AttVO attatch = attatchDao.re_selectAttatch(report_attcode);
+		if(attatch == null) {
+			throw new DataNotFoundException(report_attcode + "파일이 없습니다.");
+		}
+		
+		return attatch;
+	}
+
+}

@@ -1,0 +1,157 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>    
+<%@ taglib uri="http://www.springframework.org/tags" prefix="spring" %>    
+<h1>전 사원 관리</h1>
+
+<div class="card-body">
+                <div id="example2_wrapper" class="dataTables_wrapper dt-bootstrap4"><div class="row"><div class="col-sm-12 col-md-6"></div><div class="col-sm-12 col-md-6"></div></div><div class="row"><div class="col-sm-12"><table id="example2" class="table table-bordered table-hover dataTable dtr-inline" role="grid" aria-describedby="example2_info">
+        
+        <div id="nav">
+	<a class="btn btn-primary btn-sm" href="${cPath}/hr/employer/empenroll">
+        <i class="fas fa-folder">
+        </i>
+       	 등록
+    </a>
+    <button class="btn btn-danger btn-sm" onclick="deleteAction()">
+        <i class="fas fa-trash">
+        </i>
+    	 삭제
+    </button>
+   
+  
+  
+    
+</div>
+        
+        
+  <table class="table table-striped projects">             
+	<thead>
+		   <tr>
+		   <th rowspan="1" colspan="1">선택</th>
+		   <th rowspan="1" colspan="1">사원번호</th>
+		   <th rowspan="1" colspan="1">사원명</th>
+		   <th rowspan="1" colspan="1">부서명</th>
+		   <th rowspan="1" colspan="1">팀명</th>
+		   <th rowspan="1" colspan="1">직급</th>
+		   <th rowspan="1" colspan="1">메일</th>
+		   <th rowspan="1" colspan="1">내선번호</th>
+		   </tr>
+    </thead>
+                  <tbody id="listBody">
+               
+                 </tbody>
+                 </table>
+                  <div id="footer">
+	<nav id="pagingArea" class="d-flex ml-md-auto d-print-none">
+		${pagingVO.pagingHTML }
+	</nav>	
+</div>
+
+<form id="searchForm" action="${pageContext.request.contextPath }/hr/employer/entiremanage">
+	<input type="hidden" name="page" value="${param.page }"/>
+	<input type="hidden" name="searchType" value=""/>
+	<input type="hidden" name="searchWord" value=""/>
+</form>
+
+<script type="text/javascript">
+
+//테이블 만들기
+	
+		var listBody = $("#listBody");
+		var searchForm = $("#searchForm").paging({
+			searchUI:"#searchUI",
+			searchBtn:"#searchBtn",
+			pagination:"#pagingArea",
+			pageParam:"page",
+			byAjax:true,
+			success:function(resp){
+				let empList = resp.dataList;
+				let pagingHTML = resp.pagingHTML;
+				let trTags = [];
+				if(empList.length>0){
+					$.each(empList, function(idx, empmanage){
+						if(empmanage.retire_date==null){
+						let trTag = $("<tr>").append(
+										$("<td>").html('<input type="checkbox" name="checkRow" value="'+empmanage.emp_code+'" />')
+										, $("<td>").text(empmanage.emp_code)
+										, $("<td>").html(
+											$("<a>").attr("href", "${pageContext.request.contextPath}/hr/employer/detailempinfo/" + empmanage.emp_code)
+													.text(empmanage.emp_kor)													
+										)
+										, $("<td>").text(empmanage.dept_code)
+										, $("<td>").text(empmanage.team_code)
+										, $("<td>").text(empmanage.position_code)
+										, $("<td>").text(empmanage.emp_mail)
+										, $("<td>").text(empmanage.co_phone)
+										);
+						trTags.push(trTag);
+						}
+					});
+					$("#pagingArea").html(pagingHTML);
+				}else{
+					trTags.push($("<tr>").html($("<td colspan='8'>").text("조건에 맞는 회사일정이 없음.")));
+					$("#pagingArea").empty();
+				}
+				listBody.html(trTags);
+				listBody.data("currentpage", resp.currentPage);
+				searchForm.find("[name='page']").val("");
+			}
+		}).submit();
+	
+
+//전체 선택
+	function checkAll(){
+	      if( $("#th_checkAll").is(':checked') ){
+	        $("input[name=checkRow]").prop("checked", true);
+	      }else{
+	        $("input[name=checkRow]").prop("checked", false);
+	      }
+	}
+
+//체크된것 삭제(체크박스된 것 전부)
+	function deleteAction(){
+	  var checkRow = "";
+	  $( "input[name='checkRow']:checked" ).each (function (){
+	    checkRow = checkRow + $(this).val()+"," ;
+	  });
+	  checkRow = checkRow.substring(0,checkRow.lastIndexOf( ",")); //맨끝 콤마 지우기
+	 
+	  if(checkRow == ''){
+	    alert("삭제할 사원을 선택하세요.");
+	    return false;
+	  }
+	  console.log("### checkRow => {}"+checkRow);
+	 
+	  if(confirm("사원정보를 삭제 하시겠습니까?")){
+		  $.ajax({
+	            url : '${pageContext.request.contextPath }/hr/employer/deleteemp',
+	            type : "POST",
+	            datatype : 'json',
+	            contentType: "application/x-www-form-urlencoded; charset=UTF-8", 
+	            data:{
+	                emp_code : checkRow
+	            },
+	            success : function(data) {
+				    alert("삭제가 완료되었습니다.");
+				    location.href="${pageContext.request.contextPath }/hr/employer/entiremanage/${who}";
+	                
+	            },
+	            error:function(request, status, error) {
+	            	alert("삭제를 실패하였습니다.");
+	 
+	            }
+		 })
+	        
+
+	  }
+	 
+	}
+
+
+</script>
+
+               
+                
+                   
+             

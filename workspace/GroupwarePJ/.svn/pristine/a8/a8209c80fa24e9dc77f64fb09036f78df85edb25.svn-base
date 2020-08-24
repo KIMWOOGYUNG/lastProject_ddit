@@ -1,0 +1,21 @@
+package kr.or.ddit.project.controller;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+
+import kr.or.ddit.project.service.IProjectListService;
+
+@Controller
+public class TaskFormController {
+	
+	@Inject
+	IProjectListService service;
+	
+	@GetMapping("/project/newTask")
+	public String newTask() {
+		
+		return "newTask.project";
+	}
+}

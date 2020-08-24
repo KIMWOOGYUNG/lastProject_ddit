@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.att_admin.dao.IAdminAttDAO">
+
+	<sql id="searchFrag">
+		FROM EMPLOYEE A INNER JOIN DEPARTMENT B ON (A.DEPT_CODE=B.DEPT_CODE)
+		 			  INNER JOIN POSITION C ON (A.POSITION_CODE = C.POSITION_CODE)
+		<trim prefix="WHERE" prefixOverrides="AND">
+				<if test="detailSearch!=null"> 
+					<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.dept_code)">
+						AND A.DEPT_CODE = #{detailSearch.dept_code}
+					</if>
+					<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.emp_kor)">
+						 AND EMP_KOR LIKE '%' || #{detailSearch.emp_kor} || '%'
+					</if>
+<!-- 					<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailSearch.emp_code)"> -->
+<!-- 						AND	EMP_CODE = #{detailSearch.emp_code} -->
+<!-- 					</if> -->
+				</if>
+		</trim>            
+	</sql>
+
+	<!-- IP리스트 띄우기  -->
+	<select id="selectEmpIpCount" parameterType="pagingVO" resultType="int">
+		SELECT COUNT(*)
+		<include refid="searchFrag"/>   
+	</select>
+	
+	<select id="selectEmpIpList" parameterType="pagingVO" resultType="EmployeeVO">
+		SELECT A.*
+		FROM(
+		SELECT  ROWNUM RNUM, EMP_CODE, EMP_KOR, EMP_ENG,EMP_IP, EMP_IP2, A.DEPT_CODE
+		, B.DEPT_NAME
+			    ,POSITION_NAME
+		<include refid="searchFrag"/>   
+		)A
+		WHERE RNUM BETWEEN #{startRow} AND #{endRow}
+	</select>
+
+   <!-- 부서명 -->
+   <select id="selectDeptName" resultType="hashMap">
+   	 SELECT DEPT_NAME "dept_name", DEPT_CODE "dept_code"
+	 FROM DEPARTMENT
+   </select>
+   
+   <!-- IP변경 -->
+   <update id="updateEmpIp" parameterType="EmployeeVO">
+	   UPDATE EMPLOYEE
+		SET EMP_IP =  #{emp_ip,jdbcType=VARCHAR},
+		    EMP_IP2 = #{emp_ip2,jdbcType=VARCHAR}
+		WHERE EMP_CODE = #{emp_code} 
+   </update>
+   
+   <!-- 출근여부 확인  -->
+   <select id="selectAtt" parameterType="Time_AttendVO" resultType="Time_AttendVO">
+	   	SELECT EMP_CODE, CWS_CODE, TA_CATAG_CODE, TA_START, TA_END
+		FROM TIME_ATTEND
+		WHERE EMP_CODE = #{emp_code} 
+		AND CWS_CODE =#{cws_code}
+   </select>
+   
+   
+   <!-- 위의 값이 없으면 출근입력 -->
+   <insert id="insertAttendence" parameterType="Time_AttendVO">
+    INSERT INTO time_attend (
+    emp_code,    cws_code,    ta_start
+    ) VALUES (
+        #{emp_code} , #{cws_code} , sysdate
+    )
+   </insert>
+	<!-- 위의 값이 있으면 퇴근입력 -->
+   <update id="updateAttendence" parameterType="Time_AttendVO">
+	   UPDATE TIME_ATTEND
+		SET TA_END = sysdate
+		WHERE EMP_CODE = #{emp_code}
+		AND CWS_CODE=  #{cws_code} 
+   </update>
+	
+
+	
+
+</mapper>

@@ -1,0 +1,16 @@
+eclipse.preferences.version=1
+encoding//src/main/java/kr/or/ddit/approval/controller/ApprovalController.java=UTF-8
+encoding//src/main/java/kr/or/ddit/approval/controller/ApprovalSettingController.java=UTF-8
+encoding//src/main/java/kr/or/ddit/approval/controller/TotalDraftManagementController.java=UTF-8
+encoding//src/main/java/kr/or/ddit/project/controller/ProjectFormController.java=UTF-8
+encoding//src/main/java/kr/or/ddit/project/controller/ProjectListController.java=UTF-8
+encoding//src/main/java/kr/or/ddit/project/controller/ProjectPlanController.java=UTF-8
+encoding//src/main/java/kr/or/ddit/project/controller/ProjectTaskController.java=UTF-8
+encoding//src/main/java/kr/or/ddit/project/controller/TaskFormController.java=UTF-8
+encoding//src/main/java/kr/or/ddit/project/controller/TaskModifyController.java=UTF-8
+encoding//src/main/java/kr/or/ddit/project/dao/IProjectListDAO.java=UTF-8
+encoding//src/main/java/kr/or/ddit/project/dao/ITaskListDAO.java=UTF-8
+encoding//src/main/java/kr/or/ddit/project/service/IProjectListService.java=UTF-8
+encoding//src/main/java/kr/or/ddit/project/service/ITaskListService.java=UTF-8
+encoding//src/main/java/kr/or/ddit/project/service/ProjectListServiceImpl.java=UTF-8
+encoding//src/main/java/kr/or/ddit/project/service/TaskListServiceImpl.java=UTF-8

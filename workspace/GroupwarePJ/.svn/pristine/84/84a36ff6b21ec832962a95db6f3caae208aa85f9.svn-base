@@ -1,0 +1,68 @@
+package kr.or.ddit.vo;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.validation.constraints.NotBlank;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
+
+import lombok.Data;
+import lombok.ToString;
+
+/**
+ * @author �ۼ��ڸ�
+ * @since 2020. 6. 29
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[�����̷�(Modification Information)]]
+ * ������                          ������               ��������
+ * --------     --------    ----------------------
+ * 2020. 6. 29      �ڼ���       �����ۼ�
+ * Copyright (c) 2020 by DDIT All right reserved
+ * </pre>
+ */
+@Data
+@ToString
+public class WorkLogVO {//��������
+	
+	private int rnum;
+	private String wl_code;
+	@NotBlank
+	private String wl_catag;
+	private String emp_code;
+	@NotBlank
+	private String team_code;
+	@NotBlank
+	private String wl_title;
+	@NotBlank
+	private String wl_date;
+	@NotBlank
+	private String wl_content;
+	private String wl_share;
+	private String wl_del;
+	private String wl_report;
+	private String wl_team;
+	
+	List<WorkLog_AttatchVO> attatchList; 
+	
+	private MultipartFile[] wl_files;
+	
+	public void setWl_files(MultipartFile[] wl_files) {
+		this.wl_files = wl_files;
+		if(wl_files == null || wl_files.length == 0) return;
+		attatchList = new ArrayList<>();
+		for(MultipartFile wlFile : wl_files) {
+			if(StringUtils.isBlank(wlFile.getOriginalFilename())) continue;
+			attatchList.add(new WorkLog_AttatchVO(wlFile));
+		}
+
+	}
+	
+	private String[] deleteAttatches; 
+	
+	private String start_wlattcode;
+	
+}

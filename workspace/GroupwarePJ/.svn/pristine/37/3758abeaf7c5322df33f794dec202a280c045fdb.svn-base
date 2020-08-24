@@ -1,0 +1,25 @@
+package kr.or.ddit.message.service;
+
+import java.util.List;
+
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.vo.MessageVO;
+import kr.or.ddit.vo.PagingVO;
+
+public interface IReceiveMsgService {
+
+	
+	public ResultState createMsg(MessageVO msg);
+	
+	
+	public List<MessageVO> selectMsgList(PagingVO<MessageVO> pagingVO);
+	
+	public MessageVO selectmsg(String emp_receive);
+	
+	
+	public int selectmsgCounts(PagingVO<MessageVO> pagingVO);
+
+	
+	public ResultState removemsg(MessageVO msg);
+	
+}

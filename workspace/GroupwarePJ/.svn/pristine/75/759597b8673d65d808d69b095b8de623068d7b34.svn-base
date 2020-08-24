@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.hr_admin.dao.IAdminTeamDAO">
+
+
+	<!--팀 테이블 리스트 -->
+	<select id="selectTeammanageList" parameterType="kr.or.ddit.vo.PagingVO" resultType="kr.or.ddit.vo.TeamVO">
+	SELECT
+	TEAM_CODE,
+	TEAM_NAME,
+	DEPT_CODE
+	FROM TEAM
+	</select>
+
+	<!--페이지 카운트 -->
+	<select id="selectTeammanageCount" parameterType="kr.or.ddit.vo.PagingVO" resultType="int">
+	SELECT COUNT(TEAM_CODE)
+	FROM TEAM
+	</select>
+
+	<!--팀 등록 -->
+	<insert id="insertTeam" parameterType="kr.or.ddit.vo.TeamVO">
+	<selectKey resultType="string" keyProperty="team_code" order="BEFORE">
+	SELECT 'TE' || LPAD(NVL(TO_NUMBER(SUBSTR(MAX(TEAM_CODE), 3)), 0)+1, 3, '0') 
+	FROM TEAM
+	</selectKey>
+	INSERT INTO TEAM(TEAM_CODE,TEAM_NAME,DEPT_CODE) VALUES
+	(
+	#{team_code,jdbcType=VARCHAR},#{team_name,jdbcType=VARCHAR},#{dept_code,jdbcType=VARCHAR}
+	)
+	
+	</insert>
+
+
+	<!--팀 삭제 -->
+	<delete id="deleteteam" parameterType="string">
+	DELETE FROM TEAM
+	WHERE TEAM_CODE = #{team_code}
+	</delete>
+
+	<!--팀 수정 -->
+	<update id="updateteam" parameterType="kr.or.ddit.vo.TeamVO">
+	UPDATE TEAM
+	SET
+	TEAM_CODE = #{team_code,jdbcType=VARCHAR},
+	TEAM_NAME = #{team_name,jdbcType=VARCHAR},
+	DEPT_CODE = #{dept_code,jdbcType=VARCHAR}
+	where DEPT_CODE = #{dept_code,jdbcType=VARCHAR}
+	</update>
+	
+	
+</mapper>

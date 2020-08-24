@@ -1,0 +1,11 @@
+package kr.or.ddit.login_logout.service;
+
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.vo.EmployeeVO;
+
+public interface ILoginService {
+	public ResultState checkEmployeeCode(EmployeeVO employeeVO);
+	
+    public EmployeeVO checkEmpMail(String emp_code);
+	
+}

@@ -1,0 +1,55 @@
+package kr.or.ddit.approval.dao;
+
+import java.util.List;
+
+import org.springframework.stereotype.Repository;
+
+import kr.or.ddit.vo.Appr_OrderVO;
+import kr.or.ddit.vo.Appr_StatVO;
+import kr.or.ddit.vo.Approve_LineVO;
+import kr.or.ddit.vo.DraftVO;
+import kr.or.ddit.vo.Draft_AttatchVO;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.ReviewerGroupVO;
+import kr.or.ddit.vo.ReviewerVO;
+import kr.or.ddit.vo.Reviewer_StatVO;
+
+@Repository
+public interface IApprovalDAO {
+	List<DraftVO> selectTempFolder(PagingVO<DraftVO> pagingVO);// 기안서를 상태에따라 읽어온다.
+	DraftVO selectDraft(String draft_code);//기안서의 상세페이지를 읽어온다
+	List<Approve_LineVO> selectApproveLine(PagingVO<Approve_LineVO> pagingVO);//사원의 결제라인을 불러온다.
+	List<Appr_OrderVO> selectApprOrder(String appr_line_code);
+	List<Appr_StatVO> selectApproveStat(String draft_code);//해당 결제라인의 사원이 결제를 진행했는지 확인
+	int selectApproveCount(PagingVO<DraftVO> pagingVO);
+	int selectApprLineCount(PagingVO<Approve_LineVO> pagingVO);
+	List<ReviewerGroupVO> selectReviewerGroup(PagingVO<ReviewerGroupVO> pagingVO);//검토자 그룹 호출
+	int selectReviewerGroupCount(PagingVO<ReviewerGroupVO> pagingVO);// 검토자 그룹 숫자 호출
+	List<EmployeeVO> selectEmpSortList(String emp_codeStr);
+	
+	int insertApproveStat(Appr_StatVO appr_StatVO);//결재진행시 생성됨
+	int insertApproveLine(Approve_LineVO approve_LineVO);//결재 그룹생성
+	int insertApproveOrder(Appr_OrderVO apprOrderList);//결재 그룹에 사원 추가
+	int insertDraft(DraftVO draftVO);
+	int insertDraftAttatch(Draft_AttatchVO attatchVO);//////////////////
+	int insertReviewerGroup(ReviewerGroupVO reviewerGroupVO);
+	int insertReviewerLine(ReviewerVO reviewerVO); // 
+	int insertReviewerStat(Reviewer_StatVO reviewer_StatVO);
+	
+	int updateReviewerGroup(ReviewerGroupVO reviewerGroupVO);
+	int updateReviewerLine(ReviewerVO reviewerVO); // 
+	int updateReviewerStat(Reviewer_StatVO reviewer_StatVO);
+	int updateDraft(DraftVO draftVO);
+	int updateApproveLine(Approve_LineVO approve_LineVO);//결재 그룹수정
+	int updateApproveStat(Appr_StatVO appr_StatVO);//결재 상태 수정
+	
+	
+	int deleteDraft(DraftVO draftVO);
+	int deleteDraftAttatch(Draft_AttatchVO attatchVO);
+	int deleteAllDraftAttatch(DraftVO draftVO);
+	int deleteAllApproveOrder(String appr_line_code);//결제라인의 순서 전체삭제
+	int delteApproveOrder(String appr_order_code);//결제라인의 순서 부분삭제
+	int deleteApproveLine(String appr_line_code);//결재라인 삭제
+	
+}

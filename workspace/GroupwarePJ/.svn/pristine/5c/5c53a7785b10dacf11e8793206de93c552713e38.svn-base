@@ -1,0 +1,384 @@
+package kr.or.ddit.approval.controller;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+import javax.mail.Session;
+import javax.servlet.http.HttpSession;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.tiles.autotag.core.runtime.annotation.Parameter;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
+import org.springframework.jdbc.datasource.embedded.ConnectionProperties;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.mail.handlers.multipart_mixed;
+
+import kr.or.ddit.approval.service.IApprovalService;
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.vo.Appr_StatVO;
+import kr.or.ddit.vo.CommentVO;
+import kr.or.ddit.vo.DraftVO;
+import kr.or.ddit.vo.Draft_AttatchVO;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.Reviewer_StatVO;
+import kr.or.ddit.vo.WorkLogVO;
+import kr.or.ddit.vo.WorkLog_AttatchVO;
+
+@Controller
+@RequestMapping("approval")
+public class ApprovalEnrollmentController {
+
+	@Inject
+	IApprovalService service;
+	
+	@Value("#{appInfo.attatchPath}")
+	String attatchPath;
+	@Value("#{appInfo.attatchPath}")
+	File saveFolder;
+	
+	@PostMapping(value = "/enroll",consumes = {"multipart/form-data"})
+	public String addApproval(@ModelAttribute(name = "draft") DraftVO draftVO,@RequestParam(name = "apprLine", required = true)String apprLine
+			,@RequestParam(name="orgfile", required=false) String[] orgFile,@RequestParam(name = "rg1Line")  String rg1Line, @RequestParam(name = "rg2Line") String rg2Line
+			,@RequestParam(name = "insteadEmp")String insteadEmp,HttpSession session,@RequestParam(name = "file") MultipartFile[] file) throws JsonMappingException, JsonProcessingException {
+		
+		List<Map<String, String>> apprDataList = changeJson(apprLine);
+		List<Map<String, String>> rg1DataList = changeJson(rg1Line);
+		List<Map<String, String>> rg2DataList = changeJson(rg2Line);
+		List<Map<String, String>> insteadDataList = changeJson(insteadEmp);
+
+		draftVO.setDraft_pos("1");
+		draftVO.setDraft_stat("APP006");
+		
+		if(insteadDataList != null && insteadDataList.size()> 0) {
+			draftVO.setDraft_instead_emp(insteadDataList.get(0).get("emp_code"));
+		}
+		
+		if(StringUtils.isNotBlank(draftVO.getDraft_code())) {
+			if(orgFile != null&&orgFile.length > 0) {
+				List<String> orgFileList = service.getDraftAttachList(draftVO.getDraft_code());
+				for(String code :orgFile) {
+					orgFileList.remove(code);
+				}
+				if(!orgFileList.isEmpty()) {
+					for(String draft_attcode :orgFileList) {
+						service.removeDraftAttatch(draft_attcode);
+					}
+				}
+			}
+			
+			service.removeRevieweStat(draftVO.getDraft_code());
+			service.removeApproveStat(draftVO.getDraft_code());
+			service.setDarft(draftVO);
+		}else {
+			EmployeeVO empVO = (EmployeeVO) session.getAttribute("authUser");
+			draftVO.setEmp_code(empVO.getEmp_code());
+			service.createDraft(draftVO);
+		}
+		
+		
+		
+		StringBuffer apprLineStr = new StringBuffer();
+		for(Map<String, String> temp : apprDataList) {
+			apprLineStr.append(",'"+temp.get("emp_code")+"'");
+		}
+		
+		List<EmployeeVO> sortEmpList= service.getEmpSortList(apprLineStr.toString().substring(1));
+		
+		for(int i = 1 ;  i  <= sortEmpList.size();i++) {
+			EmployeeVO tempVO = sortEmpList.get(i-1);
+			Appr_StatVO statVO = new Appr_StatVO();
+			statVO.setAppr_order(i+"");
+			statVO.setEmp_code(tempVO.getEmp_code());
+			statVO.setDraft_code(draftVO.getDraft_code());
+			service.createApprEmpStat(statVO);
+		}
+		
+		
+		for(Map<String, String> temp : rg1DataList) {
+			Reviewer_StatVO statVO = new Reviewer_StatVO();
+			statVO.setEmp_code(temp.get("emp_code"));
+			statVO.setRs_type("1");
+			statVO.setDraft_code(draftVO.getDraft_code());
+			service.createReviewerStat(statVO);
+		}
+		
+		for(Map<String, String> temp : rg2DataList) {
+			Reviewer_StatVO statVO = new Reviewer_StatVO();
+			statVO.setEmp_code(temp.get("emp_code"));
+			statVO.setRs_type("2");
+			statVO.setDraft_code(draftVO.getDraft_code());
+			service.createReviewerStat(statVO);
+		}
+		
+		if(file != null && file.length != 0) {
+			List<Draft_AttatchVO> attacList = new ArrayList<Draft_AttatchVO>();
+			
+			for(MultipartFile tmep : file) {
+				Draft_AttatchVO attatchVO = new Draft_AttatchVO();
+				attatchVO.setRealFile(tmep);
+				attatchVO.setDraft_code(draftVO.getDraft_code());
+				attatchVO.setFile_path(attatchPath);
+				service.createDraftAttatch(attatchVO);
+				attacList.add(attatchVO);
+			}
+			
+			processAttatches(attacList);
+		}
+		
+	
+		
+		return "redirect:/approval/myapproval/all";
+	}
+	
+	@PostMapping(value = "/temporary",consumes = {"multipart/form-data"})
+	public String saveApproval(@ModelAttribute(name = "draft") DraftVO draftVO,@RequestParam(name = "apprLine", required = true)String apprLine
+			,@RequestParam(name="orgfile", required=false) String[] orgFile,@RequestParam(name = "rg1Line")  String rg1Line, @RequestParam(name = "rg2Line") String rg2Line
+			,@RequestParam(name = "insteadEmp")String insteadEmp,HttpSession session,@RequestParam(name = "file") MultipartFile[] file) throws JsonMappingException, JsonProcessingException {
+		
+		List<Map<String, String>> apprDataList = changeJson(apprLine);
+		List<Map<String, String>> rg1DataList = changeJson(rg1Line);
+		List<Map<String, String>> rg2DataList = changeJson(rg2Line);
+		List<Map<String, String>> insteadDataList = changeJson(insteadEmp);
+		
+		if(insteadDataList != null && insteadDataList.size()> 0) {
+			draftVO.setDraft_instead_emp(insteadDataList.get(0).get("emp_code"));
+		}
+		draftVO.setDraft_pos("2");
+		
+		if(StringUtils.isNotBlank(draftVO.getDraft_code())) {
+			
+			if(orgFile != null&&orgFile.length > 0) {
+				List<String> orgFileList = service.getDraftAttachList(draftVO.getDraft_code());
+				for(String code :orgFile) {
+					orgFileList.remove(code);
+				}
+				if(!orgFileList.isEmpty()) {
+					for(String draft_attcode :orgFileList) {
+						service.removeDraftAttatch(draft_attcode);
+						service.deleteFiles(draft_attcode);
+					}
+				}
+			}
+			
+			service.removeRevieweStat(draftVO.getDraft_code());
+			service.removeApproveStat(draftVO.getDraft_code());
+			
+			service.setDarft(draftVO);
+		}else {
+			EmployeeVO empVO = (EmployeeVO) session.getAttribute("authUser");
+			draftVO.setEmp_code(empVO.getEmp_code());
+			service.createDraft(draftVO);
+		}
+		
+	
+		
+		if(!apprDataList.isEmpty()) {
+			StringBuffer apprLineStr = new StringBuffer();
+			for(Map<String, String> temp : apprDataList) {
+				apprLineStr.append(",'"+temp.get("emp_code")+"'");
+			}
+				
+			List<EmployeeVO> sortEmpList= service.getEmpSortList(apprLineStr.toString().substring(1));
+			
+			for(int i = 1 ;  i  <= sortEmpList.size();i++) {
+				EmployeeVO tempVO = sortEmpList.get(i-1);
+				Appr_StatVO statVO = new Appr_StatVO();
+				statVO.setAppr_order(i+"");
+				statVO.setEmp_code(tempVO.getEmp_code());
+				statVO.setDraft_code(draftVO.getDraft_code());
+				service.createApprEmpStat(statVO);
+			}
+		}
+		
+		
+		for(Map<String, String> temp : rg1DataList) {
+			Reviewer_StatVO statVO = new Reviewer_StatVO();
+			statVO.setEmp_code(temp.get("emp_code"));
+			statVO.setRs_type("1");
+			statVO.setDraft_code(draftVO.getDraft_code());
+			service.createReviewerStat(statVO);
+		}
+		
+		for(Map<String, String> temp : rg2DataList) {
+			Reviewer_StatVO statVO = new Reviewer_StatVO();
+			statVO.setEmp_code(temp.get("emp_code"));
+			statVO.setRs_type("2");
+			statVO.setDraft_code(draftVO.getDraft_code());
+			service.createReviewerStat(statVO);
+		}
+		
+		if(file != null && file.length != 0) {
+			List<Draft_AttatchVO> attacList = new ArrayList<Draft_AttatchVO>();
+			
+			for(MultipartFile tmep : file) {
+				Draft_AttatchVO attatchVO = new Draft_AttatchVO();
+				attatchVO.setRealFile(tmep);
+				attatchVO.setDraft_code(draftVO.getDraft_code());
+				attatchVO.setFile_path(attatchPath);
+				service.createDraftAttatch(attatchVO);
+				attacList.add(attatchVO);
+			}
+			
+			processAttatches(attacList);
+		}
+		
+	
+		
+		return "redirect:/approval/myapproval/all";
+	}
+	
+	@GetMapping("/sign/{catag}")
+	public String approvalSign(@PathVariable String catag,String appr_stat_code) {
+		Appr_StatVO statVO = service.getApproveStatInfo(appr_stat_code);
+		String draft_code = statVO.getDraft_code();
+		DraftVO draftVO = service.getDraft(draft_code);
+		String checkInfo = service.getApprCheck(statVO);
+		
+		
+		if("insteadComp".equals(catag)) {
+			statVO.setAppr_stat_catag("APP007");
+			if(StringUtils.isBlank(checkInfo)) {
+				draftVO.setDraft_stat("APP005");
+			}else {
+				draftVO.setDraft_stat("APP001");
+			}
+			
+		}else if("insteadAttr".equals(catag)) {
+			statVO.setAppr_stat_catag("APP004");
+			draftVO.setDraft_stat("APP002");
+		}else if("comp".equals(catag)) {
+			statVO.setAppr_stat_catag("APP001");
+			if(StringUtils.isBlank(checkInfo)) {
+				draftVO.setDraft_stat("APP005");
+			}else {
+				draftVO.setDraft_stat("APP001");
+			}
+		}else if("attr".equals(catag)) {
+			statVO.setAppr_stat_catag("APP002");
+			draftVO.setDraft_stat("APP002");
+		}else if("arbi".equals(catag)) {
+			statVO.setAppr_stat_catag("APP003");
+			draftVO.setDraft_stat("APP001");
+		}
+		
+		service.setApprEmpStat(statVO);
+		service.setDarft(draftVO);
+		return "totalList.approval";
+	}
+	
+	
+	private List<Map<String, String>> changeJson(String dataStr) throws JsonMappingException, JsonProcessingException{
+		ObjectMapper mapper = new ObjectMapper();
+		List<Map<String, String>> data = mapper.readValue(dataStr, List.class);
+		return data;
+	}
+	
+	private int processAttatches(List<Draft_AttatchVO> attatchList) {
+		
+		int cnt = 0;
+		try {
+			for(Draft_AttatchVO attatch : attatchList) {
+				attatch.getRealFile().transferTo(new File(saveFolder, attatch.getSave_name()));
+			}
+		} catch (IllegalStateException | IOException e) {
+			throw new RuntimeException(e);
+		}
+	
+		return cnt;
+	}
+	
+	@GetMapping("/comment/{draft_code}")
+	public ModelAndView goCommentPage(@ModelAttribute(name="draft_code")@PathVariable String draft_code) {
+		 ModelAndView mav = new ModelAndView();
+		 mav.setViewName("approval/commentPage");
+		 mav.addObject("title", "작성");
+		 mav.addObject("type", "post");
+		 
+		return mav;
+	}
+	
+	@PostMapping(value = "/comment", produces = MediaType.TEXT_PLAIN_VALUE)
+	@ResponseBody
+	public String addComment(@RequestBody CommentVO commentVO,HttpSession session ) {
+		EmployeeVO empVO = (EmployeeVO) session.getAttribute("authUser");
+		String emp_code = empVO.getEmp_code();
+		String emp_kor  = "("+empVO.getPosition_name()+")"+empVO.getEmp_kor();
+		commentVO.setEmp_code(emp_code);
+		commentVO.setEmp_kor(emp_kor);
+		ResultState  result = service.createComment(commentVO);
+		if(result == ResultState.SUCCESSES)
+			return "ok";
+		else
+			return "fali";
+		
+	}
+	
+	
+	
+	
+	@DeleteMapping(value = "/comment/{cmt}", produces = MediaType.TEXT_PLAIN_VALUE)
+	@ResponseBody
+	public String removeComment(@PathVariable("cmt") String cmt_code) {
+		
+		ResultState  result = service.removeComment(cmt_code);
+		if(result == ResultState.SUCCESSES)
+			return "ok";
+		else
+			return "fali";
+		
+	}
+	
+	@GetMapping("/comment/modify/{cmt_code}")
+	public ModelAndView modifyCommentPage(@ModelAttribute(name="cmt_code")@PathVariable String cmt_code) {
+		 ModelAndView mav = new ModelAndView();
+		 mav.setViewName("approval/commentPage");
+		 mav.addObject("comment", service.getCommentInfo(cmt_code));
+		 mav.addObject("title", "수정");
+		 mav.addObject("type", "put");
+		
+		return mav;
+	}
+	
+	@PutMapping(value = "/comment", produces = MediaType.TEXT_PLAIN_VALUE)
+	@ResponseBody
+	public String updateComment(@RequestBody CommentVO commentVO) {
+		System.out.println(commentVO);
+		
+		ResultState  result = service.setComment(commentVO);
+		if(result == ResultState.SUCCESSES)
+			return "ok";
+		else
+			return "fali";
+		
+	}
+	
+	@GetMapping(value="/comment/list", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public List<CommentVO> sendCommentList(@RequestParam String draft_code){
+		return service.getCommentList(draft_code);
+	}
+	
+}

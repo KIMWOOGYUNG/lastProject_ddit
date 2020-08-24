@@ -1,0 +1,23 @@
+//package kr.or.ddit.vo;
+//
+//public class Dimension {
+//	public static double BASEDOCWIDTH;
+//	public int BASELEFT;
+//	public int BASETOP;
+//	public int BASEWIDTH;
+//	public int BASEHEIGHT;
+//
+//	public Dimension(int bASELEFT, int bASETOP, int bASEWIDTH, int bASEHEIGHT) {
+//		super();
+//		BASELEFT = bASELEFT;
+//		BASETOP = bASETOP;
+//		BASEWIDTH = bASEWIDTH;
+//		BASEHEIGHT = bASEHEIGHT;
+//	}
+//	 
+//	public double BASELEFTOFFSET;
+//	public double BASETOPOFFSET;
+//	public double BASEHEIGHTOFFSET;
+//	public double BASEWIDTHOFFSET;
+//
+//}

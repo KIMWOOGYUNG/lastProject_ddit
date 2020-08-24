@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.message.dao.IMessageDAO">
+<sql id="searchFrag">
+
+
+</sql>
+
+<select id="selectMessageList" parameterType="kr.or.ddit.vo.MessageVO" resultType="kr.or.ddit.vo.MessageVO">
+SELECT MSG_CODE,EMP_RECEIVER,EMP_SENDER,MSG_CONTENT,MSG_DATE
+,MSG_IMPORTANT,MSG_DEL
+FROM MESSAGE
+</select>
+
+<!-- 전체쪽지리스트  -->
+<select id="selectMessageCount" resultType="int" parameterType="kr.or.ddit.vo.PagingVO">
+SELECT COUNT(MSG_CODE)
+FROM MESSAGE
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</mapper>

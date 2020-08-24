@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.schedule.dao.IMy_ScheduleDAO">
+
+
+
+<!-- <select id="selectMyscheduleCount" parameterType="kr.or.ddit.vo.PagingVO" resultType="int"> -->
+<!-- 	SELECT COUNT(MS_CODE) -->
+<!-- 	FROM MY_SCHEDULE -->
+
+<!-- </select> -->
+
+<!-- <select id="selectMyscheduleList" parameterType="kr.or.ddit.vo.PagingVO" resultType="kr.or.ddit.vo.My_ScheduleVO"> -->
+<!-- SELECT MS_TITLE, EMP_KOR AS EMP_CODE, MS_STARTDATE, MS_ENDDATE, MS_IMPORTANT -->
+<!-- FROM MY_SCHEDULE A, EMPLOYEE B -->
+<!-- WHERE A.EMP_CODE = B.EMP_CODE -->
+
+<!-- </select> -->
+
+
+<!-- <select id="selectMyschedule" parameterType="kr.or.ddit.vo.My_ScheduleVO" resultType="kr.or.ddit.vo.My_ScheduleVO"> -->
+<!-- 	SELECT MS_CODE, MS_TITLE, MS_CONTENT,  -->
+<!-- 	EMP_KOR AS EMP_CODE, MS_STARTDATE,MS_ENDDATE, -->
+<!-- 	MS_IMPORTANT,PROJECT_CODE -->
+<!-- 	FROM MY_SCHEDULE, EMPLOYEE -->
+<!-- 	WHERE MS_CODE = ${} -->
+<!-- </select> -->
+
+
+
+
+</mapper>

@@ -1,0 +1,39 @@
+package kr.or.ddit.vo;
+
+import java.util.List;
+import lombok.Data;
+import lombok.ToString;
+
+/**
+ * @author 작성자명
+ * @since 2020. 6. 29
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                          수정자               수정내용
+ * --------     --------    ----------------------
+ * 2020. 6. 29      박선정       최초작성
+ * Copyright (c) 2020 by DDIT All right reserved
+ * </pre>
+ */
+@Data
+@ToString
+public class WorkLogVO {//업무일지
+
+	private String wl_code;
+	private String wl_catag;
+	private String emp_code;
+	private String team_code;
+	private String wl_title;
+	private String wl_date;
+	private String wl_content;
+	private String wl_share;
+	private String wl_del;
+	private String wl_report;
+	private String wl_team;
+	
+	List<WorkLog_AttatchVO> AttatchList; 
+	
+	
+}

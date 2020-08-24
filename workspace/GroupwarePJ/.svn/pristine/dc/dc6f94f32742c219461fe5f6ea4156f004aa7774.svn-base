@@ -1,0 +1,36 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib uri="http://www.springframework.org/tags" prefix="spring"%>
+<style>
+	.text, .form-control{display: inline;}
+
+</style>
+
+<div class = "content" style="margin: 40px 60px 0 60px">
+	<div class="card card-primary" style="width: 100%;">
+		<div class="card-header" >
+			<h3 class="card-title">Quick Example</h3>
+		</div>
+		<form role="form">
+			<div class="card-body" style="width: 100%; padding: 20px 40px 20px 40px">
+				<span class="text" style="margin-right: 60px">제목</span> <input class="form-control" type="text" style="width: 80%"><br><br>
+				<span class="text" style="margin-right: 60px">종류</span> <select class="form-control select2bs4 select2-hidden-accessible" style="width: 80%; " data-select2-id="17" tabindex="-1" aria-hidden="true"><br><br>
+					<option selected="selected" data-select2-id="19">Alabama</option>
+					<option data-select2-id="46">Alaska</option>
+				</select><br><br>
+				<span class="text" style="margin-right: 60px">부서</span> <select class="form-control select2bs4 select2-hidden-accessible" style="width: 30%; margin-right: 40px;" data-select2-id="17" tabindex="-1" aria-hidden="true" ><br><br>
+					<option selected="selected" data-select2-id="19">Alabama</option>
+					<option data-select2-id="46">Alaska</option>
+				</select>
+				<span class="text" style="margin-right: 20px">팀</span> <select class="form-control select2bs4 select2-hidden-accessible" style="width: 30%;" data-select2-id="17" tabindex="-1" aria-hidden="true"><br><br>
+					<option selected="selected" data-select2-id="19">Alabama</option>
+					<option data-select2-id="46">Alaska</option>
+				</select> <br><br>
+				<span class="text" style="margin-right: 45px">업무일</span> <input class="form-control" type="date" style="width: 80%"><br><br>
+				<span class="text" style="margin-right: 30px">공유여부</span> <input class="form-control" type="checkbox" style="width: 10px"><br><br>
+				
+			</div>
+		</form>
+	</div>
+</div>

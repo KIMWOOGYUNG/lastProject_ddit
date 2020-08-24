@@ -1,0 +1,4 @@
+#Tomcat publish data
+#Tue Aug 18 19:37:09 KST 2020
+org.eclipse.jst.jee.server\:GroupwarePJ=D\:\\B_Util\\3.Eclipse\\00.spring_tool_suite_3.9\\pivotal-tc-server\\instances\\base-instance\\wtpwebapps\\GroupwarePJ
+org.eclipse.jst.jee.server\:/binary\:C\:\\Users\\PC-18\\.m2\\repository\\org\\springframework\\spring-web\\4.3.27.RELEASE\\spring-web-4.3.27.RELEASE.jar=D\:\\B_Util\\3.Eclipse\\00.spring_tool_suite_3.9\\pivotal-tc-server\\instances\\base-instance\\wtpwebapps\\GroupwarePJ\\WEB-INF\\lib\\spring-web-4.3.27.RELEASE.jar

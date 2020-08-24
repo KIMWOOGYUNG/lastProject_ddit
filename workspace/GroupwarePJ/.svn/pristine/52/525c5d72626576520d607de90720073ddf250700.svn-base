@@ -1,0 +1,15 @@
+package kr.or.ddit.main.dao;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface IindexDAO {
+	// 근태 정상출근 통계
+	public List<Map<String, Integer>> selectNomal(String emp_code);
+	
+	// 근태 지각 통계 
+	public List<Map<String, Integer>> selectLate(String emp_code);
+}

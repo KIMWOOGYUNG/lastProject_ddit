@@ -1,0 +1,3 @@
+id : ioio852@hanmail.net
+Key값 : 3bdac3b821624790ba923fb61c1bba35
+Endpoint : https://faceareum.cognitiveservices.azure.com/face/v1.0

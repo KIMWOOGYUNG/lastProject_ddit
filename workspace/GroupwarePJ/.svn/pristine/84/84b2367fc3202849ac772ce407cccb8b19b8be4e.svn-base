@@ -1,0 +1,75 @@
+package kr.or.ddit.message.controller;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import kr.or.ddit.message.service.IMessageService;
+import kr.or.ddit.vo.MessageVO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.SearchVO;
+
+@Controller
+public class MsgController {
+	@Inject
+	IMessageService service;
+	
+	@GetMapping(value = "/note/entirenote", produces = MediaType.APPLICATION_JSON_UTF8_VALUE) //전체쪽지
+	@ResponseBody
+	public PagingVO<MessageVO> ajaxForlist(
+			@RequestParam(name = "page", required = false, defaultValue = "1") int currentPage,
+			SearchVO searchVO, Model model
+			){
+		Entirenote(currentPage, searchVO, model);
+				return (PagingVO<MessageVO>) model.asMap().get("pagingVO");
+		
+}
+	
+
+	@GetMapping("/note/entirenote")
+	public String Entirenote(@RequestParam(name = "page",required =false,defaultValue = "1")int currentPage, 
+			SearchVO searchVO, Model model) {
+		PagingVO<MessageVO> pagingVO = new PagingVO<>();
+		pagingVO.setSearchVO(searchVO);
+		pagingVO.setCurrentPage(currentPage);
+		int totalRecord=service.selectmsgCount(pagingVO);
+		pagingVO.setTotalRecord(totalRecord);
+		
+		List<MessageVO> comList = service.selectmsgList(pagingVO);
+		pagingVO.setDataList(comList);
+		
+		model.addAttribute("pagingVO",pagingVO);
+		return "Entirenote.note";
+		
+	}
+	
+	
+	@GetMapping("/note/sendnote") //발신쪽지
+	public String Sendnote() {
+		String goPage="Sendnote.note";
+		return goPage;
+		
+	}
+	@GetMapping("/note/importantnote") //중요보관함쪽지
+	public String Importnote() {
+		String goPage="Importantnote.note";
+		return goPage;
+		
+	}
+	@GetMapping("/note/deletenote") //삭제쪽지
+	public String Deletenote() {
+		String goPage="Deletenote.note";
+		return goPage;
+		
+	}
+	
+	
+	
+}

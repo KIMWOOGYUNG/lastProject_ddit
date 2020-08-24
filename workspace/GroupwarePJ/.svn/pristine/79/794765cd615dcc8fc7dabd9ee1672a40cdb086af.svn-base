@@ -1,0 +1,20 @@
+package kr.or.ddit.vo;
+
+
+import lombok.Data;
+
+@Data
+public class CalendarVO {
+	private String title;
+	private String start;
+	private String end;
+	private String color="skyblue";
+	private String id;
+	
+	//일감
+	private String emp;
+	private int progress;
+	
+	//일정
+	private String content;
+}

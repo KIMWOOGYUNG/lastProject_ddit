@@ -1,0 +1,58 @@
+package kr.or.ddit.community.controller;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+
+import kr.or.ddit.community.service.IBoardService;
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.vo.BoardVO;
+
+@Controller
+public class BoardInsertController {
+	@Inject
+	IBoardService service;
+	
+	@ModelAttribute("/board/currentAction")
+	public String currentAction() {
+		return "/board";
+	}
+	
+	@GetMapping("/board/boardForm")
+	public String boardForm(@ModelAttribute("board") BoardVO board) {
+		return "board/boardForm";
+	}
+	
+	@PostMapping("/board")
+	public String insert(
+			@ModelAttribute("board") BoardVO board, BindingResult errors, Model model
+			) {
+		String goPage = null;
+		String message = null;
+		if(!errors.hasErrors()) {
+			ResultState result = service.insertBoard(board);
+			switch(result) {
+			case FAIL:
+				message = "다시";
+				goPage = "boardForm.community";
+				break;
+			default:
+				goPage = "redirect:/board/" + board.getBoard_code();
+				break;
+			}
+		}else {
+			goPage = "boardForm.community";
+		}
+		
+		model.addAttribute("message", message);
+		
+		return goPage;
+	}
+
+	
+}

@@ -1,0 +1,60 @@
+package kr.or.ddit.work.controller;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.SearchVO;
+import kr.or.ddit.vo.WorkLogVO;
+import kr.or.ddit.vo.Work_ReportVO;
+import kr.or.ddit.work.service.IReceiveReportService;
+
+@Controller
+public class ReceiveReportReadController {
+	
+	@Inject
+	private IReceiveReportService service;
+	
+	@GetMapping(value = "/work/workreport/receivereport", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public PagingVO<WorkLogVO> ajaxForlistday(@RequestParam(name="page", required = false, defaultValue = "1") int currentPage, SearchVO searchVO, Model model){
+		receivereportList(currentPage, searchVO, model);
+		return (PagingVO<WorkLogVO>) model.asMap().get("pagingVO");
+	}
+	
+	@GetMapping("/work/workreport/receivereport")
+	public String receivereportList(@RequestParam(name = "page", required = false, defaultValue = "1")int currentPage, SearchVO searchVO, Model model) {
+		PagingVO<Work_ReportVO> pagingVO = new PagingVO<>();
+		pagingVO.setSearchVO(searchVO);
+		pagingVO.setCurrentPage(currentPage);
+		int totalRecord = service.readReportCount(pagingVO);
+		pagingVO.setTotalRecord(totalRecord);
+		
+		List<Work_ReportVO> worklogListday = service.readReportList(pagingVO);
+		pagingVO.setDataList(worklogListday);
+		
+		model.addAttribute("pagingVO", pagingVO);
+		
+		
+		return "receivereportList.work";
+	}
+	
+	@GetMapping(value = "/work/workreport/receiveview/{report_code}")
+	public String receiveView(@PathVariable(required = true) String report_code, Model model) {
+		Work_ReportVO receive = service.readReport(report_code);
+		
+		model.addAttribute("receive", receive);
+		
+		return "receivereportView.work";
+	}
+	
+}

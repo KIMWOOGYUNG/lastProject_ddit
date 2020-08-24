@@ -1,0 +1,46 @@
+package kr.or.ddit.project.controller;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import kr.or.ddit.project.service.ITaskListService;
+import kr.or.ddit.vo.TaskVO;
+
+@Controller
+public class ProjectGanttController {
+	@Inject
+	ITaskListService service;
+	
+	//간트 페이지
+	@GetMapping("/project/projectplan/{project_code}/ganttchart")
+	public String projectGantt(Model model) {
+		List<TaskVO> taskList = service.selectTaskGantt();
+		model.addAttribute("taskList", taskList);
+		return "projectGantt.project";
+	}
+	
+	//일감 리스트 조회
+	@PostMapping(value="/project/projectplan/{project_code}/ganttList")
+	@ResponseBody
+	public List<TaskVO> ganttList() {
+		List<TaskVO> taskList = service.selectTaskGantt();
+		return taskList;
+	}
+	
+	//일감 상세조회
+	@PostMapping(value="/project/projectplan/{project_code}/ganttEach", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public TaskVO ganttEach(String task_code, @PathVariable String project_code) {
+		TaskVO task = service.selectTask(task_code);
+		return task;
+	}
+}

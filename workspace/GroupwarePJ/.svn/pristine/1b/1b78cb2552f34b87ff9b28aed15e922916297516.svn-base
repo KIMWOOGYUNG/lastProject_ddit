@@ -1,0 +1,107 @@
+package kr.or.ddit.schedule.controller;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import kr.or.ddit.schedule.dao.IMyStandardDAO;
+import kr.or.ddit.schedule.service.IMy_ScheduleService;
+
+import kr.or.ddit.vo.My_ScheduleVO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.SearchVO;
+
+@Controller
+public class My_ScheduleController {
+	
+	@Inject
+	IMy_ScheduleService service;
+	
+	@Inject
+	IMyStandardDAO stdDAO;
+	
+	@ModelAttribute("currentAction")
+	private void attributeSetting(Model model) { //스탠다드 세팅 메서드
+		model.addAttribute("myimportantnm",stdDAO.selectimportant());
+	}
+	
+	@GetMapping(value="/plan/myplanbox/myplan" , produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public PagingVO<My_ScheduleVO> ajaxForlist(
+			@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+			SearchVO searchVO, Model model
+			){
+			myplanList(currentPage, searchVO, model);
+			return (PagingVO<My_ScheduleVO>) model.asMap().get("pagingVO");
+		}
+	
+	//내 일정 목록
+	@GetMapping("/plan/myplanbox/myplan")
+	public String myplanList(@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+			SearchVO searchVO, Model model) {
+		PagingVO<My_ScheduleVO> pagingVO = new PagingVO<>();
+		pagingVO.setSearchVO(searchVO);
+		pagingVO.setCurrentPage(currentPage);
+		int totalRecord = service.selectMyScheduleCount(pagingVO);
+		pagingVO.setTotalRecord(totalRecord);
+		
+		List<My_ScheduleVO> comList = service.selectMyScheduleList(pagingVO);
+		pagingVO.setDataList(comList);
+		
+		model.addAttribute("pagingVO", pagingVO);
+		
+		return "MySchedule.plan";
+	}
+	
+	//내 일정 상세 보기
+	@GetMapping("/plan/DetailMySchedule/{ms_code}")
+	public String detailmyplan(@PathVariable(name = "ms_code") String ms_code, Model model) {
+		
+	My_ScheduleVO myschedulevo = service.selectMySchedule(ms_code);
+	model.addAttribute("myschedule" , myschedulevo);
+		
+	return "DetailMySchedule.plan";
+	}
+	
+	
+	//내 일정 등록
+//	@GetMapping("/plan/MyScheduleEnroll") 
+//	public String myplanenroll() {
+//		return "MyScheduleEnroll.plan";
+//	}
+	
+	
+	//내 일정 캘린더
+	@GetMapping("/plan/myplancalendar")
+	public String complancalendar() {
+	String goPage="MyScheduleCalendar.plan";
+	return goPage;
+	}	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	//중요일정함
+	@GetMapping("/plan/myplanbox/importantplan")
+	public String MyImportSchedule() {
+		String goPage = "MyImportSchedule.plan";
+		return goPage;
+	}
+
+}

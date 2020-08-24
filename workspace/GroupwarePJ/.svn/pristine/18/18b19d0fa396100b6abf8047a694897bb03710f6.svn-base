@@ -1,0 +1,14 @@
+package kr.or.ddit.work.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+
+@Controller
+public class ReceiveReportReadController {
+	
+	@GetMapping("/work/workreport/receivereport")
+	public String reportList() {
+		
+		return "receivereportList.work";
+	}
+}

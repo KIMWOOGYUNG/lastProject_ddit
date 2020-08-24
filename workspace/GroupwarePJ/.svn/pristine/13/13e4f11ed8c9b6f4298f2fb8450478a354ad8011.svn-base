@@ -1,0 +1,92 @@
+package kr.or.ddit.att_admin.controller;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import kr.or.ddit.att_admin.dao.IAdminAttDAO;
+import kr.or.ddit.att_admin.service.IAdminAttService;
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.vo.EmployeeVO;
+import kr.or.ddit.vo.PagingVO;
+
+@Controller
+@RequestMapping("/hr/att/ip")
+public class AttIpReadController {
+	
+	@Inject
+	IAdminAttDAO dao;
+	
+	@Inject
+	IAdminAttService service;
+	
+	@GetMapping("getDeptName.do")
+	@ResponseBody
+	public List<Map<String, Object>> getDeptName() throws Exception {
+		List<Map<String, Object>> deptNameList = dao.selectDeptName();
+		return deptNameList; //xml에서 지정해준 이름으로 담겨있겠찌!
+	}
+	
+	//IP리스트 채워주기 
+	@GetMapping(produces = "application/json;charset=UTF-8")
+	@ResponseBody
+	public PagingVO<EmployeeVO> ajaxList(
+			@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+			EmployeeVO detailSearch, Model model
+			) {
+		empIpList(currentPage, detailSearch, model);
+		PagingVO<EmployeeVO> pagingVO = (PagingVO<EmployeeVO>) model.asMap().get("pagingVO");
+		return pagingVO;
+	}
+	
+	//리스트 
+	@GetMapping
+	public String empIpList(
+			@RequestParam(name="page", required = false, defaultValue ="1") int currentPage,
+			EmployeeVO detailSearch ,Model model){
+		PagingVO<EmployeeVO> pagingVO = new PagingVO<>(7,5);
+		pagingVO.setDetailSearch(detailSearch);
+		pagingVO.setCurrentPage(currentPage);
+		int totalRecord = service.readEmpIpCount(pagingVO);
+		pagingVO.setTotalRecord(totalRecord);
+		
+		List<EmployeeVO> empList = service.readEmpIpList(pagingVO);
+		pagingVO.setDataList(empList);
+		
+		model.addAttribute("pagingVO",pagingVO);
+		// logical view name
+		return "attIPList.hr";
+	}
+	
+	@PostMapping("setting")
+	public @ResponseBody ResultState empIPModify(String emp_code, String emp_ip, String emp_ip2) {
+//		String emp_ip = employeeVO.getEmp_ip();
+//		String emp_ip2 = employeeVO.getEmp_ip2();
+//		String emp_code = employeeVO.getEmp_code();
+//		
+		System.out.println(emp_ip);
+		System.out.println(emp_ip2);
+		System.out.println(emp_code);
+		
+		EmployeeVO empVO = new EmployeeVO();
+		empVO.setEmp_code(emp_code);
+		empVO.setEmp_ip(emp_ip);
+		empVO.setEmp_ip2(emp_ip2);
+		
+		ResultState result = service.modifyEmpIp(empVO);
+		return result;
+		
+		
+	}
+	
+	
+}

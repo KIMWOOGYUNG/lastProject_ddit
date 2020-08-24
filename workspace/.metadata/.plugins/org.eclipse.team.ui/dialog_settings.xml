@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<section name="SynchronizeViewSettings">
+		<item key="linkWithEditor" value="false"/>
+		<item key="lastactiveparticipant_id" value="org.tigris.subversion.subclipse.participant"/>
+		<item key="lastactiveparticipant_sec_id" value="1597658858065"/>
+		<section name="org.tigris.subversion.subclipse.participant.1593416579584">
+		</section>
+		<section name="org.tigris.subversion.subclipse.participant.1593518326964">
+			<item key="org.eclipse.team.ui.P_LAST_MODELPROVIDER" value="org.eclipse.team.ui.modelprovider_compressedfolders"/>
+			<item key="org.eclipse.team.ui.P_COMMIT_SET_ENABLED" value="false"/>
+		</section>
+		<section name="org.tigris.subversion.subclipse.participant.1593522210676">
+		</section>
+		<section name="org.tigris.subversion.subclipse.participant.1593657649648">
+		</section>
+		<section name="org.tigris.subversion.subclipse.participant.1593668152964">
+		</section>
+		<section name="org.tigris.subversion.subclipse.participant.1594024091946">
+		</section>
+		<section name="org.tigris.subversion.subclipse.participant.1594030656867">
+		</section>
+		<section name="org.tigris.subversion.subclipse.participant.1594294509957">
+		</section>
+		<section name="org.tigris.subversion.subclipse.participant.1594341574541">
+		</section>
+		<section name="org.tigris.subversion.subclipse.participant.1594342161685">
+		</section>
+		<section name="org.tigris.subversion.subclipse.participant.1594359734040">
+		</section>
+		<section name="org.tigris.subversion.subclipse.participant.1595984374687">
+		</section>
+		<section name="org.tigris.subversion.subclipse.participant.1595984436328">
+		</section>
+		<section name="org.tigris.subversion.subclipse.participant.1597632650421">
+		</section>
+		<section name="org.tigris.subversion.subclipse.participant.1597658858065">
+			<item key="org.eclipse.team.ui.P_LAST_MODELPROVIDER" value="org.eclipse.team.ui.modelprovider_compressedfolders"/>
+			<item key="org.eclipse.team.ui.P_COMMIT_SET_ENABLED" value="false"/>
+			<item key="org.eclipse.team.ui.P_SYNCVIEWPAGE_MODE" value="1"/>
+		</section>
+	</section>
+</section>

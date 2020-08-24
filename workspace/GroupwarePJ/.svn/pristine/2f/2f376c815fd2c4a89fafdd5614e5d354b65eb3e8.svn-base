@@ -1,0 +1,33 @@
+package kr.or.ddit.addr.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+@Controller
+@RequestMapping("address")
+public class AddressListController {
+	
+//	@GetMapping("address")//사내주소록
+//	public String addressList(@ModelAttribute(name ="cate" )String cate, Model model) {
+//		return null;
+//		
+//	}
+	
+	@GetMapping("myaddressList") //내주소록 
+	public String myAddressList(@ModelAttribute(name = "cate")String cate, Model model) {
+		String goPage = "myaddressList.address";
+		System.out.println("cate값"+cate);
+		if(cate.equals("myenjoy")) {
+			model.addAttribute("title","즐겨찾기 ");
+		}else if(cate.equals("account")){
+			model.addAttribute("title","거래처 ");
+		}else {
+			
+		}
+		return goPage;
+		
+	}	
+}

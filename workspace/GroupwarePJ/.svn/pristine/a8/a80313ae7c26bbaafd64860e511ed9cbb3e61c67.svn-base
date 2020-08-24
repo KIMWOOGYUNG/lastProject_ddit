@@ -1,0 +1,81 @@
+package kr.or.ddit.schedule.dao;
+
+import java.util.List;
+
+import org.springframework.stereotype.Repository;
+
+import kr.or.ddit.vo.My_ScheduleVO;
+import kr.or.ddit.vo.PagingVO;
+
+@Repository
+public interface IMy_ScheduleDAO {
+	/**
+	 * 새 내 일정 추가
+	 * @param myschedule
+	 * @return
+	 */
+	public int insertMyshedule(My_ScheduleVO myschedule);
+	/**
+	 * 등록된 내 일정의 개수 구하기
+	 * @param pagingVO
+	 * @return
+	 */
+	public int selectMyscheduleCount(PagingVO<My_ScheduleVO> pagingVO);
+	/**
+	 * 내 일정 목록을 리스트에 담기
+	 * @param pagingVO
+	 * @return
+	 */
+	public List<My_ScheduleVO> selectMyscheduleList(PagingVO<My_ScheduleVO> pagingVO);
+	/**
+	 * 내 일정 하나를 선택해서 상세정보 가져오기
+	 * @param ms_code
+	 * @return
+	 */
+	public My_ScheduleVO selectMyschedule(int ms_code);
+	/**
+	 * 프로젝트 수정
+	 * @param myschedule
+	 * @return
+	 */
+	public int updateMyschedule(My_ScheduleVO myschedule);
+	/**
+	 * 내 일정 삭제
+	 * @param myschedule
+	 * @return
+	 */
+	public int deleteMyschedule(My_ScheduleVO myschedule);
+	
+	
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

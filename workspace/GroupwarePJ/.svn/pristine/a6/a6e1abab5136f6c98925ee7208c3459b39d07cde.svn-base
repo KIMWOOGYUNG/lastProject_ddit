@@ -1,0 +1,66 @@
+package kr.or.ddit.addr.controller;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpSession;
+import javax.validation.Valid;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.Errors;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import kr.or.ddit.addr.service.IaddrService;
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.vo.AddressVO;
+import kr.or.ddit.vo.EmployeeVO;
+
+@Controller
+public class MyaddressInsertController {
+	@Inject
+	IaddrService service;
+	
+	
+	
+	//모달창 가져오기
+//	@GetMapping(value = "/address/myaddressList", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+//	@ResponseBody
+//	public String ajaxList(Model model,HttpSession session,AddressVO addVO,Errors errors) {
+//		insertaddress(model,session,addVO,errors);
+//		return "myaddressList.address";
+//	}
+//
+//	@PostMapping(value = "/address/myaddressList")
+//	public String insertaddress(@Valid @ModelAttribute("modalbtn") Model model, HttpSession session, AddressVO address,Errors errors) {
+//		EmployeeVO empVO = (EmployeeVO) session.getAttribute("authUser");
+//		address.setEmp_code(empVO.getEmp_kor());
+//		String goPage = null;
+//		String message = null;
+//		if(!errors.hasErrors()) {
+//			ResultState result = service.insertEmp(address);
+//			switch (result) {
+//			case FAIL:
+//				goPage="myaddressList.address";
+//				message = "다시 입력해주세요";
+//				break;
+//
+//			default:
+//				goPage = "redirect:/address/myaddressList";
+//				message="등록을 성공하였습니다.";
+//				break;
+//			}
+//		}else {
+//			goPage="myaddressList.address";
+//		}
+//		model.addAttribute("message", address);
+//		return goPage;
+//		
+//	}
+	
+	
+	
+	
+}

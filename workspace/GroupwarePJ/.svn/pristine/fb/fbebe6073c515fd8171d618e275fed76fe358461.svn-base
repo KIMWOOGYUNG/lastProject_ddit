@@ -1,0 +1,20 @@
+package kr.or.ddit.project.dao;
+
+import java.util.List;
+
+import org.springframework.stereotype.Repository;
+
+import kr.or.ddit.vo.StandardVO;
+
+@Repository
+public interface IPJStandardDAO {
+	
+	//중요도
+	public List<StandardVO> selectImportant();
+	
+	//상태
+	public List<StandardVO> selectStatus(); 
+	
+	//유형
+	public List<StandardVO> selectTaskType();
+}

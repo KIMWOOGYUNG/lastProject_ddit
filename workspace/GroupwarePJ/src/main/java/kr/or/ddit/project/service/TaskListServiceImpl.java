@@ -1,0 +1,209 @@
+package kr.or.ddit.project.service;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.PostConstruct;
+import javax.inject.Inject;
+
+import org.apache.commons.io.FileUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.WebApplicationContext;
+
+import exception.DataNotFoundException;
+import kr.or.ddit.enums.ResultState;
+import kr.or.ddit.project.dao.ITaskAttatchDAO;
+import kr.or.ddit.project.dao.ITaskListDAO;
+import kr.or.ddit.vo.PJ_RgroupVO;
+import kr.or.ddit.vo.PagingVO;
+import kr.or.ddit.vo.ProjectVO;
+import kr.or.ddit.vo.TaskVO;
+import kr.or.ddit.vo.Task_AttVO;
+
+@Service
+public class TaskListServiceImpl implements ITaskListService {
+	@Inject
+	ITaskListDAO dao;
+	
+	@Inject
+	private ITaskAttatchDAO attatchDao;
+	
+	@Inject
+	WebApplicationContext context;
+	
+	@Value("#{appInfo.attatchPath}")
+	String attachPath;
+	@Value("#{appInfo.attatchPath}")
+	File saveFolder;
+	
+	@PostConstruct
+	public void init() {
+//		String realPath = context.getServletContext().getRealPath(attachPath);
+//		saveFolder = new File(attachPath);
+		if(!saveFolder.exists()) saveFolder.mkdirs();
+	}
+	
+	private void deleteBinary(String[] delAttSaveName) {
+		if(delAttSaveName == null || delAttSaveName.length == 0) return;
+		try {
+			for(String delName : delAttSaveName) {
+//				System.out.println("11 : " + saveFolder + "22 : " + delName);
+				if(delName != null) FileUtils.forceDelete(new File(saveFolder, delName));
+			}
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public int processAttatches(TaskVO task) {
+		String[] delNos = task.getDeleteAttatches();
+		int cnt = 0;
+		String[] delAttSaveNames = null;
+		if(delNos != null && delNos.length > 0) {
+			delAttSaveNames = new String[delNos.length];
+			for(int i = 0; i < delNos.length; i++) {
+				delAttSaveNames[i] = attatchDao.selectAttatch(delNos[i]).getSave_name();
+			}
+			cnt = attatchDao.deleteAttatches(task);
+			deleteBinary(delAttSaveNames);
+		}
+		
+		List<Task_AttVO> attatchList = task.getTask_attList();
+		if(attatchList != null && !attatchList.isEmpty()) {
+			System.out.println(attatchList);
+			
+			try {
+				for(Task_AttVO attatch : attatchList) {
+					
+					attatch.setTask_code(task.getTask_code());
+					cnt += attatchDao.insertAttatchs(attatch);
+					attatch.getRealFile().transferTo(new File(saveFolder, attatch.getSave_name()));
+				}
+			} catch (IllegalStateException | IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		
+//		deleteBinary(delAttSaveNames);
+		return cnt;
+		
+	}
+	
+	@Override
+	public int selectTaskCount(PagingVO<TaskVO> pagingVO) {
+		return dao.selectTaskCount(pagingVO);
+	}
+
+	@Override
+	public List<TaskVO> selectTaskList(PagingVO<TaskVO> pagingVO) {
+		return dao.selectTaskList(pagingVO);
+	}
+
+	@Override
+	public TaskVO selectTask(String task_code) {
+		TaskVO vo = dao.selectTask(task_code);
+		if(vo == null) {
+			throw new DataNotFoundException(task_code + "에 해당하는 일감은 없음");
+		}
+		return vo;
+	}
+
+	@Transactional
+	@Override
+	public ResultState insertTask(TaskVO task) {
+		int cnt = dao.insertTask(task);
+		cnt += processAttatches(task);
+		ResultState result = null;
+		if(cnt > 0) {
+			result = ResultState.OK;
+		}else {
+			result = ResultState.FAIL;
+		}
+		return result;
+	}
+	
+	@Transactional
+	@Override
+	public ResultState updateTask(TaskVO task) {
+		ResultState result = null;
+		int cnt = dao.updateTask(task);
+		if(cnt > 0) {
+			processAttatches(task);
+			result = ResultState.OK;
+		}else {
+			result = ResultState.FAIL;
+		}
+		return result;
+	}
+
+	@Transactional
+	@Override
+	public ResultState deleteTask(TaskVO taskVO) {
+		TaskVO savedTask = selectTask(taskVO.getTask_code());
+		ResultState result = null;
+		
+		List<Task_AttVO> attList = savedTask.getTask_attList();
+		String[] delAttNames = null;
+		if(attList != null && !attList.isEmpty()) {
+			delAttNames = new String[attList.size()];
+			for(int i = 0; i < delAttNames.length; i++) {
+				delAttNames[i] = attList.get(i).getSave_name();
+			}
+		}
+		
+		int cnt = dao.deleteTask(taskVO.getTask_code());
+		if(cnt > 0) {
+			deleteBinary(delAttNames);
+			result = ResultState.OK;
+		}else {
+			result = ResultState.FAIL;
+		}
+		
+		return result;
+	}
+
+	@Override
+	public String selectPJ_Member(TaskVO taskVO) {
+		return dao.selectPJ_Member(taskVO);
+	}
+
+	@Override
+	public Task_AttVO downloadAttatch(String task_attcode) {
+		Task_AttVO attatch = attatchDao.selectAttatch(task_attcode);
+		if(attatch == null) {
+			throw new DataNotFoundException(task_attcode + "파일이 없음.");
+		}
+		return attatch;
+	}
+
+	@Override
+	public String selectPrgCode(ProjectVO project) {
+		return dao.selectPrgCode(project);
+	}
+
+	@Override
+	public List<TaskVO> selectTaskCal(String project_code) {
+		return dao.selectTaskCal(project_code);
+	}
+	
+	@Override
+	public ResultState updateTaskCal(TaskVO task) {
+		ResultState result = null;
+		int cnt = dao.updateTaskCal(task);
+		if(cnt > 0) {
+			result = ResultState.OK;
+		}else {
+			result = ResultState.FAIL;
+		}
+		return result;
+	}
+
+	@Override
+	public List<TaskVO> selectTaskGantt(String project_code) {
+		return dao.selectTaskGantt(project_code);
+	}
+}

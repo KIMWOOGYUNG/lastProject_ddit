@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.message.dao.IMessageDAO">
+<sql id="searchFrag">
+
+
+</sql>
+<!-- 전체쪽지 리스트 -->
+<select id="MessageList" parameterType="kr.or.ddit.vo.PagingVO" resultType="kr.or.ddit.vo.MessageVO">
+SELECT A.*
+	FROM (
+		SELECT ROWNUM RNUM, B.EMP_KOR EMP_SENDER, C.EMP_KOR EMP_RECEIVER, MSG_CONTENT, MSG_DATE
+		FROM MESSAGE A LEFT OUTER JOIN EMPLOYEE B ON (A.EMP_RECEIVER = B.EMP_CODE)
+        	 LEFT OUTER JOIN EMPLOYEE C ON (A.EMP_SENDER = C.EMP_CODE)
+		WHERE A.EMP_RECEIVER = #{detailSearch.emp_receiver}
+		) A
+WHERE RNUM BETWEEN #{startRow} AND #{endRow}
+</select>
+<!-- 수신쪽지 리스트 -->
+<select id="ReceiverList" parameterType="kr.or.ddit.vo.PagingVO" resultType="kr.or.ddit.vo.MessageVO">
+SELECT A.*
+ 	FROM(
+ 	SELECT ROWNUM RNUM, B.EMP_KOR EMP_SENDER, MSG_CONTENT, MSG_DATE
+ 	FROM MESSAGE A LEFT OUTER JOIN EMPLOYEE B ON (A.EMP_SENDER = B.EMP_CODE)
+ 	 WHERE A.EMP_RECEIVER = #{detailSearch.emp_sender}
+ 	) A
+ WHERE RNUM BETWEEN #{startRow} AND #{endRow}
+ 	
+
+</select>
+
+
+
+<!-- 전체쪽지리스트  -->
+<select id="selectMessageCount" resultType="int" parameterType="kr.or.ddit.vo.PagingVO">
+SELECT COUNT(MSG_CODE)
+FROM MESSAGE
+</select>
+
+<!-- 발신쪽지리스트 -->
+<select id="selectMsgsend" resultType="kr.or.ddit.vo.PagingVO" parameterType="kr.or.ddit.vo.MessageVO">
+
+
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</mapper>

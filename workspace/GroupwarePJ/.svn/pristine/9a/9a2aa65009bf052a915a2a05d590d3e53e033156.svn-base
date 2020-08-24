@@ -1,0 +1,20 @@
+package kr.or.ddit.att_admin.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+@Controller
+@RequestMapping("/hr/att/detailList")
+public class attDetailListController {
+	
+	@GetMapping
+	public String detailList() {
+		String goPage = "attDetailList.hr";
+		return goPage;
+	}
+	
+	
+	
+	
+}
